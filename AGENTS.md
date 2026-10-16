@@ -65,7 +65,19 @@ Deploy web: bina (`npm run build`) lalu salin `dist/` ke `docs/` dan push ke
 
 - `src/screens/` — skrin utama (Home, Subjects, Games, Progress, Profile)
 - `src/lib/i18n.ts` — kamus BM (`MS`) dan EN; kira-kira 221 kunci setiap satu
+- `src/data/topics/` — nota asas topik DSKP (374 nota)
+- `src/data/notes-extra.ts` — nota ringkas tambahan setiap topik (248 nota);
+  digabungkan dalam `src/data/catalog.ts` semasa muat. Untuk tambah nota,
+  letak kunci mengikut `id` topik dalam `EXTRA_NOTES`. Nota baharu perlu
+  sepadan dengan `id` dalam `src/data/topics/*.ts` (semakan: tiada orphan).
 - `android-app/` — projek Android (manifest, `MainActivity.java`, res, assets/www)
 - `scripts/build-apk.sh` — saluran bina APK
 - `scripts/make-icons.py` / `make-android-icons.py` — penjana ikon
 - `audit-i18n.mjs` — semak kunci i18n yang hilang
+
+## Bahasa antara muka
+
+Teks antara muka mesti dalam **Bahasa Malaysia**, bukan Bahasa Indonesia.
+Contoh pembetulan yang telah dibuat: `ketik` → `tekan`, `tukat` → `tukar`,
+`Paute` → `Pautan`. Sebelum terbit, imbas `src/lib/i18n.ts` dan `src/data/`
+untuk perkataan Indonesia (unduh, unggah, pengaturan, kirim, soal, dll.).
