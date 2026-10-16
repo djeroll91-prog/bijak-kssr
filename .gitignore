@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+.agent_tmp/
+android-app/build/
+android-app/keystore/
+android-app/src/main/assets/www/
