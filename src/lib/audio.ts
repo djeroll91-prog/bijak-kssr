@@ -172,16 +172,29 @@ export const sound = new SoundEngine();
 /**
  * Suara bacaan menggunakan Web Speech API.
  * Bahasa disokong: Bahasa Melayu (ms-MY) dan Inggeris (en-GB/en-US).
+ *
+ * Nota penting: ada peranti/penyemak imbas yang tidak menyediakan suara
+ * Bahasa Melayu. Enjin ini memilih suara terbaik yang ada dan memecahkan
+ * teks panjang kepada bahagian kecil supaya bacaan tidak terhenti.
  */
 class VoiceEngine {
   private enabled = false;
   private voiceMs: SpeechSynthesisVoice | null = null;
   private voiceEn: SpeechSynthesisVoice | null = null;
+  private queue: string[] = [];
+  private speaking = false;
+
+  /** Adakah API suara tersedia pada peranti ini? */
+  get supported(): boolean {
+    return typeof window !== 'undefined' && 'speechSynthesis' in window;
+  }
 
   setEnabled(on: boolean): void {
     this.enabled = on;
-    if (!on && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    if (!on && this.supported) {
       window.speechSynthesis.cancel();
+      this.queue = [];
+      this.speaking = false;
     } else if (on) {
       this.loadVoices();
     }
@@ -192,11 +205,13 @@ class VoiceEngine {
   }
 
   loadVoices(): void {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    if (!this.supported) return;
     const voices = window.speechSynthesis.getVoices();
     if (voices.length === 0) return;
+    // Utamakan suara Bahasa Melayu; jika tiada, Indonesia paling hampir.
     this.voiceMs =
       voices.find((v) => /^ms/i.test(v.lang)) ??
+      voices.find((v) => /malay|melayu/i.test(v.name)) ??
       voices.find((v) => /^id/i.test(v.lang)) ??
       null;
     this.voiceEn =
@@ -205,27 +220,64 @@ class VoiceEngine {
       null;
   }
 
+  /** Pecahkan teks panjang kepada ayat supaya setiap bahagian dibaca lancar. */
+  private split(text: string): string[] {
+    const parts = text
+      .split(/(?<=[.!?…])\s+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const out: string[] = [];
+    let buf = '';
+    for (const p of parts.length ? parts : [text]) {
+      if ((buf + ' ' + p).trim().length > 200) {
+        if (buf) out.push(buf.trim());
+        buf = p;
+      } else {
+        buf = (buf + ' ' + p).trim();
+      }
+    }
+    if (buf) out.push(buf.trim());
+    return out;
+  }
+
   /** Baca teks dengan bahasa yang dipilih. */
   speak(text: string, lang: 'ms' | 'en' = 'ms'): void {
-    if (!this.enabled) return;
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    if (!this.enabled || !this.supported) return;
     this.loadVoices();
     const clean = text.replace(/[_#*`]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!clean) return;
     window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(clean.slice(0, 320));
+    this.queue = this.split(clean);
+    this.speaking = false;
+    this.drain(lang);
+  }
+
+  private drain(lang: 'ms' | 'en'): void {
+    if (!this.supported) return;
+    if (this.speaking) return;
+    const next = this.queue.shift();
+    if (!next) return;
+    this.speaking = true;
+    const u = new SpeechSynthesisUtterance(next);
     u.lang = lang === 'en' ? 'en-GB' : 'ms-MY';
     const voice = lang === 'en' ? this.voiceEn : this.voiceMs;
     if (voice) u.voice = voice;
     u.rate = 0.92;
     u.pitch = 1.08;
+    const done = () => {
+      this.speaking = false;
+      this.drain(lang);
+    };
+    u.onend = done;
+    u.onerror = done;
+    // Sesetengah peranti "tersekat" jika terlalu lama; pastikan diteruskan.
     window.speechSynthesis.speak(u);
   }
 
   stop(): void {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    if (this.supported) window.speechSynthesis.cancel();
+    this.queue = [];
+    this.speaking = false;
   }
 }
 

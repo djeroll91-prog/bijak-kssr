@@ -12,7 +12,7 @@ import { copyText, shareUrl } from '../lib/share';
 import type { YearNum } from '../data/types';
 
 const AVATARS = ['🦊', '🐼', '🐯', '🐨', '🐸', '🦉', '🐙', '🦄', '🐲', '🐰', '🐵', '🐧'];
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 
 export function ProfileScreen() {
   const {
@@ -163,6 +163,11 @@ export function ProfileScreen() {
               if (v) setTimeout(() => voice.speak(t('profile.voiceOn'), lang), 120);
             }}
           />
+          {!voice.supported ? (
+            <p className="tiny muted" style={{ margin: '-6px 4px 4px' }}>
+              ℹ️ {t('profile.voiceNoSupport')}
+            </p>
+          ) : null}
           <ToggleRow
             lead="✨"
             title={t('profile.motion')}
@@ -183,6 +188,13 @@ export function ProfileScreen() {
             desc={t('profile.contrastDesc')}
             on={settings.contrast}
             onChange={(v) => setSetting('contrast', v)}
+          />
+          <ToggleRow
+            lead="🌙"
+            title={t('profile.dark')}
+            desc={t('profile.darkDesc')}
+            on={settings.dark}
+            onChange={(v) => setSetting('dark', v)}
           />
 
           {/* Bahasa */}

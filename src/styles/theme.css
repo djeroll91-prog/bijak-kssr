@@ -110,6 +110,118 @@
   --ink-faint: #5f5675;
 }
 
+/* ==========================================================================
+   Mod Gelap — latar gelap dengan kotak bercahaya (glow)
+   Warna kekal ceria tetapi lembut supaya tidak menyilaukan mata murid.
+   ========================================================================== */
+:root[data-theme='dark'] {
+  --bg: #14122a;
+  --bg-deep: #0d0b1d;
+  --surface: #201d3d;
+  --surface-soft: #262247;
+  --surface-sunken: #1a1734;
+
+  --ink: #eceaf8;
+  --ink-soft: #b3aed2;
+  --ink-faint: #7d7799;
+  --ink-on-color: #ffffff;
+
+  --brand: #8b7bf5;
+  --brand-deep: #7a68ee;
+  --brand-soft: #2b2650;
+
+  --accent: #ffc063;
+  --accent-deep: #e7a63a;
+  --accent-soft: #3a2f1c;
+
+  --success: #33c894;
+  --success-soft: #173b30;
+  --warn: #f0a83a;
+  --warn-soft: #3a2e17;
+  --danger: #f07d8d;
+  --danger-soft: #3d1f27;
+  --info: #5fb0ef;
+  --info-soft: #16304a;
+
+  --sub-matematik: #9a8bf8;
+  --sub-bahasa-melayu: #f085ad;
+  --sub-english: #5fb0ef;
+  --sub-sains: #33c894;
+  --sub-sejarah: #f0a83a;
+
+  /* Cahaya lembut (glow) untuk setiap kotak */
+  --glow: 0 0 0 1px rgba(139, 123, 245, 0.28), 0 0 18px rgba(139, 123, 245, 0.22),
+    0 6px 22px rgba(0, 0, 0, 0.45);
+  --glow-soft: 0 0 0 1px rgba(139, 123, 245, 0.18), 0 0 12px rgba(139, 123, 245, 0.14);
+  --sh-1: 0 0 0 1px rgba(139, 123, 245, 0.2), 0 0 14px rgba(139, 123, 245, 0.16),
+    0 4px 16px rgba(0, 0, 0, 0.4);
+  --sh-2: 0 0 0 1px rgba(139, 123, 245, 0.24), 0 0 20px rgba(139, 123, 245, 0.2),
+    0 8px 26px rgba(0, 0, 0, 0.5);
+  --sh-3: 0 0 0 1px rgba(139, 123, 245, 0.3), 0 0 30px rgba(139, 123, 245, 0.28),
+    0 14px 36px rgba(0, 0, 0, 0.55);
+  --sh-press: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Kotak gelap bercahaya pada permukaan utama */
+:root[data-theme='dark'] .card,
+:root[data-theme='dark'] .card-flat,
+:root[data-theme='dark'] .note-block,
+:root[data-theme='dark'] .topic-item,
+:root[data-theme='dark'] .subject-tile,
+:root[data-theme='dark'] .stat-pill,
+:root[data-theme='dark'] .settings-row,
+:root[data-theme='dark'] .badge-card,
+:root[data-theme='dark'] .game-card,
+:root[data-theme='dark'] .q-prompt,
+:root[data-theme='dark'] .option,
+:root[data-theme='dark'] .numeric-display,
+:root[data-theme='dark'] .keypad button,
+:root[data-theme='dark'] .feedback {
+  box-shadow: var(--sh-1);
+  border: 1px solid rgba(139, 123, 245, 0.16);
+}
+
+:root[data-theme='dark'] .subject-tile::before {
+  box-shadow: 0 0 12px var(--tile, var(--brand));
+}
+
+:root[data-theme='dark'] .btn:not([disabled]) {
+  box-shadow: 0 0 14px rgba(139, 123, 245, 0.28);
+}
+
+:root[data-theme='dark'] .option[data-state='correct'] {
+  box-shadow: inset 0 0 0 3px var(--success), 0 0 16px rgba(51, 200, 148, 0.45);
+}
+
+:root[data-theme='dark'] .option[data-state='wrong'] {
+  box-shadow: inset 0 0 0 3px var(--danger), 0 0 16px rgba(240, 125, 141, 0.45);
+}
+
+/* Latar gelap dengan cahaya lembut */
+:root[data-theme='dark'] .app-shell {
+  background: radial-gradient(circle at 12% 0%, rgba(139, 123, 245, 0.2), transparent 45%),
+    radial-gradient(circle at 88% 8%, rgba(255, 192, 99, 0.14), transparent 42%),
+    var(--bg-deep);
+}
+
+:root[data-theme='dark'] .phone {
+  box-shadow: 0 0 0 1px rgba(139, 123, 245, 0.2), 0 0 60px rgba(139, 123, 245, 0.12);
+}
+
+:root[data-theme='dark'] .note-block[data-kind='tip'] {
+  border-color: rgba(255, 192, 99, 0.3);
+}
+:root[data-theme='dark'] .note-block[data-kind='example'] {
+  border-color: rgba(95, 176, 239, 0.3);
+}
+:root[data-theme='dark'] .note-block[data-kind='formula'] {
+  border-color: rgba(139, 123, 245, 0.35);
+}
+:root[data-theme='dark'] .note-block[data-kind='fun'] {
+  border-color: rgba(51, 200, 148, 0.3);
+}
+
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;

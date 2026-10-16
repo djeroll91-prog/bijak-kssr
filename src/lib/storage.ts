@@ -16,6 +16,7 @@ export const DEFAULT_SETTINGS: Settings = {
   motion: true,
   calm: false,
   contrast: false,
+  dark: false,
   fontScale: 1,
 };
 
@@ -114,6 +115,7 @@ function repairSettings(raw: unknown): Settings {
     motion: raw.motion !== false,
     calm: raw.calm === true,
     contrast: raw.contrast === true,
+    dark: raw.dark === true,
     fontScale: clampFont(Number(raw.fontScale)),
   };
 }

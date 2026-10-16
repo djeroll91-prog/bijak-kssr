@@ -134,6 +134,8 @@ export interface Settings {
   motion: boolean;
   calm: boolean;
   contrast: boolean;
+  /** Mod gelap: latar gelap dengan kotak bercahaya. */
+  dark: boolean;
   fontScale: number;
 }
 
