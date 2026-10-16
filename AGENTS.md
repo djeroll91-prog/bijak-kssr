@@ -81,3 +81,23 @@ Teks antara muka mesti dalam **Bahasa Malaysia**, bukan Bahasa Indonesia.
 Contoh pembetulan yang telah dibuat: `ketik` → `tekan`, `tukat` → `tukar`,
 `Paute` → `Pautan`. Sebelum terbit, imbas `src/lib/i18n.ts` dan `src/data/`
 untuk perkataan Indonesia (unduh, unggah, pengaturan, kirim, soal, dll.).
+
+## Tema (terang / gelap)
+
+Tema dikawal oleh atribut `data-theme` pada `<html>`, ditetapkan dalam
+`src/state/store.tsx` daripada `settings.dark`. Token tema gelap berada dalam
+`:root[data-theme='dark']` di `src/styles/theme.css`, bersama peraturan
+`--sh-*` bercahaya (glow) untuk `.card`, `.option`, `.subject-tile`, `.note-block`
+dan sebagainya. `settings.dark` disimpan melalui `src/lib/storage.ts`
+(`DEFAULT_SETTINGS` + `repairSettings`). Togol ada dalam skrin Profil (🌙).
+
+## Bacaan suara (TTS)
+
+`VoiceEngine` dalam `src/lib/audio.ts` menggunakan Web Speech API. Had penting:
+sesetengah peranti/WebView tiada suara Bahasa Melayu, dan `speechSynthesis`
+mungkin tidak wujud langsung. Enjin menyediakan `voice.supported`, memilih
+suara terbaik yang ada (ms → nama "Malay" → id → null), dan memecahkan teks
+panjang kepada ayat supaya bacaan tidak terhenti. UI menunjukkan makluman
+`profile.voiceNoSupport` bila peranti tiada enjin suara. Jika pengguna kata
+butang baca "tak berfungsi", semak `voice.supported` dahulu — ia bukan pepijat
+kod jika peranti tiada enjin TTS.
