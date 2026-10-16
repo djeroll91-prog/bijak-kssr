@@ -206,11 +206,11 @@ const MS: Dict = {
   'profile.yearsCount': 'darjah',
   'profile.privacyNote': '100% luar talian • Tiada iklan • Tiada pengumpulan data',
   'profile.share': 'Kongsi dengan Ibu Bapa & Murid',
-  'profile.shareDesc': 'Paute kekal ini boleh dibuka bila-bila masa — boleh dipasang seperti aplikasi.',
-  'profile.copyLink': 'Salin Paute',
+  'profile.shareDesc': 'Pautan kekal ini boleh dibuka bila-bila masa — boleh dipasang seperti aplikasi.',
+  'profile.copyLink': 'Salin Pautan',
   'profile.shareLink': 'Kongsi',
-  'toast.linkCopied': '🔗 Paute disalin!',
-  'toast.copyFailed': 'Tidak dapat menyalin paute',
+  'toast.linkCopied': '🔗 Pautan disalin!',
+  'toast.copyFailed': 'Tidak dapat menyalin pautan',
   'profile.version': 'Versi',
 
   // Toast
@@ -240,8 +240,8 @@ const MS: Dict = {
   'games.endFantastic': 'Pantastik!',
   'games.endCombo': 'Kombo Hebat!',
   'games.scoreLabel': 'Skor {s}',
-  'games.tapFirstLast': 'Ketik huruf pertama, kemudian huruf terakhir.',
-  'games.tapToArrange': 'Ketik untuk susun…',
+  'games.tapFirstLast': 'Tekan huruf pertama, kemudian huruf terakhir.',
+  'games.tapToArrange': 'Tekan untuk susun…',
   'games.answerIn6': 'Jawab dalam 6 saat untuk kekalkan kombo!',
   'games.noOrderQuestions': 'Tiada soalan susun urutan untuk subjek ini.',
 

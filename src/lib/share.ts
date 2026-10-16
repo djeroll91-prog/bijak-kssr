@@ -1,6 +1,6 @@
-/** Paute kongsi kekal + utiliti papan keratan. */
+/** Pautan kongsi kekal + utiliti papan keratan. */
 
-/** Paute awam yang kekal. Boleh ditetapkan melalui VITE_SHARE_URL semasa bina. */
+/** Pautan awam yang kekal. Boleh ditetapkan melalui VITE_SHARE_URL semasa bina. */
 export function shareUrl(): string {
   const configured = import.meta.env.VITE_SHARE_URL as string | undefined;
   if (configured && configured.trim()) return configured.trim().replace(/\/+$/, '') + '/';

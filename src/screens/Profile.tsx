@@ -265,7 +265,7 @@ export function ProfileScreen() {
           </div>
         </div>
 
-        {/* Paute kekal untuk dikongsi */}
+        {/* Pautan kekal untuk dikongsi */}
         <p className="section-title">{t('profile.share')}</p>
         <div className="share-box">
           <button

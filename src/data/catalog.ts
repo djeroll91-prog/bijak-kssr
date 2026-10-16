@@ -9,6 +9,7 @@ import { MATEMATIK_TOPICS_12 } from './topics/matematik-12';
 import { MATEMATIK_TOPICS_36 } from './topics/matematik-36';
 import { BAHASA_MELAYU_TOPICS, ENGLISH_TOPICS } from './topics/bm-en';
 import { SAINS_TOPICS, SEJARAH_TOPICS } from './topics/sains-sejarah';
+import { EXTRA_NOTES } from './notes-extra';
 import { MATEMATIK_GENERATORS } from '../lib/generators/matematik';
 import { MATEMATIK_GENERATORS_34 } from '../lib/generators/matematik2';
 import { MATEMATIK_GENERATORS_56 } from '../lib/generators/matematik3';
@@ -26,7 +27,10 @@ export const ALL_TOPICS: Topic[] = [
   ...ENGLISH_TOPICS,
   ...SAINS_TOPICS,
   ...SEJARAH_TOPICS,
-];
+].map((t) => {
+  const extra = EXTRA_NOTES[t.id];
+  return extra ? { ...t, notes: [...t.notes, ...extra] } : t;
+});
 
 const GENERATORS: Record<string, Generator> = {
   ...MATEMATIK_GENERATORS,
