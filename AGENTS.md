@@ -48,13 +48,18 @@ bash scripts/build-apk.sh                      # bina dist/bijak-kssr.apk
    kata laluannya adalah **rahsia pembangunan sahaja**. Untuk edaran awam, jana
    kunci baharu dan simpan di luar kawalan versi.
 
-## Pautan edaran
+## Pautan edaran (KEKAL)
 
-- **APK boleh pasang:** https://gofile.io/d/p23Oaj4A (`bijak-kssr.apk`, 317 KB, ditandatangani)
-- **Pakej web (PWA):** https://gofile.io/d/m0QP2x7U (`bijak-kssr-app.zip`)
-- Fail hos gofile kekal tetapi boleh dipadam selepas lama tidak diakses. Untuk
-  pautan yang benar-benar kekal, letak `bijak-kssr.apk` dalam GitHub Release repo
-  `belajar-ceria` (token dalam env ini baca sahaja, jadi ia mesti dibuat manual).
+- **APK boleh pasang (pautan kekal):**
+  https://github.com/djeroll91-prog/bijak-kssr/releases/latest/download/bijak-kssr.apk
+  (juga boleh dimuat turun dari https://djeroll91-prog.github.io/bijak-kssr/bijak-kssr.apk)
+- **Aplikasi web (PWA, kekal):** https://djeroll91-prog.github.io/bijak-kssr/
+- **Repo:** https://github.com/djeroll91-prog/bijak-kssr
+- **Pakej web zip:** https://github.com/djeroll91-prog/bijak-kssr/releases/latest/download/bijak-kssr-app.zip
+
+Deploy web: bina (`npm run build`) lalu salin `dist/` ke `docs/` dan push ke
+`main`. GitHub Pages dicetak dari `main /docs`. Cetuskan bina semula melalui
+`POST /repos/:owner/:repo/pages/builds` jika perlu.
 
 ## Struktur
 
