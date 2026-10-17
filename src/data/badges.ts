@@ -186,7 +186,7 @@ export const BADGES: Badge[] = [
   },
   {
     id: 'darjah-terbaik',
-    name: 'Bintang Darjah',
+    name: 'Bintang Tahun',
     emoji: '🥇',
     how: 'Dapat markah penuh dalam topik tahun semasa.',
     nameEn: 'Year Star',
