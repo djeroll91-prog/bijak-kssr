@@ -250,6 +250,38 @@ Contoh pembetulan yang telah dibuat: `ketik` ŌåÆ `tekan`, `tukat` ŌåÆ `tuk
 `Paute` ŌåÆ `Pautan`. Sebelum terbit, imbas `src/lib/i18n.ts` dan `src/data/`
 untuk perkataan Indonesia (unduh, unggah, pengaturan, kirim, soal, dll.).
 
+## Susun atur: telefon (APK) lwn desktop (web)
+
+Aplikasi direka sebagai UI telefon: `.phone` dalam `src/App.tsx` dihadkan
+`max-width: 460px`. Sejak v1.10.0, **pelayar web** mendapat susun atur desktop
+(bar sisi + kandungan berbilang kolum), manakala **APK Android kekal telefon**.
+
+Kunci kepada ini ialah dua atribut pada `<html>`, ditetapkan awal dalam
+`src/main.tsx` sebelum React dipasang:
+
+- `data-shell` = `apk` | `web`
+  APK memuatkan halaman dari hos maya `appassets.androidplatform.net`
+  (lihat `MainActivity.java`), jadi `location.hostname` membezakannya.
+- `data-layout` = `auto` | `desktop` | `phone`
+  APK **dikunci** kepada `phone` tanpa mengira skrin. Pelayar menghormati
+  pilihan yang disimpan di `localStorage['bijak-kssr/screen-layout']`, jika
+  tidak lalai `auto`.
+
+Semua peraturan desktop dalam `src/styles/theme.css` (bahagian akhir fail,
+`@media (min-width: 1024px)`) dijaga dengan
+`:root:not([data-layout='phone'])`, dan grid dua kolum tambahan dijaga dengan
+`:has(> .side-nav)` supaya onboarding (tiada bar sisi) tidak runtuh ke kolum
+248px. Peraturan desktop **tidak** terpakai kepada APK pada bila-bila masa.
+
+`src/lib/layout.ts` mengeksport `shellChannel` dan `useScreenLayout()` untuk
+komponen. Kawalan pilihan susun atur ada dalam skrin Profil dan ditanda
+`data-web-only="true"`; CSS menyembunyikannya dalam APK
+(`:root[data-shell='apk'] [data-web-only='true']`).
+
+Ujian: `node test-desktop-layout.mjs` (jsdom, termasuk hos maya APK).
+Untuk semakan susun atur sebenar, muatkan aplikasi dalam Chromium headless —
+jsdom tidak menilai CSS, jadi ia tidak boleh mengesahkan susun atur.
+
 ## Tema (terang / gelap)
 
 Tema dikawal oleh atribut `data-theme` pada `<html>`, ditetapkan dalam

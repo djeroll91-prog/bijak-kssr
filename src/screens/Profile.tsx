@@ -9,11 +9,12 @@ import { dayCount, yearLabel, yearTheme } from '../lib/i18n';
 import { catalogStats } from '../data/catalog';
 import { profileStats } from '../lib/storage';
 import { sound, voice } from '../lib/audio';
+import { useScreenLayout } from '../lib/layout';
 import { copyText, shareUrl } from '../lib/share';
 import type { YearNum } from '../data/types';
 
 const AVATARS = ['🦊', '🐼', '🐯', '🐨', '🐸', '🦉', '🐙', '🦄', '🐲', '🐰', '🐵', '🐧'];
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.10.0';
 
 export function ProfileScreen() {
   const {
@@ -36,6 +37,7 @@ export function ProfileScreen() {
   } = useStore();
   const t = useT();
 
+  const [screenLayout, setScreenLayout] = useScreenLayout();
   const [sheet, setSheet] = useState<null | 'name' | 'year' | 'avatar' | 'switch' | 'add' | 'reset'>(null);
   const [lockSheet, setLockSheet] = useState<null | 'set'>(null);
   /** Benar apabila PIN disemak khusus untuk membenarkan tukar PIN. */
@@ -224,6 +226,40 @@ export function ProfileScreen() {
                   }}
                 >
                   {l === 'ms' ? 'BM' : 'EN'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Susun atur skrin — web sahaja (APK dikunci kepada telefon). */}
+          <div className="settings-row" data-web-only="true">
+            <span className="lead" aria-hidden="true">
+              🖥️
+            </span>
+            <span className="grow">
+              <b>{t('profile.layout')}</b>
+              <small>{t('profile.layoutDesc')}</small>
+            </span>
+            <div className="row layout-switch" style={{ gap: 6 }}>
+              {(
+                [
+                  ['auto', t('profile.layoutAuto')],
+                  ['desktop', t('profile.layoutDesktop')],
+                  ['phone', t('profile.layoutPhone')],
+                ] as const
+              ).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className="chip"
+                  data-active={screenLayout === mode ? 'true' : 'false'}
+                  style={screenLayout === mode ? { background: 'var(--brand)', color: '#fff' } : undefined}
+                  onClick={() => {
+                    sound.play('pop');
+                    setScreenLayout(mode);
+                  }}
+                >
+                  {label}
                 </button>
               ))}
             </div>

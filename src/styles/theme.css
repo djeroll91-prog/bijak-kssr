@@ -2553,3 +2553,205 @@ ul {
 :root[data-motion='off'] .exam-hud .chip[data-tone='danger'] {
   animation: none;
 }
+
+/* ==========================================================================
+   Susun atur desktop (web sahaja)
+   ==========================================================================
+   APK Android memuatkan halaman dari hos maya `appassets.androidplatform.net`
+   dalam WebView. main.tsx menetapkan dua attribute pada <html>:
+
+     data-shell  = 'apk' | 'web'   — saluran
+     data-layout = 'auto' | 'desktop' | 'phone'
+
+   APK sentiasa `data-layout="phone"`, jadi setiap peraturan desktop di bawah
+   dijaga dengan `:root:not([data-layout='phone'])`. Ini memastikan pengalaman
+   aplikasi Android tidak berubah pada tablet atau skrin lebar sekali pun.
+   ========================================================================== */
+
+/* Bar sisi tersembunyi secara lalai; hanya muncul pada skrin lebar. */
+.side-nav {
+  display: none;
+}
+
+/* Pilihan manual "Telefon" dalam web: kekalkan bingkai telefon. */
+:root[data-layout='phone'] .side-nav {
+  display: none !important;
+}
+
+:root[data-layout='phone'] .bottom-nav {
+  display: grid !important;
+}
+
+/* Kawalan web sahaja tidak dipaparkan dalam APK. */
+:root[data-shell='apk'] [data-web-only='true'] {
+  display: none !important;
+}
+
+@media (min-width: 1024px) {
+  /* Bingkai telefon dibuka supaya kandungan mengisi tetingkap. */
+  :root:not([data-layout='phone']) .app-shell .phone:has(> .side-nav) {
+    max-width: none;
+    min-height: 100dvh;
+    display: grid;
+    grid-template-columns: 248px minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  :root:not([data-layout='phone']) .app-shell .screen-scroll {
+    padding: var(--sp-5) var(--sp-6) var(--sp-6);
+    max-width: 1180px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ---- Bar sisi ---- */
+  :root:not([data-layout='phone']) .side-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    padding: var(--sp-5) var(--sp-4);
+    background: var(--surface);
+    border-right: 1px solid rgba(59, 51, 85, 0.08);
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    overflow-y: auto;
+    grid-column: 1;
+    grid-row: 1 / -1;
+  }
+
+  /* Semua anak lain masuk kolum kedua, di sebelah bar sisi. */
+  :root:not([data-layout='phone']) .app-shell .phone > .screen-stage,
+  :root:not([data-layout='phone']) .app-shell .phone > .bottom-nav,
+  :root:not([data-layout='phone']) .app-shell .phone > .toast {
+    grid-column: 2;
+  }
+
+  /* Nav bawah tidak diperlukan pada desktop. */
+  :root:not([data-layout='phone']) .app-shell .bottom-nav {
+    display: none;
+  }
+
+  /* ---- Kandungan berbilang kolum ---- */
+  :root:not([data-layout='phone']) .app-shell .screen-scroll > .stack,
+  :root:not([data-layout='phone']) .app-shell .screen-scroll > .subject-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--sp-3);
+    align-items: start;
+  }
+
+  /* Overlay tetap (HUD pemasa, tag kuiz, toast) berpusat pada ruang
+     kandungan, bukan pada tetingkap, kerana bar sisi mengambil 248px. */
+  :root:not([data-layout='phone']) .exam-hud,
+  :root:not([data-layout='phone']) .toast,
+  :root:not([data-layout='phone']) .quiz-tag {
+    left: calc(50% + 124px);
+  }
+
+  /* Skrin soalan kekal satu kolum supaya soalan tidak berpecah. */
+  :root:not([data-layout='phone']) .screen-stage[data-screen='quiz'] .screen-scroll > .stack,
+  :root:not([data-layout='phone']) .screen-stage[data-screen='mockExam'] .screen-scroll > .stack,
+  :root:not([data-layout='phone']) .screen-stage[data-screen='result'] .screen-scroll > .stack,
+  :root:not([data-layout='phone']) .screen-stage[data-screen='examResult'] .screen-scroll > .stack,
+  :root:not([data-layout='phone']) .screen-stage[data-screen='notes'] .screen-scroll > .stack {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---- Bar sisi: jenama, item, profil ---- */
+.side-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-2) var(--sp-4);
+}
+
+.side-nav-brand .mark {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-md);
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  background: var(--brand-soft);
+}
+
+.side-nav-brand .name {
+  font-weight: 900;
+  font-size: 1.02rem;
+  line-height: 1.1;
+}
+
+.side-nav-brand .sub {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  font-weight: 700;
+}
+
+.side-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 11px var(--sp-3);
+  border-radius: var(--r-md);
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-align: left;
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+
+.side-nav-item .ico {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.side-nav-item:hover {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.side-nav-item[data-active='true'] {
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+}
+
+.side-nav-foot {
+  margin-top: auto;
+  padding-top: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.side-nav-who {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--surface-soft);
+}
+
+.side-nav-who .avatar {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.side-nav-who .nm {
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.side-nav-who .yr {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  font-weight: 700;
+}
+
+.layout-switch {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}

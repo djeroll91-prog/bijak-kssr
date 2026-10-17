@@ -77,6 +77,70 @@ function BottomNav() {
 }
 
 /**
+ * Bar sisi untuk susun atur desktop (skrin lebar dalam pelayar). Menggunakan
+ * senarai navigasi yang sama seperti nav bawah, jadi tingkah laku konsisten.
+ * Disembunyikan oleh CSS pada telefon dan dalam APK.
+ */
+function SideNav() {
+  const { nav, go, profile, lang } = useStore();
+  const t = useT();
+
+  const active = (id: ScreenId) =>
+    nav.screen === id ||
+    (id === 'subjects' && SUBJECT_TABS.includes(nav.screen)) ||
+    (id === 'plan' && PLAN_TABS.includes(nav.screen));
+
+  return (
+    <nav className="side-nav" aria-label="Navigasi utama">
+      <div className="side-nav-brand">
+        <span className="mark" aria-hidden="true">
+          🎒
+        </span>
+        <div>
+          <div className="name">{t('app.name')}</div>
+          <div className="sub">{t('app.tagline')}</div>
+        </div>
+      </div>
+
+      {NAV_ITEMS.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          className="side-nav-item"
+          data-active={active(item.id) ? 'true' : 'false'}
+          aria-current={nav.screen === item.id ? 'page' : undefined}
+          onClick={() => {
+            sound.play('tap');
+            go({ screen: item.id });
+          }}
+        >
+          <span className="ico" aria-hidden="true">
+            {item.icon}
+          </span>
+          {t(item.labelKey)}
+        </button>
+      ))}
+
+      {profile ? (
+        <div className="side-nav-foot">
+          <div className="side-nav-who">
+            <span className="avatar" aria-hidden="true">
+              {profile.avatar}
+            </span>
+            <div>
+              <div className="nm">{profile.name}</div>
+              <div className="yr">
+                {lang === 'en' ? `Year ${profile.year}` : `Tahun ${profile.year}`}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </nav>
+  );
+}
+
+/**
  * Bungkus skrin dengan animasi masuk supaya peralihan halaman terasa hidup.
  * Kunci berubah mengikut skrin, jadi setiap peralihan mencetuskan animasi.
  */
@@ -102,6 +166,7 @@ function Router() {
 
   return (
     <div className="phone">
+      <SideNav />
       <ScreenStage screen={nav.screen}>
         {nav.screen === 'home' ? <HomeScreen /> : null}
         {nav.screen === 'subjects' ? <SubjectsScreen /> : null}
