@@ -108,6 +108,54 @@ export interface Attempt {
   retries: number;
 }
 
+/** Skor satu topik dalam ujian diagnosis. */
+export interface DiagnosticItem {
+  topicId: string;
+  subject: SubjectId;
+  title: string;
+  correct: number;
+  total: number;
+}
+
+/** Ringkasan satu sesi ujian diagnosis. */
+export interface DiagnosticResult {
+  ts: number;
+  year: YearNum;
+  items: DiagnosticItem[];
+  correct: number;
+  total: number;
+  seconds: number;
+}
+
+/** Jenis tugasan dalam pelan belajar. */
+export type PlanTaskKind = 'learn' | 'practice' | 'remedial' | 'game';
+
+/** Satu tugasan dalam pelan belajar mingguan. */
+export interface PlanTask {
+  id: string;
+  /** Hari dalam pelan: 0 = hari pertama. */
+  dayIndex: number;
+  topicId: string;
+  kind: PlanTaskKind;
+  /** Anggaran masa dalam minit. */
+  minutes: number;
+  done: boolean;
+}
+
+/** Pelan belajar 7 hari yang dijana daripada kelemahan murid. */
+export interface StudyPlan {
+  createdAt: number;
+  year: YearNum;
+  /** Topik tumpuan (kelemahan + topik belum cuba). */
+  focusTopicIds: string[];
+  /** Topik yang dikenal pasti lemah semasa pelan dijana. */
+  weakTopicIds: string[];
+  tasks: PlanTask[];
+  /** Saat belajar terkumpul pada tarikh terakhir aktif. */
+  focusSeconds: number;
+  lastFocusDate: string;
+}
+
 export interface Profile {
   id: string;
   name: string;
@@ -126,6 +174,10 @@ export interface Profile {
   points: number;
   /** Topik yang pernah dibuka. */
   seenTopics: string[];
+  /** Keputusan ujian diagnosis terakhir (jika ada). */
+  diagnostic?: DiagnosticResult | null;
+  /** Pelan belajar mingguan semasa (jika ada). */
+  plan?: StudyPlan | null;
 }
 
 export interface Settings {

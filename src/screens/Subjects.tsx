@@ -45,7 +45,7 @@ export function SubjectsScreen() {
           </p>
         </div>
 
-        <div className="stack" style={{ marginTop: 14 }}>
+        <div className="stack stagger" style={{ marginTop: 14 }}>
           {rows.map(({ meta, list, tried, avg, available }) => (
             <button
               key={meta.id}

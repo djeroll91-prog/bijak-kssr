@@ -14,7 +14,17 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { AppData, Attempt, Badge, Profile, Settings, SubjectId, YearNum } from '../data/types';
+import type {
+  AppData,
+  Attempt,
+  Badge,
+  DiagnosticItem,
+  Profile,
+  Settings,
+  StudyPlan,
+  SubjectId,
+  YearNum,
+} from '../data/types';
 import {
   DEFAULT_SETTINGS,
   clearData,
@@ -27,6 +37,7 @@ import {
   todayKey,
 } from '../lib/storage';
 import { newBadges } from '../data/badges';
+import { buildPlan, DIAGNOSTIC_TOPIC_ID } from '../lib/plan';
 import { sound, voice } from '../lib/audio';
 import { translate, type Lang } from '../lib/i18n';
 
@@ -41,7 +52,10 @@ export type ScreenId =
   | 'game'
   | 'progress'
   | 'badges'
-  | 'profile';
+  | 'profile'
+  | 'plan'
+  | 'diagnostic'
+  | 'report';
 
 export interface NavState {
   screen: ScreenId;
@@ -52,6 +66,8 @@ export interface NavState {
   result?: QuizResult;
   /** Tetapan latihan pantas. */
   quick?: { topicIds: string[]; label: string };
+  /** Tugasan pelan belajar yang sedang dijalankan. */
+  planTaskId?: string;
   /** Kembali ke skrin mana selepas result. */
   from?: ScreenId;
 }
@@ -109,6 +125,13 @@ interface Store {
   markTopicSeen: (topicId: string) => void;
   consumePendingBadges: () => void;
   celebrateBadge: (id: string) => void;
+
+  /** Program belajar */
+  saveDiagnostic: (items: DiagnosticItem[], seconds: number) => void;
+  generatePlan: () => void;
+  completePlanTask: (taskId: string) => void;
+  addFocusSeconds: (seconds: number) => void;
+  clearPlan: () => void;
 
   /** Data */
   exportData: () => void;
@@ -326,6 +349,101 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  /** Kemas kini profil aktif dengan perubahan separa. */
+  const patchProfile = useCallback((patch: (p: Profile) => Partial<Profile>) => {
+    setData((d) => ({
+      ...d,
+      profiles: d.profiles.map((p) => (p.id === d.activeProfileId ? { ...p, ...patch(p) } : p)),
+    }));
+  }, []);
+
+  /**
+   * Simpan keputusan ujian diagnosis. Satu percubaan ringkasan juga
+   * direkodkan supaya bintang, mata dan lencana terus berfungsi.
+   */
+  const saveDiagnostic = useCallback(
+    (items: DiagnosticItem[], seconds: number) => {
+      const correct = items.reduce((s, it) => s + it.correct, 0);
+      const total = items.reduce((s, it) => s + it.total, 0);
+      const year = profile?.year ?? 1;
+      let gained: Badge[] = [];
+      setData((d) => {
+        const idx = d.profiles.findIndex((p) => p.id === d.activeProfileId);
+        if (idx === -1) return d;
+        const p = d.profiles[idx];
+        const full: Attempt = {
+          id: `a-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+          ts: Date.now(),
+          year,
+          subject: 'matematik',
+          topicId: DIAGNOSTIC_TOPIC_ID,
+          topicTitle: 'Ujian Diagnosis',
+          correct,
+          total,
+          seconds,
+          retries: 0,
+        };
+        const st = streakUpdate(p);
+        const updated: Profile = {
+          ...p,
+          ...st,
+          attempts: [...p.attempts, full],
+          stars: p.stars + starsFor(correct, total),
+          points: p.points + pointsFor(correct, total, seconds),
+          diagnostic: { ts: Date.now(), year, items, correct, total, seconds },
+          seenTopics: [...new Set([...p.seenTopics, ...items.map((it) => it.topicId)])],
+        };
+        gained = newBadges(updated);
+        if (gained.length > 0) updated.badges = [...updated.badges, ...gained.map((b) => b.id)];
+        // Jana pelan baharu daripada keputusan terkini.
+        const plan = buildPlan(updated);
+        if (plan) updated.plan = plan;
+        const profiles = d.profiles.slice();
+        profiles[idx] = updated;
+        return { ...d, profiles };
+      });
+      if (gained.length > 0) setPendingBadges(gained);
+      return gained;
+    },
+    [profile?.year],
+  );
+
+  /** Jana semula pelan belajar daripada kelemahan semasa. */
+  const generatePlan = useCallback(() => {
+    patchProfile((p) => {
+      const plan = buildPlan(p);
+      return plan ? { plan } : {};
+    });
+  }, [patchProfile]);
+
+  const completePlanTask = useCallback((taskId: string) => {
+    patchProfile((p) => {
+      if (!p.plan) return {};
+      const tasks: StudyPlan['tasks'] = p.plan.tasks.map((t) =>
+        t.id === taskId ? { ...t, done: true } : t,
+      );
+      return { plan: { ...p.plan, tasks } };
+    });
+  }, [patchProfile]);
+
+  const clearPlan = useCallback(() => {
+    patchProfile(() => ({ plan: null }));
+  }, [patchProfile]);
+
+  /** Tambah masa belajar fokus (diasingkan mengikut tarikh). */
+  const addFocusSeconds = useCallback(
+    (seconds: number) => {
+      if (seconds <= 0) return;
+      patchProfile((p) => {
+        if (!p.plan) return {};
+        const today = todayKey();
+        const base = p.plan.lastFocusDate === today ? p.plan.focusSeconds : 0;
+        return { plan: { ...p.plan, focusSeconds: base + seconds, lastFocusDate: today } };
+      });
+    },
+    [patchProfile],
+  );
+
   const exportDataFn = useCallback(() => doExport(data), [data]);
 
   const importDataFn = useCallback(async (file: File) => {
@@ -364,6 +482,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     markTopicSeen,
     consumePendingBadges,
     celebrateBadge,
+    saveDiagnostic,
+    generatePlan,
+    completePlanTask,
+    addFocusSeconds,
+    clearPlan,
     exportData: exportDataFn,
     importData: importDataFn,
     resetAll,

@@ -1881,6 +1881,438 @@ ul {
   animation: breathe 2.4s ease-in-out infinite;
 }
 
+/* ------------------------------------------------------------------ */
+/* Animasi peralihan halaman                                           */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Setiap skrin dibalut `.screen-stage`. Kunci React berubah mengikut skrin,
+ * jadi elemen baharu dipasang dan animasi masuk dimainkan setiap peralihan.
+ */
+.screen-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* fill-mode 'backwards' sahaja: selepas animasi tamat tiada transform kekal,
+     jadi elemen position:fixed dalam skrin tidak terperangkap dalam bingkai. */
+  animation: pageIn var(--dur-slow) var(--ease-out) backwards;
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Skrin latihan masuk dari sisi supaya terasa "masuk mod fokus". */
+.screen-stage[data-screen='quiz'],
+.screen-stage[data-screen='diagnostic'],
+.screen-stage[data-screen='game'] {
+  animation: focusIn var(--dur-slow) var(--ease-out) backwards;
+}
+
+@keyframes focusIn {
+  from {
+    opacity: 0;
+    transform: translateX(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Skrin keputusan membesar masuk seperti hadiah dibuka. */
+.screen-stage[data-screen='result'] {
+  animation: rewardIn 520ms var(--ease-pop) backwards;
+}
+
+@keyframes rewardIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Kemunculan berperingkat untuk senarai kad. */
+.stagger > * {
+  animation: slideInUp 420ms var(--ease-out) backwards;
+}
+
+.stagger > *:nth-child(1) { animation-delay: 40ms; }
+.stagger > *:nth-child(2) { animation-delay: 90ms; }
+.stagger > *:nth-child(3) { animation-delay: 140ms; }
+.stagger > *:nth-child(4) { animation-delay: 190ms; }
+.stagger > *:nth-child(5) { animation-delay: 240ms; }
+.stagger > *:nth-child(6) { animation-delay: 290ms; }
+.stagger > *:nth-child(7) { animation-delay: 340ms; }
+.stagger > *:nth-child(8) { animation-delay: 390ms; }
+.stagger > *:nth-child(n + 9) { animation-delay: 430ms; }
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-pop {
+  animation: popIn var(--dur) var(--ease-pop) backwards;
+}
+
+.animate-slide {
+  animation: slideInUp 380ms var(--ease-out) backwards;
+}
+
+/* Getaran kecil untuk ikon aktiviti semasa. */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Ikon yang berdenyut apabila aktiviti sedang berjalan. */
+.animate-pulse {
+  animation: pulseGlow 1.6s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.32);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 12px rgba(108, 92, 231, 0);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Program belajar: kad panggilan tindakan pada Utama                  */
+/* ------------------------------------------------------------------ */
+
+.plan-cta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  text-align: left;
+  border-radius: var(--r-lg);
+  border: 2px dashed var(--brand);
+  background: linear-gradient(135deg, var(--brand-soft), var(--surface));
+  box-shadow: var(--sh-1);
+  transition: transform var(--dur-fast) var(--ease-pop), box-shadow var(--dur-fast);
+}
+
+.plan-cta:active {
+  transform: scale(0.975);
+  box-shadow: var(--sh-press);
+}
+
+.plan-cta[data-ready='true'] {
+  border-style: solid;
+  border-color: var(--accent);
+  background: linear-gradient(135deg, var(--accent-soft), var(--surface));
+}
+
+.plan-cta .pc-emoji {
+  font-size: 1.9rem;
+  line-height: 1;
+  animation: float 3.2s ease-in-out infinite;
+}
+
+.plan-cta b {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.plan-cta small {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.plan-cta .pc-go {
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: var(--brand-deep);
+  background: var(--surface);
+  border-radius: var(--r-pill);
+  padding: 4px 10px;
+  box-shadow: var(--sh-1);
+}
+
+.plan-cta .pc-bar {
+  display: block;
+  height: 7px;
+  margin-top: 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.plan-cta .pc-bar i {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--accent), var(--accent-deep));
+  transition: width var(--dur-slow) var(--ease-out);
+}
+
+/* ------------------------------------------------------------------ */
+/* Program belajar: jalur minggu                                       */
+/* ------------------------------------------------------------------ */
+
+.plan-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-top: var(--sp-4);
+}
+
+.plan-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  color: var(--ink-faint);
+  font-weight: 900;
+  font-size: 0.72rem;
+  transition: transform var(--dur-fast) var(--ease-pop), background var(--dur-fast);
+}
+
+.plan-day:active {
+  transform: scale(0.92);
+}
+
+.plan-day .d-dot {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.plan-day[data-state='today'] {
+  background: var(--brand);
+  color: var(--ink-on-color);
+  animation: breathe 2.2s ease-in-out infinite;
+}
+
+.plan-day[data-state='part'] {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.plan-day[data-state='done'] {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+/* ------------------------------------------------------------------ */
+/* Program belajar: kad tugasan                                        */
+/* ------------------------------------------------------------------ */
+
+.plan-task {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--sh-1);
+  transition: transform var(--dur-fast) var(--ease-pop), opacity var(--dur);
+}
+
+.plan-task:active {
+  transform: scale(0.985);
+}
+
+.plan-task[data-done='true'] {
+  opacity: 0.62;
+}
+
+.plan-task[data-done='true'] b {
+  text-decoration: line-through;
+}
+
+.plan-task .pt-check {
+  flex: 0 0 40px;
+  width: 40px;
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  color: var(--success);
+  font-size: 1.2rem;
+  font-weight: 900;
+  transition: background var(--dur-fast), transform var(--dur-fast) var(--ease-pop);
+}
+
+.plan-task[data-done='true'] .pt-check {
+  background: var(--success);
+  color: var(--ink-on-color);
+  animation: starPop var(--dur) var(--ease-pop);
+}
+
+.plan-task .pt-check:active {
+  transform: scale(0.9);
+}
+
+.plan-task .pt-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 4px;
+  text-align: left;
+}
+
+.plan-task .pt-emoji {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  font-size: 1.25rem;
+}
+
+.plan-task b {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.plan-task small {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Program belajar: pemasa fokus                                       */
+/* ------------------------------------------------------------------ */
+
+.focus-ring {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  font-size: 1.3rem;
+  transition: background var(--dur);
+}
+
+.focus-ring[data-on='true'] {
+  background: var(--accent-soft);
+  animation: pulseGlow 1.8s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* Program belajar: laporan ibu bapa                                   */
+/* ------------------------------------------------------------------ */
+
+.report-steps {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 8px;
+}
+
+.report-steps li {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.report-steps li::marker {
+  color: var(--brand);
+  font-weight: 900;
+}
+
+/* Kad hero kecil untuk skrin pengenalan ujian. */
+.hero-card {
+  text-align: center;
+}
+
+.hero-card .hero-emoji {
+  display: block;
+  font-size: 2.8rem;
+  margin-bottom: 6px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.hero-card h3 {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+/* Setiap soalan baharu muncul dengan animasi supaya murid tahu ia bertukar. */
+.q-body {
+  animation: qIn 380ms var(--ease-out) backwards;
+}
+
+@keyframes qIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.prompt-emoji {
+  font-size: 2rem;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+
+/* Ikon topik berdenyut perlahan supaya kad nampak hidup. */
+.topic-item .badge {
+  transition: transform var(--dur) var(--ease-pop);
+}
+
+.topic-item:active .badge {
+  transform: scale(1.12) rotate(-4deg);
+}
+
+/* Label kecil di bawah skrin latihan (duduk dalam bingkai telefon). */
+.quiz-tag {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  animation: fadeIn var(--dur-slow) ease both;
+}
+
 /* Hormati tetapan sistem & mod kurangkan gerakan */
 :root[data-motion='off'] *,
 :root[data-motion='off'] *::before,

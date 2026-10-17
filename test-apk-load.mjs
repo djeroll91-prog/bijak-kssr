@@ -57,8 +57,12 @@ virtualConsole.on('jsdomError', (e) => {
 virtualConsole.on('error', (m) => errors.push('console.error: ' + m));
 
 const html = readFileSync(INDEX, 'utf8');
+// jsdom tidak melaksanakan <script type="module">, jadi jalankan bundel itu
+// sendiri sebagai skrip klasik selepas DOM dibina (lihat `dom.window.eval`).
+const moduleSrc = html.match(/<script[^>]*type="module"[^>]*src="([^"]+)"/)?.[1];
+const htmlForJsdom = html.replace(/<script[^>]*type="module"[^>]*><\/script>/, '');
 
-const dom = new JSDOM(html, {
+const dom = new JSDOM(htmlForJsdom, {
   url: 'https://appassets.androidplatform.net/index.html',
   runScripts: 'dangerously',
   resources: {
@@ -102,6 +106,15 @@ const dom = new JSDOM(html, {
 });
 
 // Beri masa skrip dimuat dan React dirender.
+// Jalankan bundel modul secara manual (jsdom melangkau type="module").
+if (moduleSrc) {
+  const bundlePath = join(PAYLOAD, moduleSrc.replace(/^\.\//, ''));
+  try {
+    dom.window.eval(readFileSync(bundlePath, 'utf8'));
+  } catch (e) {
+    errors.push('bundle: ' + e.message);
+  }
+}
 await new Promise((r) => setTimeout(r, 2500));
 
 const doc = dom.window.document;
@@ -114,14 +127,14 @@ const check = (name, ok, detail = '') => {
   report.push({ name, ok, detail });
 };
 
-check('index.html dimuatkan', !!doc.querySelector('script[src*="index-"]'));
+check('index.html dimuatkan', !!moduleSrc && existsSync(join(PAYLOAD, moduleSrc.replace(/^\.\//, ''))));
 check('root React wujud', !!root);
 check('React merender kandungan', rootHtml.length > 200, `${rootHtml.length} aksara`);
 check('Tiada aset hilang', missing.length === 0, missing.join(', '));
 check('Tiada ralat JavaScript', errors.length === 0, errors.slice(0, 3).join(' | '));
 
 // Kandungan yang dijangka daripada aplikasi sebenar (dwibahasa BM lalai).
-check('Teks Bahasa Melayu muncul', /Utama|Subjek|Permainan|Kemajuan|Profil/.test(text));
+check('Teks Bahasa Melayu muncul', /Selamat Datang|Pilih Darjah|Utama|Subjek|Permainan|Kemajuan|Profil/.test(text));
 check('Nama aplikasi muncul', /Bijak KSSR|Selamat/.test(text));
 check('Ikon bintang/emoji muncul', /[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/u.test(text));
 

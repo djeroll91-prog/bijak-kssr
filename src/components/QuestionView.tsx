@@ -63,53 +63,55 @@ export function QuestionView({
       </div>
 
       <div className="screen-scroll" data-flush="true">
-        <div className="q-prompt">
-          {q.emoji ? (
-            <div style={{ fontSize: '2rem', marginBottom: 6 }} aria-hidden="true">
-              {q.emoji}
+        <div className="q-body" key={q.id}>
+          <div className="q-prompt">
+            {q.emoji ? (
+              <div className="prompt-emoji animate-float" aria-hidden="true">
+                {q.emoji}
+              </div>
+            ) : null}
+            <p className="prompt-text">{q.prompt}</p>
+            {q.promptSub ? <p className="prompt-sub">{q.promptSub}</p> : null}
+            {voiceOn ? (
+              <button
+                type="button"
+                className="chip chip-brand"
+                style={{ marginTop: 10 }}
+                onClick={() => voice.speak(q.speak ?? q.prompt, voiceLang)}
+              >
+                🔊 {t('notes.readAloud')}
+              </button>
+            ) : null}
+          </div>
+
+          <Body q={q} answered={answered} result={result} onAnswer={onAnswer} t={t} />
+
+          {answered ? (
+            <div className="feedback" data-ok={result.ok ? 'true' : 'false'} role="status">
+              <span className="fb-emoji" aria-hidden="true">
+                {result.ok ? '🎉' : '💪'}
+              </span>
+              <div className="grow">
+                <b>{result.ok ? t('quiz.correct') : t('quiz.wrong')}</b>
+                <p>{q.explanation}</p>
+              </div>
             </div>
           ) : null}
-          <p className="prompt-text">{q.prompt}</p>
-          {q.promptSub ? <p className="prompt-sub">{q.promptSub}</p> : null}
-          {voiceOn ? (
-            <button
-              type="button"
-              className="chip chip-brand"
-              style={{ marginTop: 10 }}
-              onClick={() => voice.speak(q.speak ?? q.prompt, voiceLang)}
-            >
-              🔊 {t('notes.readAloud')}
+
+          {!answered && q.hint ? (
+            <button type="button" className="chip chip-warn" style={{ marginTop: 12 }} onClick={onHint}>
+              💡 {t('quiz.showHint')}
             </button>
           ) : null}
-        </div>
 
-        <Body q={q} answered={answered} result={result} onAnswer={onAnswer} t={t} />
-
-        {answered ? (
-          <div className="feedback" data-ok={result.ok ? 'true' : 'false'} role="status">
-            <span className="fb-emoji" aria-hidden="true">
-              {result.ok ? '🎉' : '💪'}
-            </span>
-            <div className="grow">
-              <b>{result.ok ? t('quiz.correct') : t('quiz.wrong')}</b>
-              <p>{q.explanation}</p>
+          {answered ? (
+            <div style={{ marginTop: 18 }}>
+              <Btn block onClick={onNext} variant="success">
+                {index + 1 >= total ? `🏁 ${t('quiz.finish')}` : `${t('quiz.next')} →`}
+              </Btn>
             </div>
-          </div>
-        ) : null}
-
-        {!answered && q.hint ? (
-          <button type="button" className="chip chip-warn" style={{ marginTop: 12 }} onClick={onHint}>
-            💡 {t('quiz.showHint')}
-          </button>
-        ) : null}
-
-        {answered ? (
-          <div style={{ marginTop: 18 }}>
-            <Btn block onClick={onNext} variant="success">
-              {index + 1 >= total ? `🏁 ${t('quiz.finish')}` : `${t('quiz.next')} →`}
-            </Btn>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import { subjectName, yearLabel, yearTheme } from '../lib/i18n';
 import { ALL_TOPICS, topicsFor } from '../data/catalog';
 import { badgeById, badgeName } from '../data/badges';
 import { profileStats } from '../lib/storage';
+import { planIsStale, planProgress } from '../lib/plan';
 import { sound } from '../lib/audio';
 import type { Topic } from '../data/types';
 
@@ -19,6 +20,10 @@ export function HomeScreen() {
   const stats = profileStats(profile);
   const stars = useAnimatedNumber(profile.stars);
   const points = useAnimatedNumber(profile.points);
+
+  // Pelan dianggap sedia apabila ada dan masih relevan untuk tahun semasa.
+  const planReady = Boolean(profile.plan) && !planIsStale(profile.plan, profile.year);
+  const planProgressValue = planProgress(profile.plan);
 
   const yearTopics = useMemo(() => ALL_TOPICS.filter((x) => x.year === profile.year), [profile.year]);
   const subjects = useMemo(
@@ -74,7 +79,7 @@ export function HomeScreen() {
           </div>
         </div>
 
-        <div className="card" style={{ marginTop: 14 }}>
+        <div className="card animate-pop" style={{ marginTop: 14 }}>
           <div className="row-between">
             <div className="row">
               <ProgressRing value={overall} size={54} />
@@ -90,6 +95,37 @@ export function HomeScreen() {
             </Chip>
           </div>
         </div>
+
+        {/* Kad pelan belajar: langkah seterusnya yang jelas untuk murid. */}
+        <button
+          type="button"
+          className="plan-cta animate-slide"
+          data-ready={planReady ? 'true' : 'false'}
+          onClick={() => {
+            sound.play(planReady ? 'levelup' : 'pop');
+            go({ screen: planReady ? 'plan' : 'diagnostic' });
+          }}
+        >
+          <span className="pc-emoji" aria-hidden="true">
+            {planReady ? '🗺️' : '🧭'}
+          </span>
+          <span className="grow">
+            <b>{planReady ? t('plan.todayTasks') : t('diag.introTitle')}</b>
+            <small>
+              {planReady
+                ? t('plan.dayOf', { n: planProgressValue.activeDay + 1, t: 7 })
+                : t('diag.encourage')}
+            </small>
+            {planReady ? (
+              <span className="pc-bar">
+                <i style={{ width: `${planProgressValue.pct}%` }} />
+              </span>
+            ) : null}
+          </span>
+          <span className="pc-go" aria-hidden="true">
+            {planReady ? `${planProgressValue.done}/${planProgressValue.total}` : '›'}
+          </span>
+        </button>
 
         <p className="section-title">{t('home.subjects')}</p>
         <div className="subject-grid">
@@ -126,7 +162,7 @@ export function HomeScreen() {
         </div>
 
         <p className="section-title">{t('home.suggested')}</p>
-        <div className="stack">
+        <div className="stack stagger">
           {suggested.map((topic) => (
             <button
               key={topic.id}
@@ -169,6 +205,12 @@ export function HomeScreen() {
         <div style={{ marginTop: 20 }}>
           <Btn block variant="accent" onClick={() => go({ screen: 'games' })}>
             🎮 {t('games.title')}
+          </Btn>
+        </div>
+
+        <div style={{ marginTop: 10 }}>
+          <Btn block variant="ghost" onClick={() => go({ screen: 'report' })}>
+            📄 {t('report.title')}
           </Btn>
         </div>
       </div>

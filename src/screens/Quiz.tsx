@@ -14,7 +14,7 @@ import type { Question } from '../data/types';
 const QUESTION_COUNT = 8;
 
 export function QuizScreen() {
-  const { nav, go, back, recordAttempt, settings, profile, lang } = useStore();
+  const { nav, go, back, recordAttempt, settings, profile, lang, completePlanTask } = useStore();
   const t = useT();
 
   const [nonce] = useState(() => Math.floor(Math.random() * 1e9));
@@ -81,6 +81,9 @@ export function QuizScreen() {
 
       sound.play(correct === questions.length ? 'win' : correct / questions.length >= 0.6 ? 'levelup' : 'tap');
 
+      // Tandakan tugasan pelan sebagai siap apabila latihan selesai.
+      if (nav.planTaskId) completePlanTask(nav.planTaskId);
+
       go({
         screen: 'result',
         subject,
@@ -102,7 +105,7 @@ export function QuizScreen() {
         },
       });
     },
-    [recordAttempt, questions, startedAt, nav, topic, profile, retries, go],
+    [recordAttempt, questions, startedAt, nav, topic, profile, retries, go, completePlanTask],
   );
 
   const handleAnswer = (a: AnswerState) => {

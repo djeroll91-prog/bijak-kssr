@@ -48,7 +48,7 @@ export function TopicsScreen() {
         ) : (
           <>
             <p className="section-title">{t('topics.title')}</p>
-            <div className="stack">
+            <div className="stack stagger">
               {available.map((topic) => {
                 const best = bestScore(profile.attempts, topic.id);
                 const attempts = profile.attempts.filter((a) => a.topicId === topic.id).length;
@@ -99,7 +99,7 @@ export function TopicsScreen() {
         {games.length > 0 ? (
           <>
             <p className="section-title">{t('topics.game')}</p>
-            <div className="stack">
+            <div className="stack stagger">
               {games.map((g) => (
                 <button
                   key={g.id}

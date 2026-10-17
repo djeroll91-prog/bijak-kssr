@@ -11,6 +11,8 @@ import { subjectName, yearLabel } from '../lib/i18n';
 import { ALL_TOPICS, topicsFor } from '../data/catalog';
 import { BADGES, badgeName } from '../data/badges';
 import { profileStats } from '../lib/storage';
+import { sound } from '../lib/audio';
+import { DIAGNOSTIC_TOPIC_ID, diagnosticRows, planProgress, practisedTopicCount } from '../lib/plan';
 import type { SubjectId } from '../data/types';
 
 type Range = 7 | 15 | 30;
@@ -20,12 +22,21 @@ export function ProgressScreen() {
   const t = useT();
   const [range, setRange] = useState<Range>(15);
 
-  const stats = useMemo(() => (profile ? profileStats(profile) : null), [profile]);
+  // Percubaan latihan sebenar sahaja; ringkasan diagnosis dipaparkan berasingan.
+  const practice = useMemo(
+    () => (profile ? profile.attempts.filter((a) => a.topicId !== DIAGNOSTIC_TOPIC_ID) : []),
+    [profile],
+  );
 
-  const sessions = useMemo(() => {
-    if (!profile) return [];
-    return profile.attempts.slice(-range);
-  }, [profile, range]);
+  const stats = useMemo(
+    () => (profile ? profileStats({ ...profile, attempts: practice }) : null),
+    [profile, practice],
+  );
+
+  const diagRows = useMemo(() => diagnosticRows(profile?.diagnostic), [profile?.diagnostic]);
+  const planProgressValue = useMemo(() => planProgress(profile?.plan), [profile?.plan]);
+
+  const sessions = useMemo(() => practice.slice(-range), [practice, range]);
 
   const trend = useMemo(
     () =>
@@ -40,29 +51,29 @@ export function ProgressScreen() {
   const bySubject = useMemo(() => {
     if (!profile) return [];
     return SUBJECTS.map((s) => {
-      const rel = profile.attempts.filter((a) => a.subject === s.id && a.total > 0);
+      const rel = practice.filter((a) => a.subject === s.id && a.total > 0);
       const avg = rel.length > 0 ? Math.round(rel.reduce((sum, a) => sum + (a.correct / a.total) * 100, 0) / rel.length) : 0;
       return { id: s.id, name: subjectName(lang, s.id, s.name), emoji: s.emoji, colour: s.color, avg, count: rel.length };
     }).filter((x) => x.count > 0);
-  }, [profile, lang]);
+  }, [practice, lang]);
 
   /** Prestasi ikut darjah. */
   const byYear = useMemo(() => {
     if (!profile) return [];
     return ([1, 2, 3, 4, 5, 6] as const)
       .map((y) => {
-        const rel = profile.attempts.filter((a) => a.year === y && a.total > 0);
+        const rel = practice.filter((a) => a.year === y && a.total > 0);
         const avg = rel.length > 0 ? Math.round(rel.reduce((sum, a) => sum + (a.correct / a.total) * 100, 0) / rel.length) : 0;
         return { year: y, avg, count: rel.length };
       })
       .filter((x) => x.count > 0);
-  }, [profile]);
+  }, [practice]);
 
   /** Penguasaan setiap topik (purata markah). */
   const mastery = useMemo(() => {
     if (!profile) return [];
     const map = new Map<string, { total: number; count: number }>();
-    for (const a of profile.attempts) {
+    for (const a of practice) {
       if (a.total === 0) continue;
       const cur = map.get(a.topicId) ?? { total: 0, count: 0 };
       cur.total += (a.correct / a.total) * 100;
@@ -82,17 +93,17 @@ export function ProgressScreen() {
         };
       })
       .sort((a, b) => b.avg - a.avg);
-  }, [profile]);
+  }, [practice]);
 
   const totalStars = useMemo(
-    () => (profile ? profile.attempts.reduce((s, a) => s + (a.correct === a.total && a.total > 0 ? 3 : a.total > 0 && a.correct / a.total >= 0.8 ? 2 : a.total > 0 && a.correct / a.total >= 0.6 ? 1 : 0), 0) : 0),
-    [profile],
+    () => practice.reduce((s, a) => s + (a.correct === a.total && a.total > 0 ? 3 : a.total > 0 && a.correct / a.total >= 0.8 ? 2 : a.total > 0 && a.correct / a.total >= 0.6 ? 1 : 0), 0),
+    [practice],
   );
 
   if (!profile || !stats) return null;
 
   const yearTopicCount = ALL_TOPICS.filter((x) => x.year === profile.year).length;
-  const overallPct = yearTopicCount > 0 ? (new Set(profile.attempts.map((a) => a.topicId)).size / yearTopicCount) * 100 : 0;
+  const overallPct = yearTopicCount > 0 ? (practisedTopicCount(profile) / yearTopicCount) * 100 : 0;
   const bestSubject = bySubject.length > 0 ? bySubject.reduce((a, b) => (a.avg >= b.avg ? a : b)) : null;
   const weakSubject = bySubject.length > 0 ? bySubject.reduce((a, b) => (a.avg <= b.avg ? a : b)) : null;
 
@@ -101,7 +112,7 @@ export function ProgressScreen() {
       ? trend[trend.length - 1].value - trend[0].value
       : 0;
 
-  if (profile.attempts.length === 0) {
+  if (practice.length === 0 && !profile.diagnostic) {
     return (
       <div className="screen">
         <TopBar onBack={back} title={t('progress.title')} />
@@ -124,7 +135,7 @@ export function ProgressScreen() {
               <div>
                 <b style={{ fontSize: '0.95rem', fontWeight: 900 }}>{t('progress.overview')}</b>
                 <p className="tiny muted">
-                  {new Set(profile.attempts.map((a) => a.topicId)).size}/{yearTopicCount} {t('subjects.topics')}
+                  {practisedTopicCount(profile)}/{yearTopicCount} {t('subjects.topics')}
                 </p>
               </div>
             </div>
@@ -149,6 +160,76 @@ export function ProgressScreen() {
             </span>
           </div>
         </div>
+
+        {/* Program belajar: diagnosis + pelan + laporan */}
+        <p className="section-title">🗺️ {t('plan.title')}</p>
+        <div className="card">
+          <div className="row-between">
+            <div className="row">
+              <ProgressRing value={planProgressValue.pct} size={48} />
+              <div>
+                <b style={{ fontSize: '0.9rem', fontWeight: 900 }}>
+                  {profile.plan
+                    ? t('plan.dayOf', { n: planProgressValue.activeDay + 1, t: 7 })
+                    : t('plan.noPlanTitle')}
+                </b>
+                <p className="tiny muted">
+                  {profile.plan
+                    ? `${planProgressValue.done}/${planProgressValue.total} ${t('plan.tasksDone')}`
+                    : t('plan.noPlanDesc')}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="row wrap" style={{ gap: 8, marginTop: 12 }}>
+            <button
+              type="button"
+              className="chip chip-brand"
+              onClick={() => {
+                sound.play('pop');
+                go({ screen: 'plan' });
+              }}
+            >
+              🗺️ {t('plan.title')}
+            </button>
+            <button
+              type="button"
+              className="chip"
+              onClick={() => {
+                sound.play('pop');
+                go({ screen: 'diagnostic' });
+              }}
+            >
+              🧭 {t('diag.retake')}
+            </button>
+            <button
+              type="button"
+              className="chip"
+              onClick={() => {
+                sound.play('pop');
+                go({ screen: 'report' });
+              }}
+            >
+              📄 {t('report.title')}
+            </button>
+          </div>
+        </div>
+
+        {diagRows.length > 0 ? (
+          <>
+            <p className="section-title">🧭 {t('diag.byTopic')}</p>
+            <div className="card">
+              <BarList
+                rows={diagRows.map((r) => ({
+                  label: r.title,
+                  value: r.pct,
+                  colour: r.pct >= 80 ? 'var(--success)' : r.pct >= 60 ? 'var(--warn)' : 'var(--danger)',
+                  suffix: '%',
+                }))}
+              />
+            </div>
+          </>
+        ) : null}
 
         {/* Trend markah */}
         <p className="section-title">{t('progress.trend')}</p>
@@ -280,7 +361,7 @@ export function ProgressScreen() {
         {/* Latihan terkini */}
         <p className="section-title">{t('progress.recent')}</p>
         <div className="stack">
-          {[...profile.attempts]
+          {[...practice]
             .reverse()
             .slice(0, 8)
             .map((a) => {

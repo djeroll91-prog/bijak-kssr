@@ -5,7 +5,19 @@
  * membolehkan aplikasi dikemas kini tanpa kehilangan rekod lama.
  */
 
-import type { AppData, Attempt, Profile, Settings, YearNum } from '../data/types';
+import type {
+  AppData,
+  Attempt,
+  DiagnosticItem,
+  DiagnosticResult,
+  PlanTask,
+  PlanTaskKind,
+  Profile,
+  Settings,
+  StudyPlan,
+  SubjectId,
+  YearNum,
+} from '../data/types';
 
 const KEY = 'bijak-kssr/v1';
 export const SCHEMA_VERSION = 1;
@@ -45,6 +57,8 @@ export function newProfile(name: string, avatar: string, year: YearNum): Profile
     stars: 0,
     points: 0,
     seenTopics: [],
+    diagnostic: null,
+    plan: null,
   };
 }
 
@@ -84,6 +98,69 @@ function clampYear(n: number): YearNum {
   return v as YearNum;
 }
 
+function repairDiagnostic(raw: unknown): DiagnosticResult | null {
+  if (!isObj(raw)) return null;
+  const items: DiagnosticItem[] = Array.isArray(raw.items)
+    ? raw.items
+        .map((it): DiagnosticItem | null => {
+          if (!isObj(it)) return null;
+          const total = Number(it.total);
+          if (!Number.isFinite(total) || total <= 0) return null;
+          return {
+            topicId: typeof it.topicId === 'string' ? it.topicId : 'unknown',
+            subject: (it.subject as SubjectId) ?? 'matematik',
+            title: typeof it.title === 'string' ? it.title : 'Topik',
+            correct: Math.max(0, Math.min(Number(it.correct) || 0, total)),
+            total,
+          };
+        })
+        .filter((it): it is DiagnosticItem => it !== null)
+    : [];
+  if (items.length === 0) return null;
+  return {
+    ts: Number(raw.ts) || Date.now(),
+    year: clampYear(Number(raw.year)),
+    items,
+    correct: Math.max(0, Number(raw.correct) || items.reduce((s, it) => s + it.correct, 0)),
+    total: Math.max(1, Number(raw.total) || items.reduce((s, it) => s + it.total, 0)),
+    seconds: Math.max(0, Number(raw.seconds) || 0),
+  };
+}
+
+const PLAN_KINDS: PlanTaskKind[] = ['learn', 'practice', 'remedial', 'game'];
+
+function repairPlan(raw: unknown): StudyPlan | null {
+  if (!isObj(raw)) return null;
+  const tasks: PlanTask[] = Array.isArray(raw.tasks)
+    ? raw.tasks
+        .map((t, i): PlanTask | null => {
+          if (!isObj(t) || typeof t.topicId !== 'string') return null;
+          const kind = PLAN_KINDS.includes(t.kind as PlanTaskKind) ? (t.kind as PlanTaskKind) : 'practice';
+          return {
+            id: typeof t.id === 'string' ? t.id : `t-${i}`,
+            dayIndex: Math.max(0, Math.min(6, Math.round(Number(t.dayIndex) || 0))),
+            topicId: t.topicId,
+            kind,
+            minutes: Math.max(3, Math.min(30, Math.round(Number(t.minutes) || 10))),
+            done: t.done === true,
+          };
+        })
+        .filter((t): t is PlanTask => t !== null)
+    : [];
+  if (tasks.length === 0) return null;
+  const strings = (v: unknown): string[] =>
+    Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
+  return {
+    createdAt: Number(raw.createdAt) || Date.now(),
+    year: clampYear(Number(raw.year)),
+    focusTopicIds: strings(raw.focusTopicIds),
+    weakTopicIds: strings(raw.weakTopicIds),
+    tasks,
+    focusSeconds: Math.max(0, Number(raw.focusSeconds) || 0),
+    lastFocusDate: typeof raw.lastFocusDate === 'string' ? raw.lastFocusDate : todayKey(),
+  };
+}
+
 function repairProfile(raw: unknown): Profile | null {
   if (!isObj(raw)) return null;
   const attempts = Array.isArray(raw.attempts)
@@ -104,6 +181,8 @@ function repairProfile(raw: unknown): Profile | null {
     seenTopics: Array.isArray(raw.seenTopics)
       ? raw.seenTopics.filter((t): t is string => typeof t === 'string')
       : [],
+    diagnostic: repairDiagnostic(raw.diagnostic),
+    plan: repairPlan(raw.plan),
   };
 }
 

@@ -1,6 +1,6 @@
 /** Kerangka aplikasi: navigasi, penghalaan skrin dan kesan global. */
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, type ReactNode } from 'react';
 import { StoreProvider, useStore, useT } from './state/store';
 import { Onboarding } from './screens/Onboarding';
 import { HomeScreen } from './screens/Home';
@@ -13,16 +13,26 @@ import { ProgressScreen } from './screens/Progress';
 import { BadgesScreen } from './screens/Badges';
 import { ProfileScreen } from './screens/Profile';
 import { GamesScreen, GameScreen } from './screens/Games';
+import { PlanScreen } from './screens/Plan';
+import { DiagnosticScreen } from './screens/Diagnostic';
+import { ReportScreen } from './screens/Report';
 import { sound } from './lib/audio';
 import type { ScreenId } from './state/store';
 
 const NAV_ITEMS: { id: ScreenId; icon: string; labelKey: string }[] = [
   { id: 'home', icon: '🏠', labelKey: 'nav.home' },
   { id: 'subjects', icon: '📚', labelKey: 'nav.subjects' },
+  { id: 'plan', icon: '🗺️', labelKey: 'nav.plan' },
   { id: 'games', icon: '🎮', labelKey: 'nav.games' },
   { id: 'progress', icon: '📊', labelKey: 'nav.progress' },
   { id: 'profile', icon: '🙂', labelKey: 'nav.profile' },
 ];
+
+/** Skrin yang berkongsi tab "Subjek" pada navigasi bawah. */
+const SUBJECT_TABS: ScreenId[] = ['topics', 'notes'];
+
+/** Skrin yang berkongsi tab "Pelan" pada navigasi bawah. */
+const PLAN_TABS: ScreenId[] = ['diagnostic', 'report'];
 
 function BottomNav() {
   const { nav, go } = useStore();
@@ -40,7 +50,13 @@ function BottomNav() {
           key={item.id}
           type="button"
           className="nav-item"
-          data-active={nav.screen === item.id || (item.id === 'subjects' && ['topics', 'notes'].includes(nav.screen)) ? 'true' : 'false'}
+          data-active={
+            nav.screen === item.id ||
+            (item.id === 'subjects' && SUBJECT_TABS.includes(nav.screen)) ||
+            (item.id === 'plan' && PLAN_TABS.includes(nav.screen))
+              ? 'true'
+              : 'false'
+          }
           aria-current={nav.screen === item.id ? 'page' : undefined}
           onClick={() => {
             sound.play('tap');
@@ -54,6 +70,18 @@ function BottomNav() {
         </button>
       ))}
     </nav>
+  );
+}
+
+/**
+ * Bungkus skrin dengan animasi masuk supaya peralihan halaman terasa hidup.
+ * Kunci berubah mengikut skrin, jadi setiap peralihan mencetuskan animasi.
+ */
+function ScreenStage({ screen, children }: { screen: ScreenId; children: ReactNode }) {
+  return (
+    <div className="screen-stage" key={screen} data-screen={screen}>
+      {children}
+    </div>
   );
 }
 
@@ -71,17 +99,22 @@ function Router() {
 
   return (
     <div className="phone">
-      {nav.screen === 'home' ? <HomeScreen /> : null}
-      {nav.screen === 'subjects' ? <SubjectsScreen /> : null}
-      {nav.screen === 'topics' ? <TopicsScreen /> : null}
-      {nav.screen === 'notes' ? <NotesScreen /> : null}
-      {nav.screen === 'quiz' ? <QuizScreen /> : null}
-      {nav.screen === 'result' ? <ResultScreen /> : null}
-      {nav.screen === 'progress' ? <ProgressScreen /> : null}
-      {nav.screen === 'badges' ? <BadgesScreen /> : null}
-      {nav.screen === 'profile' ? <ProfileScreen /> : null}
-      {nav.screen === 'games' ? <GamesScreen /> : null}
-      {nav.screen === 'game' ? <GameScreen onScore={saveScore} /> : null}
+      <ScreenStage screen={nav.screen}>
+        {nav.screen === 'home' ? <HomeScreen /> : null}
+        {nav.screen === 'subjects' ? <SubjectsScreen /> : null}
+        {nav.screen === 'topics' ? <TopicsScreen /> : null}
+        {nav.screen === 'notes' ? <NotesScreen /> : null}
+        {nav.screen === 'quiz' ? <QuizScreen /> : null}
+        {nav.screen === 'result' ? <ResultScreen /> : null}
+        {nav.screen === 'progress' ? <ProgressScreen /> : null}
+        {nav.screen === 'badges' ? <BadgesScreen /> : null}
+        {nav.screen === 'profile' ? <ProfileScreen /> : null}
+        {nav.screen === 'games' ? <GamesScreen /> : null}
+        {nav.screen === 'game' ? <GameScreen onScore={saveScore} /> : null}
+        {nav.screen === 'plan' ? <PlanScreen /> : null}
+        {nav.screen === 'diagnostic' ? <DiagnosticScreen /> : null}
+        {nav.screen === 'report' ? <ReportScreen /> : null}
+      </ScreenStage>
 
       <BottomNav />
 
