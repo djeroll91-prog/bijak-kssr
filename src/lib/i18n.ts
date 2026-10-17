@@ -28,6 +28,7 @@ const MS: Dict = {
   'nav.games': 'Permainan',
   'nav.progress': 'Kemajuan',
   'nav.profile': 'Profil',
+  'nav.mainLabel': 'Navigasi utama',
 
   // Home
   'home.hi': 'Hai',
@@ -533,6 +534,7 @@ const EN: Dict = {
   'nav.games': 'Games',
   'nav.progress': 'Progress',
   'nav.profile': 'Profile',
+  'nav.mainLabel': 'Main navigation',
 
   'home.hi': 'Hi',
   'home.letsLearn': "Let's learn today!",

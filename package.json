@@ -1,7 +1,7 @@
 {
   "name": "bijak-kssr",
   "private": true,
-  "version": "1.10.0",
+  "version": "1.11.0",
   "type": "module",
   "description": "Bijak KSSR - Aplikasi pembelajaran interaktif untuk murid Tahun 1 hingga Tahun 6 (KSSR Semakan, KPM Malaysia)",
   "scripts": {

@@ -130,9 +130,12 @@ const apkHtml = apk.doc.documentElement;
 check('APK: data-shell = apk', apkHtml.dataset.shell === 'apk', apkHtml.dataset.shell);
 check('APK: data-layout dikunci kepada phone', apkHtml.dataset.layout === 'phone', apkHtml.dataset.layout);
 check('APK: tiada ralat JS', apk.errors.length === 0, apk.errors.slice(0, 1).join(''));
-check('APK: bar sisi tidak dipaparkan (kelas wujud tetapi CSS sembunyi)',
-  apk.doc.querySelectorAll('.side-nav').length === 1,
-  `${apk.doc.querySelectorAll('.side-nav').length}`);
+check('APK: bar tab atas tidak dipaparkan (dirender tetapi CSS sembunyi)',
+  apk.doc.querySelectorAll('.web-nav').length === 1 && css.includes('[data-layout=phone].web-nav{display:none!important}'),
+  `${apk.doc.querySelectorAll('.web-nav').length} + peraturan CSS`);
+check('APK: nav bawah telefon dirender',
+  apk.doc.querySelectorAll('.bottom-nav').length === 1,
+  `${apk.doc.querySelectorAll('.bottom-nav').length}`);
 check('APK: kawalan susun atur web disembunyikan',
   css.includes('[data-shell=apk][data-web-only=true]'),
   'peraturan CSS ada');
@@ -143,33 +146,39 @@ const webHtml = web.doc.documentElement;
 check('Web: data-shell = web', webHtml.dataset.shell === 'web', webHtml.dataset.shell);
 check('Web: data-layout = auto', webHtml.dataset.layout === 'auto', webHtml.dataset.layout);
 check('Web: tiada ralat JS', web.errors.length === 0, web.errors.slice(0, 1).join(''));
-check('Web: bar sisi dirender dalam DOM', web.doc.querySelectorAll('.side-nav').length === 1,
-  `${web.doc.querySelectorAll('.side-nav').length}`);
+check('Web: bar tab atas dirender dalam DOM', web.doc.querySelectorAll('.web-nav').length === 1,
+  `${web.doc.querySelectorAll('.web-nav').length}`);
 
-// Item bar sisi sepadan dengan tab nav bawah (kesinambungan tingkah laku).
-const sideItems = web.doc.querySelectorAll('.side-nav .side-nav-item').length;
-check('Web: bar sisi ada 6 item navigasi', sideItems === 6, `${sideItems}`);
+// Tab sepadan dengan nav bawah (kesinambungan tingkah laku).
+const topTabs = web.doc.querySelectorAll('.web-nav .web-tab').length;
+check('Web: bar tab atas ada 6 tab', topTabs === 6, `${topTabs}`);
 
-// Nama murid muncul dalam bar sisi.
-const who = web.doc.querySelector('.side-nav-who .nm')?.textContent?.trim();
-check('Web: nama murid dalam bar sisi', who === 'Aisyah', who || 'tiada');
+// Label tab diambil daripada i18n (BM).
+const firstTab = web.doc.querySelector('.web-nav .web-tab')?.textContent?.trim();
+check('Web: label tab pertama = Utama', firstTab === '🏠Utama', firstTab || 'tiada');
 
-// Tahun dipaparkan dalam bar sisi.
-const yr = web.doc.querySelector('.side-nav-who .yr')?.textContent?.trim();
-check('Web: tahun murid dalam bar sisi', yr === 'Tahun 1', yr || 'tiada');
+// Nama murid muncul dalam bar atas.
+const who = web.doc.querySelector('.web-nav-who .nm')?.textContent?.trim();
+check('Web: nama murid dalam bar atas', who === 'Aisyah', who || 'tiada');
 
-// ---- 3. CSS desktop hadir dan dijaga ----
-check('CSS: media query desktop (min-width: 1024px) ada', css.includes('min-width:1024px'));
-check('CSS: peraturan desktop dijaga oleh :root:not([data-layout=phone])',
+// Tahun dipaparkan dalam bar atas.
+const yr = web.doc.querySelector('.web-nav-who .yr')?.textContent?.trim();
+check('Web: tahun murid dalam bar atas', yr === 'Tahun 1', yr || 'tiada');
+
+// ---- 3. CSS web hadir dan dijaga ----
+check('CSS: media query web (min-width: 1024px) ada', css.includes('min-width:1024px'));
+check('CSS: peraturan web dijaga oleh :root:not([data-layout=phone])',
   css.includes(':root:not([data-layout=phone])'), 'guard ada');
-check('CSS: bar sisi 248px dalam grid', css.includes('grid-template-columns:248pxminmax(0,1fr)'));
-check('CSS: grid berbilang kolum untuk senarai', css.includes('repeat(auto-fill,minmax(320px,1fr))'));
-check('CSS: grid hanya apabila bar sisi wujud (:has)',
-  css.includes(':has(>.side-nav)'), 'guard :has ada');
-check('CSS: overlay tetap diimbangi untuk bar sisi',
-  css.includes('calc(50%+124px)'), 'offset ada');
-check('CSS: skrin soalan kekal satu kolum',
+check('CSS: bar tab atas melekat (position:sticky)',
+  css.includes('.web-nav{display:none}') && css.includes('position:sticky'),
+  'sticky ada');
+check('CSS: bingkai telefon 460px dibuka pada web',
+  css.includes('max-width:none') && css.includes('.app-shell.phone'), 'bingkai dibuka');
+check('CSS: grid berbilang kolum untuk senarai', css.includes('repeat(auto-fill,minmax(340px,1fr))'));
+check('CSS: nav bawah disembunyikan pada web', css.includes('.bottom-nav{display:none}'));
+check('CSS: skrin fokus kekal satu kolum',
   css.includes('data-screen=quiz].screen-scroll>.stack'), 'kekangan ada');
+check('CSS: tiada lagi bar sisi lama', !css.includes('.side-nav'), 'sidebar dibuang');
 
 // ---- 4. Pilihan susun atur dalam profil ----
 const click = (el) => {

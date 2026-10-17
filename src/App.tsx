@@ -47,7 +47,7 @@ function BottomNav() {
   if (hidden.includes(nav.screen)) return null;
 
   return (
-    <nav className="bottom-nav" aria-label="Navigasi utama">
+    <nav className="bottom-nav" aria-label={t('nav.mainLabel')}>
       {NAV_ITEMS.map((item) => (
         <button
           key={item.id}
@@ -77,11 +77,15 @@ function BottomNav() {
 }
 
 /**
- * Bar sisi untuk susun atur desktop (skrin lebar dalam pelayar). Menggunakan
- * senarai navigasi yang sama seperti nav bawah, jadi tingkah laku konsisten.
- * Disembunyikan oleh CSS pada telefon dan dalam APK.
+ * Navigasi utama untuk susun atur web (skrin lebar).
+ *
+ * Bar sisi lama digantikan dengan **bar tab di atas**: jenama di kiri,
+ * tab mendatar di tengah, dan ringkasan murid di kanan. Ia melekat pada
+ * atas tetingkap (`position: sticky`) supaya tab sentiasa boleh dicapai
+ * semasa menatal. Menggunakan senarai navigasi yang sama seperti nav bawah,
+ * jadi tingkah laku konsisten.
  */
-function SideNav() {
+function WebNav() {
   const { nav, go, profile, lang } = useStore();
   const t = useT();
 
@@ -91,8 +95,8 @@ function SideNav() {
     (id === 'plan' && PLAN_TABS.includes(nav.screen));
 
   return (
-    <nav className="side-nav" aria-label="Navigasi utama">
-      <div className="side-nav-brand">
+    <header className="web-nav">
+      <div className="web-nav-brand">
         <span className="mark" aria-hidden="true">
           🎒
         </span>
@@ -102,41 +106,41 @@ function SideNav() {
         </div>
       </div>
 
-      {NAV_ITEMS.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          className="side-nav-item"
-          data-active={active(item.id) ? 'true' : 'false'}
-          aria-current={nav.screen === item.id ? 'page' : undefined}
-          onClick={() => {
-            sound.play('tap');
-            go({ screen: item.id });
-          }}
-        >
-          <span className="ico" aria-hidden="true">
-            {item.icon}
-          </span>
-          {t(item.labelKey)}
-        </button>
-      ))}
+      <nav className="web-tabs" aria-label={t('nav.mainLabel')}>
+        {NAV_ITEMS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className="web-tab"
+            data-active={active(item.id) ? 'true' : 'false'}
+            aria-current={nav.screen === item.id ? 'page' : undefined}
+            onClick={() => {
+              sound.play('tap');
+              go({ screen: item.id });
+            }}
+          >
+            <span className="ico" aria-hidden="true">
+              {item.icon}
+            </span>
+            {t(item.labelKey)}
+          </button>
+        ))}
+      </nav>
 
       {profile ? (
-        <div className="side-nav-foot">
-          <div className="side-nav-who">
-            <span className="avatar" aria-hidden="true">
-              {profile.avatar}
-            </span>
-            <div>
-              <div className="nm">{profile.name}</div>
-              <div className="yr">
-                {lang === 'en' ? `Year ${profile.year}` : `Tahun ${profile.year}`}
-              </div>
+        <div className="web-nav-who">
+          <span className="avatar" aria-hidden="true">
+            {profile.avatar}
+          </span>
+          <div className="who-text">
+            <div className="nm">{profile.name}</div>
+            <div className="yr">
+              {lang === 'en' ? `Year ${profile.year}` : `Tahun ${profile.year}`}
             </div>
           </div>
         </div>
       ) : null}
-    </nav>
+    </header>
   );
 }
 
@@ -166,7 +170,7 @@ function Router() {
 
   return (
     <div className="phone">
-      <SideNav />
+      <WebNav />
       <ScreenStage screen={nav.screen}>
         {nav.screen === 'home' ? <HomeScreen /> : null}
         {nav.screen === 'subjects' ? <SubjectsScreen /> : null}

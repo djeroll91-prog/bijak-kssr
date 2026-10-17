@@ -250,11 +250,12 @@ Contoh pembetulan yang telah dibuat: `ketik` ŌåÆ `tekan`, `tukat` ŌåÆ `tuk
 `Paute` ŌåÆ `Pautan`. Sebelum terbit, imbas `src/lib/i18n.ts` dan `src/data/`
 untuk perkataan Indonesia (unduh, unggah, pengaturan, kirim, soal, dll.).
 
-## Susun atur: telefon (APK) lwn desktop (web)
+## Susun atur: telefon (APK) lwn web penuh (pelayar)
 
 Aplikasi direka sebagai UI telefon: `.phone` dalam `src/App.tsx` dihadkan
-`max-width: 460px`. Sejak v1.10.0, **pelayar web** mendapat susun atur desktop
-(bar sisi + kandungan berbilang kolum), manakala **APK Android kekal telefon**.
+`max-width: 460px`. Sejak v1.11.0, **pelayar web skrin lebar** mendapat susun
+atur web penuh — bingkai telefon dibuka, **bar tab melekat di atas**, dan
+kandungan berbilang kolum — manakala **APK Android kekal telefon**.
 
 Kunci kepada ini ialah dua atribut pada `<html>`, ditetapkan awal dalam
 `src/main.tsx` sebelum React dipasang:
@@ -267,11 +268,17 @@ Kunci kepada ini ialah dua atribut pada `<html>`, ditetapkan awal dalam
   pilihan yang disimpan di `localStorage['bijak-kssr/screen-layout']`, jika
   tidak lalai `auto`.
 
-Semua peraturan desktop dalam `src/styles/theme.css` (bahagian akhir fail,
-`@media (min-width: 1024px)`) dijaga dengan
-`:root:not([data-layout='phone'])`, dan grid dua kolum tambahan dijaga dengan
-`:has(> .side-nav)` supaya onboarding (tiada bar sisi) tidak runtuh ke kolum
-248px. Peraturan desktop **tidak** terpakai kepada APK pada bila-bila masa.
+Navigasi web ialah komponen `WebNav` (bukan lagi `SideNav`): satu `<header>`
+dengan jenama, tab mendatar (`.web-tab`, satu per `NAV_ITEMS`), dan ringkasan
+murid di kanan. Ia `position: sticky; top: 0` supaya tab sentiasa boleh dicapai
+semasa menatal. Nav bawah telefon (`.bottom-nav`) disembunyikan pada web.
+
+Semua peraturan web dalam `src/styles/theme.css` (bahagian akhir fail,
+`@media (min-width: 1024px)`) dijaga dengan `:root:not([data-layout='phone'])`.
+Skrin senarai mendapat grid `repeat(auto-fill, minmax(340px, 1fr))`; skrin fokus
+(kuiz, nota, keputusan, diagnostik) dikekang kepada satu kolum berpusat
+(`max-width: 960px`) supaya ukuran bacaan kekal selesa. Peraturan web **tidak**
+terpakai kepada APK pada bila-bila masa.
 
 `src/lib/layout.ts` mengeksport `shellChannel` dan `useScreenLayout()` untuk
 komponen. Kawalan pilihan susun atur ada dalam skrin Profil dan ditanda
