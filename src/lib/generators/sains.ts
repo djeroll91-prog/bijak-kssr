@@ -214,8 +214,203 @@ function sn1BumiAsasBinaan(_y: number, rng: Rng, count: number): Question[] {
 }
 
 /* ------------------------------------------------------------------ */
+/* Tahun 1 (sambungan)                                                 */
+/* ------------------------------------------------------------------ */
+
+function sn1KemahiranSaintifik(_y: number, rng: Rng, count: number): Question[] {
+  const skills = [
+    { t: 'Memerhati', d: 'Menggunakan deria untuk mengkaji objek', e: '👁️' },
+    { t: 'Mengelas', d: 'Mengumpulkan objek mengikut ciri yang sama', e: '🗂️' },
+    { t: 'Mengukur', d: 'Menggunakan nombor dan alat ukur', e: '📏' },
+    { t: 'Berkomunikasi', d: 'Menyampaikan maklumat kepada orang lain', e: '🗣️' },
+  ];
+  const rules = [
+    'Jangan makan atau minum di dalam bilik sains',
+    'Dengar arahan guru dengan teliti',
+    'Jangan berlari di dalam bilik sains',
+    'Cuci tangan selepas menjalankan eksperimen',
+  ];
+  const notRules = [
+    'Boleh makan sambil bereksperimen',
+    'Boleh berlari-lari di dalam bilik sains',
+    'Boleh rasa semua bahan kimia',
+    'Boleh tinggalkan alat tanpa dibersihkan',
+  ];
+  return fill(count, (i) => {
+    const mode = i % 4;
+    if (mode === 0) {
+      const s = rng.pick(skills);
+      return mcq(rng, {
+        prefix: 'sn1-skill',
+        prompt: `${s.e} Apakah maksud kemahiran "${s.t}"?`,
+        answer: s.d,
+        distractors: skills.filter((x) => x.t !== s.t).map((x) => x.d),
+        explanation: `"${s.t}": ${s.d.toLowerCase()}.`,
+        emoji: '🔬',
+        cols: 1,
+        speak: `Apakah maksud kemahiran ${s.t}?`,
+      });
+    }
+    if (mode === 1) {
+      const picked = rng.sample(skills, 3);
+      return match({
+        prefix: 'sn1-skill',
+        prompt: 'Padankan kemahiran proses sains dengan maksudnya.',
+        pairs: picked.map((s) => ({ left: s.t, right: s.d })),
+        explanation: 'Kemahiran proses sains membantu kita menjalankan penyiasatan.',
+        emoji: '🧭',
+      });
+    }
+    if (mode === 2) {
+      const good = rng.chance(0.5);
+      const r = good ? rng.pick(rules) : rng.pick(notRules);
+      return trueFalse({
+        prefix: 'sn1-rules',
+        prompt: `Peraturan bilik sains: "${r}."`,
+        isTrue: good,
+        explanation: good
+          ? 'Betul! Peraturan ini menjaga keselamatan kita di bilik sains.'
+          : 'Salah. Peraturan ini berbahaya dan tidak boleh dilakukan di bilik sains.',
+        emoji: good ? '🦺' : '⚠️',
+      });
+    }
+    const s = rng.pick(skills);
+    return mcq(rng, {
+      prefix: 'sn1-skill',
+      prompt: `Kamu menggunakan deria untuk mengkaji sehelai daun. Kemahiran apakah ini?`,
+      answer: 'Memerhati',
+      distractors: skills.filter((x) => x.t !== 'Memerhati').map((x) => x.t),
+      explanation: 'Menggunakan deria untuk mengkaji objek dipanggil memerhati.',
+      emoji: s.e,
+      cols: 2,
+    });
+  });
+}
+
+/* ------------------------------------------------------------------ */
 /* Tahun 2                                                             */
 /* ------------------------------------------------------------------ */
+
+function sn2Elektrik(_y: number, rng: Rng, count: number): Question[] {
+  const components = [
+    { t: 'Mentol', d: 'Menyala apabila arus elektrik mengalir', e: '💡' },
+    { t: 'Bateri', d: 'Membekalkan tenaga elektrik', e: '🔋' },
+    { t: 'Wayar', d: 'Menghubungkan komponen litar', e: '🔌' },
+    { t: 'Suis', d: 'Membuka dan menutup litar', e: '🎚️' },
+  ];
+  const conductors = ['Paku besi', 'Duit syiling', 'Klip kertas', 'Grafit pensel'];
+  const insulators = ['Getah', 'Kertas', 'Plastik', 'Kayu', 'Kaca'];
+  return fill(count, (i) => {
+    const mode = i % 4;
+    if (mode === 0) {
+      const c = rng.pick(components);
+      return mcq(rng, {
+        prefix: 'sn2-elektrik',
+        prompt: `${c.e} Apakah fungsi ${c.t.toLowerCase()} dalam litar elektrik?`,
+        answer: c.d,
+        distractors: components.filter((x) => x.t !== c.t).map((x) => x.d),
+        explanation: `${c.t}: ${c.d.toLowerCase()}.`,
+        emoji: '⚡',
+        cols: 1,
+        speak: `Apakah fungsi ${c.t}?`,
+      });
+    }
+    if (mode === 1) {
+      const isConductor = rng.chance(0.5);
+      const o = isConductor ? rng.pick(conductors) : rng.pick(insulators);
+      return mcq(rng, {
+        prefix: 'sn2-elektrik',
+        prompt: `"${o}" ialah konduktor atau penebat elektrik?`,
+        answer: isConductor ? 'Konduktor' : 'Penebat',
+        distractors: ['Konduktor', 'Penebat'],
+        explanation: isConductor
+          ? `"${o}" ialah konduktor — mentol akan menyala apabila disambung dalam litar.`
+          : `"${o}" ialah penebat — mentol tidak menyala kerana elektrik tidak dapat mengalir.`,
+        emoji: isConductor ? '⚡' : '🚫',
+        cols: 2,
+        speak: `Adakah ${o} konduktor atau penebat?`,
+      });
+    }
+    if (mode === 2) {
+      const picked = rng.sample([...conductors, ...insulators], 3);
+      return match({
+        prefix: 'sn2-elektrik',
+        prompt: 'Padankan bahan dengan jenisnya.',
+        pairs: picked.map((o) => ({
+          left: o,
+          right: conductors.includes(o) ? 'Konduktor' : 'Penebat',
+        })),
+        explanation: 'Konduktor membenarkan elektrik mengalir; penebat tidak.',
+        emoji: '🔗',
+      });
+    }
+    const complete = rng.chance(0.5);
+    return trueFalse({
+      prefix: 'sn2-elektrik',
+      prompt: complete
+        ? 'Mentol menyala apabila litar elektrik lengkap.'
+        : 'Mentol menyala walaupun suis terbuka.',
+      isTrue: complete,
+      explanation: complete
+        ? 'Betul! Arus elektrik perlu laluan lengkap untuk menyalakan mentol.'
+        : 'Salah. Apabila suis terbuka, litar tidak lengkap dan mentol tidak menyala.',
+      emoji: '💡',
+    });
+  });
+}
+
+function sn2Campuran(_y: number, rng: Rng, count: number): Question[] {
+  const larut = ['Gula', 'Garam', 'Sirap', 'Madu', 'Serbuk koko'];
+  const takLarut = ['Pasir', 'Batu', 'Minyak', 'Serbuk kayu', 'Kacang'];
+  const cara = [
+    { t: 'Menapis', d: 'Mengasingkan pasir daripada air' },
+    { t: 'Menuras', d: 'Mengasingkan air daripada beras' },
+    { t: 'Menggunakan magnet', d: 'Mengasingkan besi daripada pasir' },
+    { t: 'Mengenap', d: 'Membiarkan pasir mendap di dasar' },
+  ];
+  return fill(count, (i) => {
+    const mode = i % 3;
+    if (mode === 0) {
+      const isLarut = rng.chance(0.5);
+      const b = isLarut ? rng.pick(larut) : rng.pick(takLarut);
+      return mcq(rng, {
+        prefix: 'sn2-campuran',
+        prompt: `"${b}" larut atau tidak larut dalam air?`,
+        answer: isLarut ? 'Larut' : 'Tidak larut',
+        distractors: ['Larut', 'Tidak larut'],
+        explanation: isLarut
+          ? `"${b}" larut dalam air — ia hilang apabila dikacau.`
+          : `"${b}" tidak larut dalam air — ia masih kelihatan.`,
+        emoji: isLarut ? '💧' : '🏖️',
+        cols: 2,
+        speak: `Adakah ${b} larut dalam air?`,
+      });
+    }
+    if (mode === 1) {
+      const c = rng.pick(cara);
+      return mcq(rng, {
+        prefix: 'sn2-campuran',
+        prompt: `Kaedah "${c.t}" digunakan untuk apa?`,
+        answer: c.d,
+        distractors: cara.filter((x) => x.t !== c.t).map((x) => x.d),
+        explanation: `${c.t}: ${c.d.toLowerCase()}.`,
+        emoji: '🥣',
+        cols: 1,
+      });
+    }
+    const picked = rng.sample([...larut, ...takLarut], 3);
+    return match({
+      prefix: 'sn2-campuran',
+      prompt: 'Padankan bahan dengan sifat larutnya dalam air.',
+      pairs: picked.map((b) => ({
+        left: b,
+        right: larut.includes(b) ? 'Larut' : 'Tidak larut',
+      })),
+      explanation: 'Bahan larut hilang dalam air; bahan tidak larut masih kelihatan.',
+      emoji: '🔗',
+    });
+  });
+}
 
 function sn2PembiakanTumbesaran(_y: number, rng: Rng, count: number): Question[] {
   const animals = [
@@ -1066,10 +1261,13 @@ function sn6BumiUntukKehidupan(_y: number, rng: Rng, count: number): Question[] 
 }
 
 export const SAINS_GENERATORS: Record<string, (y: number, r: Rng, c: number) => Question[]> = {
+  'sn1-kemahiran-saintifik': sn1KemahiranSaintifik,
   'sn1-deria-benda-hidup': sn1DeriaBendaHidup,
   'sn1-benda-hidup-bukan-hidup': sn1BendaHidupBukanHidup,
   'sn1-magnet-penyerapan': sn1MagnetPenyerapan,
   'sn1-bumi-asas-binaan': sn1BumiAsasBinaan,
+  'sn2-elektrik': sn2Elektrik,
+  'sn2-campuran': sn2Campuran,
   'sn2-pembiakan-tumbesaran': sn2PembiakanTumbesaran,
   'sn2-keperluan-manusia': sn2KeperluanManusia,
   'sn2-terang-gelap': sn2TerangGelap,

@@ -389,6 +389,77 @@ function mt1BentukRuang(year: number, rng: Rng, count: number): Question[] {
   });
 }
 
+function mt1UkuranSukatan(year: number, rng: Rng, count: number): Question[] {
+  void year;
+  const panjang = [
+    { a: 'Pensel', b: 'Pemadam', why: 'Pensel lebih panjang daripada pemadam.' },
+    { a: 'Meja', b: 'Buku', why: 'Meja lebih panjang daripada buku.' },
+    { a: 'Pembaris', b: 'Klip kertas', why: 'Pembaris lebih panjang daripada klip kertas.' },
+    { a: 'Tali', b: 'Benang', why: 'Tali lebih panjang daripada benang.' },
+  ];
+  const jisim = [
+    { a: 'Batu', b: 'Kapas', why: 'Batu lebih berat daripada kapas.' },
+    { a: 'Buku', b: 'Kertas', why: 'Buku lebih berat daripada sekeping kertas.' },
+    { a: 'Bola besi', b: 'Belon', why: 'Bola besi lebih berat daripada belon.' },
+    { a: 'Beg sekolah', b: 'Pensel', why: 'Beg sekolah lebih berat daripada pensel.' },
+  ];
+  const isipadu = [
+    { a: 'Baldi', b: 'Cawan', why: 'Baldi boleh memuatkan lebih banyak air daripada cawan.' },
+    { a: 'Balang', b: 'Sudu', why: 'Balang memuatkan lebih banyak air daripada sudu.' },
+    { a: 'Kolam', b: 'Mangkuk', why: 'Kolam memuatkan lebih banyak air daripada mangkuk.' },
+  ];
+  const unit = ['Jengkal', 'Depa', 'Kaki', 'Klip kertas', 'Pensel'];
+  return fill(count, (i) => {
+    const mode = i % 4;
+    if (mode === 0) {
+      const it = rng.pick(panjang);
+      return mcq(rng, {
+        prefix: 'mt1-ukur',
+        prompt: `Antara ${it.a.toLowerCase()} dan ${it.b.toLowerCase()}, yang manakah lebih panjang?`,
+        answer: it.a,
+        distractors: [it.b, 'Sama panjang', 'Tidak dapat diukur'],
+        explanation: it.why,
+        emoji: '📏',
+        cols: 2,
+        speak: `Yang mana lebih panjang?`,
+      });
+    }
+    if (mode === 1) {
+      const it = rng.pick(jisim);
+      return mcq(rng, {
+        prefix: 'mt1-ukur',
+        prompt: `Antara ${it.a.toLowerCase()} dan ${it.b.toLowerCase()}, yang manakah lebih berat?`,
+        answer: it.a,
+        distractors: [it.b, 'Sama berat', 'Tidak dapat ditimbang'],
+        explanation: it.why,
+        emoji: '⚖️',
+        cols: 2,
+        speak: `Yang mana lebih berat?`,
+      });
+    }
+    if (mode === 2) {
+      const it = rng.pick(isipadu);
+      return mcq(rng, {
+        prefix: 'mt1-ukur',
+        prompt: `Bekas manakah boleh memuatkan lebih banyak air?\n${it.a} atau ${it.b}`,
+        answer: it.a,
+        distractors: [it.b, 'Sama banyak', 'Kedua-duanya kosong'],
+        explanation: it.why,
+        emoji: '💧',
+        cols: 2,
+      });
+    }
+    const u = rng.pick(unit);
+    return trueFalse({
+      prefix: 'mt1-ukur',
+      prompt: `"${u}" ialah unit bukan piawai untuk mengukur panjang.`,
+      isTrue: true,
+      explanation: `"${u}" ialah unit bukan piawai kerana setiap orang mempunyai saiz yang berbeza.`,
+      emoji: '✋',
+    });
+  });
+}
+
 function mt1Data(year: number, rng: Rng, count: number): Question[] {
   void year;
   const fruits = [
@@ -859,6 +930,7 @@ export const MATEMATIK_GENERATORS: Record<string, (y: number, r: Rng, c: number)
   'mt1-pecahan-asas': mt1PecahanAsas,
   'mt1-wang': mt1Wang,
   'mt1-masa-waktu': mt1MasaWaktu,
+  'mt1-ukuran-sukatan': mt1UkuranSukatan,
   'mt1-bentuk-ruang': mt1BentukRuang,
   'mt1-data': mt1Data,
   'mt2-nombor-hingga-1000': mt2NomborHingga1000,

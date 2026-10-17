@@ -13,6 +13,23 @@ const G = {
 export const SAINS_TOPICS: Topic[] = [
   /* --------------------------- TAHUN 1 --------------------------- */
   {
+    id: 'sn1-kemahiran-saintifik',
+    year: 1,
+    subject: 'sains',
+    code: '1.0',
+    title: 'Kemahiran Saintifik',
+    emoji: '🔬',
+    summary: 'Kemahiran proses sains asas dan peraturan bilik sains.',
+    generator: 'sn1-kemahiran-saintifik',
+    games: [G.memory, G.word, G.order],
+    notes: [
+      { kind: 'tip', title: 'Kemahiran Proses Sains', body: 'Saintis menggunakan kemahiran khas untuk mengkaji dunia.', bullets: ['Memerhati — menggunakan deria', 'Mengelas — kumpulkan ikut ciri sama', 'Mengukur — guna nombor dan alat', 'Berkomunikasi — beritahu orang lain'] },
+      { kind: 'tip', title: 'Peraturan Bilik Sains', body: 'Bilik sains tempat belajar yang selamat jika kita patuh peraturan.', emojiRow: '🥼 🧤 🦺' },
+      { kind: 'example', title: 'Peraturan Penting', bullets: ['Jangan makan atau minum di bilik sains', 'Dengar arahan guru dengan teliti', 'Jangan berlari di dalam bilik sains', 'Cuci tangan selepas eksperimen'] },
+      { kind: 'fun', title: 'Jadi Saintis Kecil', body: 'Cuba perhati daun pokok di luar rumah. Berapa warna yang kamu nampak? Itulah kemahiran memerhati!', emojiRow: '🍃 🔍' },
+    ],
+  },
+  {
     id: 'sn1-deria-benda-hidup',
     year: 1,
     subject: 'sains',
@@ -140,6 +157,41 @@ export const SAINS_TOPICS: Topic[] = [
       { kind: 'tip', title: 'Bahan Berasid', body: 'Bahan berasid rasa masam. Contoh: limau, cuka, asam.', emojiRow: '🍋 🧃' },
       { kind: 'tip', title: 'Bahan Beralkali', body: 'Bahan beralkali rasa pahit dan licin. Contoh: sabun, ubat gigi.', emojiRow: '🧼 🦷' },
       { kind: 'example', title: 'Neutral', body: 'Air tulen, gula dan garam ialah bahan neutral — bukan asid, bukan alkali.' },
+    ],
+  },
+
+  {
+    id: 'sn2-elektrik',
+    year: 2,
+    subject: 'sains',
+    code: '7.0',
+    title: 'Elektrik',
+    emoji: '💡',
+    summary: 'Komponen litar elektrik, konduktor dan penebat.',
+    generator: 'sn2-elektrik',
+    games: [G.memory, G.word, G.speed],
+    notes: [
+      { kind: 'tip', title: 'Komponen Litar', body: 'Litar elektrik lengkap ada mentol, wayar, suis dan bateri.', emojiRow: '💡 🔌 🔋' },
+      { kind: 'tip', title: 'Konduktor dan Penebat', body: 'Konduktor membenarkan elektrik mengalir sehingga mentol menyala. Penebat tidak membenarkan elektrik mengalir.', emojiRow: '⚡ 🚫' },
+      { kind: 'example', title: 'Contoh Bahan', bullets: ['Konduktor: paku, duit syiling, klip kertas, pensel grafit', 'Penebat: getah, kertas, plastik, kayu'] },
+      { kind: 'fun', title: 'Selamat!', body: 'Jangan sesekali memasukkan jari atau benda logam ke dalam soket elektrik. Bahaya!', emojiRow: '⚠️ ⚡' },
+    ],
+  },
+  {
+    id: 'sn2-campuran',
+    year: 2,
+    subject: 'sains',
+    code: '8.0',
+    title: 'Campuran',
+    emoji: '🥣',
+    summary: 'Bahan larut dan tidak larut, serta cara mengasingkan campuran.',
+    generator: 'sn2-campuran',
+    games: [G.memory, G.order, G.word],
+    notes: [
+      { kind: 'tip', title: 'Bahan Larut', body: 'Bahan larut hilang apabila dikacau dalam air. Contoh: gula, garam, sirap.', emojiRow: '🍬 🧂 💧' },
+      { kind: 'tip', title: 'Bahan Tidak Larut', body: 'Bahan tidak larut masih kelihatan dalam air. Contoh: pasir, batu, minyak.', emojiRow: '🏖️ 🪨 🛢️' },
+      { kind: 'formula', title: 'Cara Mengasingkan', bullets: ['Menapis: asingkan pasir daripada air', 'Menuras: asingkan air daripada beras', 'Menggunakan magnet: asingkan besi daripada pasir'] },
+      { kind: 'fun', title: 'Cuba Ini', body: 'Masukkan sesudu gula ke dalam air dan kacau. Gula larut! Sekarang cuba pasir — pasir tidak larut.', emojiRow: '🥄 🧪' },
     ],
   },
 

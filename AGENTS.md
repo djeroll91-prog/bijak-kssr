@@ -1,4 +1,4 @@
-# AGENTS.md ŌĆö Bijak KSSR
+# AGENTS.md — Bijak KSSR
 
 Aplikasi pembelajaran luar talian untuk murid sekolah rendah Malaysia (Tahun 1ŌĆō6),
 mengikut silibus **KSSR Semakan 2017**. Web statik (Vite + React + TS + PWA) yang
@@ -35,7 +35,7 @@ bash scripts/build-apk.sh                      # bina dist/bijak-kssr.apk
    kelas bersarang yang dikompil dengan JDK 21. Versi 35.0.1 berfungsi.
 2. **Tiada Gradle diperlukan.** APK dibina terus dengan `aapt2 compile` ŌåÆ `aapt2 link`
    ŌåÆ `javac` ŌåÆ `d8` ŌåÆ `zipalign` ŌåÆ `apksigner`. Elak pergantungan muat turun besar.
-3. **`zip` tiada dalam imej ini** ŌĆö masukkan `classes.dex` ke dalam APK guna
+3. **`zip` tiada dalam imej ini** — masukkan `classes.dex` ke dalam APK guna
    `zipfile` Python (APK ialah fail ZIP biasa).
 4. **`/dev/kvm` tiada**, jadi emulator Android tidak boleh dijalankan. Sahkan APK
    secara statik sahaja: `aapt2 dump badging`, `apksigner verify`, `dexdump -f`,
@@ -93,36 +93,56 @@ Aplikasi ini mengikut **KSSR Semakan 2017**, dan itu masih betul untuk majoriti 
 "Teknologi dan Digital" ke katalog Tahun 1-6 sekarang — itu subjek KP2027 yang hanya
 terpakai kepada kohort Tahun 1 mulai 2027, bukan kepada pengguna semasa.
 
+### Penomboran standard kandungan DSKP (disemak 2026)
+
+Medan `code` sesuatu topik dipaparkan sebagai "DSKP x.0" dalam skrin Topik dan Nota,
+jadi ia **mesti padan nombor tajuk DSKP sebenar**. Dua pembetulan dibuat:
+
+- **Matematik Tahun 1** ada **8** standard kandungan. Kod topik kini 1.0 Nombor,
+  2.0 Operasi Asas, 3.0 Pecahan, 4.0 Wang, 5.0 Masa dan Waktu, **6.0 Ukuran dan
+  Sukatan**, 7.0 Ruang, 8.0 Pengurusan Data. Sebelum ini 6.0/7.0 tersalah nombor dan
+  6.0 Ukuran dan Sukatan langsung tiada.
+- **Sains** menggunakan tema 1.0 Kemahiran Saintifik dan 2.0 Peraturan Bilik Sains
+  untuk **setiap** tahun (T1-T6), disahkan dari DSKP Sains Tahun 1 dan Tahun 6.
+  Sains Tahun 1 dahulunya bermula pada 2.0 tanpa 1.0.
+- **Sains Tahun 2** ada **8** standard kandungan: 7.0 Elektrik dan 8.0 Campuran
+  (kedua-duanya sebelum ini tiada).
+
+**Sejarah guna penomboran TAJUK, bukan standard kandungan.** DSKP Sejarah Tahun 5
+mengandungi Tajuk 6-8 dan Tahun 6 Tajuk 9-12; medan `code` Sejarah belum diselaraskan
+dengan skema ini. Jangan tukar nombor Sejarah tanpa merujuk DSKP penuh dahulu —
+terutama Tahun 6, yang turut ada sub-tajuk 12.4 Malaysia dan Dunia.
+
 ## Struktur
 
-- `src/screens/` ŌĆö skrin utama (Home, Subjects, Games, Progress, Profile)
-- `src/lib/i18n.ts` ŌĆö kamus BM (`MS`) dan EN; kira-kira 221 kunci setiap satu
-- `src/data/topics/` ŌĆö nota asas topik DSKP (374 nota)
-- `src/data/notes-extra.ts` ŌĆö nota ringkas tambahan setiap topik (248 nota);
+- `src/screens/` — skrin utama (Home, Subjects, Games, Progress, Profile)
+- `src/lib/i18n.ts` — kamus BM (`MS`) dan EN; kira-kira 221 kunci setiap satu
+- `src/data/topics/` — nota asas topik DSKP (374 nota)
+- `src/data/notes-extra.ts` — nota ringkas tambahan setiap topik (248 nota);
   digabungkan dalam `src/data/catalog.ts` semasa muat. Untuk tambah nota,
   letak kunci mengikut `id` topik dalam `EXTRA_NOTES`. Nota baharu perlu
   sepadan dengan `id` dalam `src/data/topics/*.ts` (semakan: tiada orphan).
-- `src/data/contributors.ts` ŌĆö kredit guru penyumbang latihan. Setiap topik
+- `src/data/contributors.ts` — kredit guru penyumbang latihan. Setiap topik
   dipetakan secara deterministik (hash `id`) kepada seorang guru supaya kredit
   kekal. Semakan: `node verify-contributors.mjs`.
-- `src/lib/review.ts` ŌĆö enjin ulangan berjarak (SRS) peringkat **topik**
+- `src/lib/review.ts` — enjin ulangan berjarak (SRS) peringkat **topik**
   (bukan per soalan, kerana penjana menghasilkan soalan baharu setiap kali).
   Kotak Leitner (`BOX_INTERVALS`, `MAX_BOX=5`): lulus naik kotak dan
   menjarakkan tarikh, gagal turun kotak dan masuk bank kesilapan
   (`MISTAKE_LIMIT=8`). Kad lama dibina semula daripada sejarah percubaan
   semasa migrasi, jadi data murid sedia ada tidak hilang.
-- `src/lib/dates.ts` ŌĆö pembantu tarikh (`todayKey`, `addDays`) untuk memecahkan
+- `src/lib/dates.ts` — pembantu tarikh (`todayKey`, `addDays`) untuk memecahkan
   kebergantungan bulat antara `storage.ts` dan `review.ts`.
-- `android-app/` ŌĆö projek Android (manifest, `MainActivity.java`, res, assets/www)
-- `scripts/build-apk.sh` ŌĆö saluran bina APK
-- `scripts/make-icons.py` / `make-android-icons.py` ŌĆö penjana ikon
-- `audit-i18n.mjs` ŌĆö semak kunci i18n yang hilang
+- `android-app/` — projek Android (manifest, `MainActivity.java`, res, assets/www)
+- `scripts/build-apk.sh` — saluran bina APK
+- `scripts/make-icons.py` / `make-android-icons.py` — penjana ikon
+- `audit-i18n.mjs` — semak kunci i18n yang hilang
 - `verify-generators.mjs`, `verify-random.mjs`, `verify-plan.mjs`,
   `verify-contributors.mjs` — semakan enjin soalan, kerawakan, pelan
   harian dan kredit guru
-- `verify-review.mjs` ŌĆö semakan enjin SRS (kotak, jarak, lapses)
-- `verify-migrate.mjs` ŌĆö semakan migrasi data (rekod lama kekal, kad dibina)
-- `test-review-ui.mjs` / `test-review-flow.mjs` ŌĆö ujian jsdom pada `dist/`:
+- `verify-review.mjs` — semakan enjin SRS (kotak, jarak, lapses)
+- `verify-migrate.mjs` — semakan migrasi data (rekod lama kekal, kad dibina)
+- `test-review-ui.mjs` / `test-review-flow.mjs` — ujian jsdom pada `dist/`:
   kad ulangan muncul, sesi berselang merentas topik, kad dikemas kini
 
 ### Gerbang ibu bapa, trend & ujian skrin (v1.5.0)
@@ -184,5 +204,5 @@ mungkin tidak wujud langsung. Enjin menyediakan `voice.supported`, memilih
 suara terbaik yang ada (ms ŌåÆ nama "Malay" ŌåÆ id ŌåÆ null), dan memecahkan teks
 panjang kepada ayat supaya bacaan tidak terhenti. UI menunjukkan makluman
 `profile.voiceNoSupport` bila peranti tiada enjin suara. Jika pengguna kata
-butang baca "tak berfungsi", semak `voice.supported` dahulu ŌĆö ia bukan pepijat
+butang baca "tak berfungsi", semak `voice.supported` dahulu — ia bukan pepijat
 kod jika peranti tiada enjin TTS.
