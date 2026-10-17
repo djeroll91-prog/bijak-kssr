@@ -305,7 +305,7 @@ function NumericAnswer({
         <button
           type="button"
           disabled={answered}
-          style={{ gridColumn: 'span 3', background: 'var(--brand)', color: '#fff' }}
+          style={{ gridColumn: 'span 3', background: 'var(--brand)', color: 'var(--on-fill)' }}
           onClick={submit}
         >
           {t('quiz.submit')} ✓

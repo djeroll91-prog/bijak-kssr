@@ -370,3 +370,34 @@ murid tidak melihat soalan yang sama berulang kali:
   dari segi huruf besar/kecil.
 - Ujian: `node verify-exam.mjs` (kepelbagaian + elak ulangan) dan
   `node verify-generators.mjs` (bank sihat).
+
+## Warna, bunyi & animasi (aksesibiliti)
+
+Mod paparan dikawal oleh atribut pada `<html>`: `data-theme` (cerah/gelap),
+`data-calm` (tenang), `data-contrast` (kontras tinggi), `data-motion`
+(gerakan). Semua ditetapkan dalam `src/state/store.tsx`; gaya dalam
+`src/styles/theme.css`.
+
+Peraturan penting tentang warna:
+
+- Warna jenama/subjek dipakai dalam DUA peranan serentak: sebagai latar penuh
+  dan sebagai teks atas permukaan. Satu nilai mesti lulus kedua-duanya.
+- Teks di atas blok berwarna mesti guna `--on-fill`, bukan `#fff`. Dalam mod
+  gelap blok itu terang, jadi `--on-fill` menjadi gelap (`#1a1630`). Jangan
+  tulis `color: #fff` pada butang/cip/kunci jawapan.
+- Tahap logam pada `result-hero` (emas/perak/gangsa) guna dakwat gelap
+  `#2e2410`, bukan putih — logam itu cerah.
+- `node audit-contrast.mjs` menguji 188 pasangan (4 mod x 47) dan mesti lulus
+  WCAG AA. Jalankan selepas mengubah sebarang warna. Ia membaca token terus
+  daripada `theme.css`, jadi nilai literal mesti dikemas kini dalam senarai
+  `PAIRS` jika gradien tetap berubah.
+- Jangan guna `var(--muted)` — tidak wujud; guna `var(--ink-soft)`.
+
+Bunyi: `src/lib/audio.ts` (Web Audio API, sintetik sepenuhnya, selamat luar
+talian). Semua nama bunyi dalam `SoundName` mesti ada pemanggil. Lencana
+baharu memainkan `badge` dalam `Result.tsx` (ditangguh 700 ms supaya tidak
+bertindih dengan bunyi markah).
+
+Animasi: semua `@keyframes` dihormati oleh blok `data-motion='off'` dan
+`prefers-reduced-motion`. Ujian: `node test-screens.mjs`,
+`node test-desktop-layout.mjs`, `node test-voice-picker.mjs`.

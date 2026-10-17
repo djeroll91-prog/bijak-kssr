@@ -15,8 +15,11 @@
   /* --- Teks (bukan hitam tulen) --- */
   --ink: #3b3355;
   --ink-soft: #6b6280;
-  --ink-faint: #9a92ab;
+  --ink-faint: #706b7d;
   --ink-on-color: #ffffff;
+  /* Teks di atas blok berwarna (butang, cip subjek, kunci jawapan).
+     Mod gelap menukarnya kepada gelap kerana blok di sana terang. */
+  --on-fill: #ffffff;
 
   /* --- Jenama --- */
   --brand: #6c5ce7;
@@ -25,24 +28,24 @@
 
   /* --- Aksen --- */
   --accent: #ffb84c;
-  --accent-deep: #e79a24;
+  --accent-deep: #986518;
   --accent-soft: #fff2dc;
 
-  --success: #17a673;
+  --success: #117d57;
   --success-soft: #dcf7ee;
-  --warn: #e0900f;
+  --warn: #99620a;
   --warn-soft: #fdf0d5;
-  --danger: #e05c6e;
+  --danger: #af4856;
   --danger-soft: #fde5e8;
-  --info: #3d92d6;
+  --info: #2f70a5;
   --info-soft: #e2f0fb;
 
   /* --- Warna mata pelajaran --- */
   --sub-matematik: #6c5ce7;
-  --sub-bahasa-melayu: #e0608f;
-  --sub-english: #3d92d6;
-  --sub-sains: #17a673;
-  --sub-sejarah: #d98324;
+  --sub-bahasa-melayu: #be5179;
+  --sub-english: #337bb5;
+  --sub-sains: #13875e;
+  --sub-sejarah: #aa671c;
 
   /* --- Bentuk --- */
   --r-sm: 10px;
@@ -85,22 +88,26 @@
   --bg-deep: #efebe4;
   --surface-soft: #fbfaf8;
   --surface-sunken: #f2efe9;
+  --ink-faint: #6b6577;
   --brand: #6f68b8;
   --brand-deep: #5a539c;
   --brand-soft: #eceaf6;
   --accent: #e3ab5c;
+  --accent-deep: #976417;
   --accent-soft: #f8f1e4;
-  --success: #3f9a7d;
+  --success: #317761;
   --success-soft: #e3f0eb;
-  --danger: #c06878;
+  --warn: #8d5c0d;
+  --warn-soft: #f6efdf;
+  --danger: #9c5461;
   --danger-soft: #f6e6e9;
-  --info: #5b8db8;
+  --info: #487092;
   --info-soft: #e8eff5;
   --sub-matematik: #6f68b8;
-  --sub-bahasa-melayu: #b8698c;
-  --sub-english: #5b8db8;
-  --sub-sains: #3f9a7d;
-  --sub-sejarah: #b3874a;
+  --sub-bahasa-melayu: #a86080;
+  --sub-english: #4f7aa0;
+  --sub-sains: #36836a;
+  --sub-sejarah: #95703e;
   --ink: #3d3a4a;
 }
 
@@ -123,12 +130,15 @@
 
   --ink: #eceaf8;
   --ink-soft: #b3aed2;
-  --ink-faint: #7d7799;
+  --ink-faint: #9089b0;
   --ink-on-color: #ffffff;
+  /* Blok berwarna dalam mod gelap adalah terang, jadi teks di atasnya
+     mesti gelap supaya kekal jelas. */
+  --on-fill: #1a1630;
 
   --brand: #8b7bf5;
-  --brand-deep: #7a68ee;
-  --brand-soft: #2b2650;
+  --brand-deep: #957fff;
+  --brand-soft: #1b1738;
 
   --accent: #ffc063;
   --accent-deep: #e7a63a;
@@ -456,7 +466,7 @@ ul {
   font-weight: 800;
   font-size: 1rem;
   background: var(--brand);
-  color: var(--ink-on-color);
+  color: var(--on-fill);
   box-shadow: 0 4px 0 var(--brand-deep), var(--sh-1);
   transition: transform var(--dur-fast) var(--ease-pop), box-shadow var(--dur-fast);
 }
@@ -612,7 +622,7 @@ ul {
   border-radius: var(--r-xl);
   padding: var(--sp-5);
   color: var(--ink-on-color);
-  background: linear-gradient(135deg, #7d6cf0, #6c5ce7 55%, #5a48d6);
+  background: linear-gradient(135deg, #7464df, #6c5ce7 55%, #5a48d6);
   box-shadow: var(--sh-2);
   position: relative;
   overflow: hidden;
@@ -962,7 +972,7 @@ ul {
 
 .option[data-state='correct'] .key {
   background: var(--success);
-  color: #fff;
+  color: var(--on-fill);
 }
 
 .option[data-state='wrong'] {
@@ -973,7 +983,7 @@ ul {
 
 .option[data-state='wrong'] .key {
   background: var(--danger);
-  color: #fff;
+  color: var(--on-fill);
 }
 
 .option[data-state='dim'] {
@@ -1132,15 +1142,22 @@ ul {
   padding: var(--sp-6) var(--sp-4);
   text-align: center;
   color: var(--ink-on-color);
-  background: linear-gradient(150deg, #7d6cf0, #6c5ce7 60%, #4f3fc4);
+  background: linear-gradient(150deg, #7464df, #6c5ce7 60%, #4f3fc4);
   box-shadow: var(--sh-2);
   position: relative;
   overflow: hidden;
 }
 
+.result-hero[data-tier='gold'],
+.result-hero[data-tier='silver'],
+.result-hero[data-tier='bronze'] {
+  /* Logam cerah: dakwat gelap lebih jelas daripada putih, dan satu
+     dakwat gelap menampung ketiga-tiga tahap pada semua hentian. */
+  color: #2e2410;
+}
+
 .result-hero[data-tier='gold'] {
-  background: linear-gradient(150deg, #ffce6a, #f7a83a 55%, #e08a13);
-  color: #4a3208;
+  background: linear-gradient(150deg, #ffce6a, #f7a83a 55%, #e79a1c);
 }
 
 .result-hero[data-tier='silver'] {
@@ -1148,7 +1165,7 @@ ul {
 }
 
 .result-hero[data-tier='bronze'] {
-  background: linear-gradient(150deg, #e5b892, #cf9367 55%, #b0733f);
+  background: linear-gradient(150deg, #e8c1a0, #d9a878 55%, #c08d5c);
 }
 
 .result-hero h2 {
@@ -1395,7 +1412,7 @@ ul {
   display: grid;
   place-items: center;
   font-weight: 900;
-  color: #fff;
+  color: var(--on-fill);
   box-shadow: inset -4px -6px 12px rgba(0, 0, 0, 0.16),
     inset 5px 6px 12px rgba(255, 255, 255, 0.4), var(--sh-1);
   will-change: transform;
@@ -1412,7 +1429,7 @@ ul {
   place-items: center;
   font-size: 1.7rem;
   background: var(--brand);
-  color: #fff;
+  color: var(--on-fill);
   box-shadow: var(--sh-1);
   transition: transform var(--dur) var(--ease-pop), background var(--dur);
 }
@@ -1452,7 +1469,7 @@ ul {
 
 .word-cell[data-found='true'] {
   background: var(--success);
-  color: #fff;
+  color: var(--on-fill);
 }
 
 /* ==========================================================================
@@ -1787,7 +1804,7 @@ ul {
   transform: translateX(-50%);
   z-index: 80;
   background: var(--ink);
-  color: #fff;
+  color: var(--on-fill);
   padding: 10px 18px;
   border-radius: var(--r-pill);
   font-size: 0.84rem;
@@ -2080,7 +2097,7 @@ ul {
 
 .plan-cta[data-ready='true'] {
   border-style: solid;
-  border-color: var(--accent);
+  border-color: var(--accent-deep);
   background: linear-gradient(135deg, var(--accent-soft), var(--surface));
 }
 
@@ -2167,7 +2184,7 @@ ul {
 
 .plan-day[data-state='today'] {
   background: var(--brand);
-  color: var(--ink-on-color);
+  color: var(--on-fill);
   animation: breathe 2.2s ease-in-out infinite;
 }
 
@@ -2221,7 +2238,7 @@ ul {
 
 .plan-task[data-done='true'] .pt-check {
   background: var(--success);
-  color: var(--ink-on-color);
+  color: var(--on-fill);
   animation: starPop var(--dur) var(--ease-pop);
 }
 
@@ -2427,7 +2444,7 @@ ul {
 
 .exam-hud .chip[data-tone='warn'] {
   background: var(--warn-soft, #fff4d6);
-  color: #8a5a00;
+  color: var(--warn);
 }
 
 .exam-hud .chip[data-tone='danger'] {
@@ -2472,13 +2489,13 @@ ul {
 .exam-jump[data-done='true'][data-ok='true'] {
   background: var(--success);
   border-color: var(--success);
-  color: #fff;
+  color: var(--on-fill);
 }
 
 .exam-jump[data-done='true'][data-ok='false'] {
   background: var(--danger);
   border-color: var(--danger);
-  color: #fff;
+  color: var(--on-fill);
 }
 
 .exam-jump[data-done='false'] {
@@ -2648,14 +2665,14 @@ ul {
 .tips-head small {
   display: block;
   font-size: 0.72rem;
-  color: var(--muted);
+  color: var(--ink-soft);
   margin-top: 2px;
 }
 
 .tips-chevron {
   transition: transform 200ms var(--ease-out);
   font-size: 1.1rem;
-  color: var(--muted);
+  color: var(--ink-soft);
 }
 
 .tips-chevron[data-open='true'] {

@@ -35,9 +35,15 @@ export function ResultScreen() {
     }
   }, [r, score, settings.voice, t, lang]);
 
-  // Tandakan lencana baharu sebagai diumumkan.
+  // Tandakan lencana baharu sebagai diumumkan, dengan bunyi tersendiri
+  // supaya murid tahu lencana baharu diperoleh (berbeza daripada markah).
   useEffect(() => {
     if (!r) return;
+    if (r.badges.length > 0) {
+      const timer = window.setTimeout(() => sound.play('badge'), 700);
+      r.badges.forEach((b) => celebrateBadge(b.id));
+      return () => window.clearTimeout(timer);
+    }
     r.badges.forEach((b) => celebrateBadge(b.id));
   }, [r, celebrateBadge]);
 

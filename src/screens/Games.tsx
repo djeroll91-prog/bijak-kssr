@@ -350,7 +350,15 @@ function BubbleGame({
   );
 }
 
-const BUBBLE_COLOURS = ['#6c5ce7', '#e0608f', '#3d92d6', '#17a673', '#e79a24'];
+/* Warna gelembung ikut token subjek supaya kontras teks kekal lulus
+   dalam mod cerah dan gelap (lihat --on-fill). */
+const BUBBLE_COLOURS = [
+  'var(--sub-matematik)',
+  'var(--sub-bahasa-melayu)',
+  'var(--sub-english)',
+  'var(--sub-sains)',
+  'var(--sub-sejarah)',
+];
 
 /* ================================================================== */
 /* Permainan 2: Padan Ingatan                                          */

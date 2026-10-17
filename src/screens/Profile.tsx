@@ -14,7 +14,7 @@ import { copyText, shareUrl } from '../lib/share';
 import type { YearNum } from '../data/types';
 
 const AVATARS = ['🦊', '🐼', '🐯', '🐨', '🐸', '🦉', '🐙', '🦄', '🐲', '🐰', '🐵', '🐧'];
-const APP_VERSION = '1.12.0';
+const APP_VERSION = '1.14.0';
 
 export function ProfileScreen() {
   const {
@@ -281,7 +281,7 @@ export function ProfileScreen() {
                   key={l}
                   type="button"
                   className="chip"
-                  style={lang === l ? { background: 'var(--brand)', color: '#fff' } : undefined}
+                  style={lang === l ? { background: 'var(--brand)', color: 'var(--on-fill)' } : undefined}
                   onClick={() => {
                     sound.play('pop');
                     setLang(l);
@@ -315,7 +315,7 @@ export function ProfileScreen() {
                   type="button"
                   className="chip"
                   data-active={screenLayout === mode ? 'true' : 'false'}
-                  style={screenLayout === mode ? { background: 'var(--brand)', color: '#fff' } : undefined}
+                  style={screenLayout === mode ? { background: 'var(--brand)', color: 'var(--on-fill)' } : undefined}
                   onClick={() => {
                     sound.play('pop');
                     setScreenLayout(mode);
@@ -342,7 +342,7 @@ export function ProfileScreen() {
                   key={s}
                   type="button"
                   className="chip"
-                  style={settings.fontScale === s ? { background: 'var(--brand)', color: '#fff' } : undefined}
+                  style={settings.fontScale === s ? { background: 'var(--brand)', color: 'var(--on-fill)' } : undefined}
                   onClick={() => {
                     sound.play('tap');
                     setSetting('fontScale', s);
@@ -667,7 +667,7 @@ export function ProfileScreen() {
                 key={l}
                 type="button"
                 className="chip"
-                style={voiceTab === l ? { background: 'var(--brand)', color: '#fff' } : undefined}
+                style={voiceTab === l ? { background: 'var(--brand)', color: 'var(--on-fill)' } : undefined}
                 onClick={() => {
                   sound.play('pop');
                   setVoiceTab(l);

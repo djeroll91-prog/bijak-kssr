@@ -363,7 +363,7 @@ export function ProgressScreen() {
             <button
               type="button"
               className="chip"
-              style={!trendSubject ? { background: 'var(--brand)', color: '#fff' } : undefined}
+              style={!trendSubject ? { background: 'var(--brand)', color: 'var(--on-fill)' } : undefined}
               onClick={() => {
                 sound.play('tap');
                 setTrendSubject('');
@@ -380,7 +380,7 @@ export function ProgressScreen() {
                   key={sid}
                   type="button"
                   className="chip"
-                  style={on ? { background: meta.color, color: '#fff' } : undefined}
+                  style={on ? { background: meta.color, color: 'var(--on-fill)' } : undefined}
                   onClick={() => {
                     sound.play('tap');
                     setTrendSubject(sid);
@@ -403,7 +403,7 @@ export function ProgressScreen() {
                 <button
                   type="button"
                   className="chip"
-                  style={!trendTopic ? { background: 'var(--brand)', color: '#fff' } : undefined}
+                  style={!trendTopic ? { background: 'var(--brand)', color: 'var(--on-fill)' } : undefined}
                   onClick={() => {
                     sound.play('tap');
                     setTrendTopic('');
@@ -419,7 +419,7 @@ export function ProgressScreen() {
                       key={tid}
                       type="button"
                       className="chip"
-                      style={on ? { background: 'var(--brand)', color: '#fff' } : undefined}
+                      style={on ? { background: 'var(--brand)', color: 'var(--on-fill)' } : undefined}
                       onClick={() => {
                         sound.play('tap');
                         setTrendTopic(tid);
@@ -455,7 +455,7 @@ export function ProgressScreen() {
                 key={n}
                 type="button"
                 className="chip"
-                style={range === n ? { background: 'var(--brand)', color: '#fff' } : undefined}
+                style={range === n ? { background: 'var(--brand)', color: 'var(--on-fill)' } : undefined}
                 onClick={() => setRange(n)}
               >
                 {n}
