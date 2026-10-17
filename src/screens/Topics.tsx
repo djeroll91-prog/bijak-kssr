@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { useStore, useT } from '../state/store';
 import { Chip, EmptyState, ProgressRing, TopBar } from '../components/ui';
 import { subjectById, gamesForSubject } from '../data/subjects';
-import { gameBlurb, gameName, subjectName, yearLabel } from '../lib/i18n';
+import { gameBlurb, gameName, subjectName, topicCodeLabel, yearLabel } from '../lib/i18n';
 import { topicsFor } from '../data/catalog';
 import { sound } from '../lib/audio';
 import type { SubjectId, YearNum } from '../data/types';
@@ -69,7 +69,7 @@ export function TopicsScreen() {
                       <b>{topic.title}</b>
                       <small>{topic.summary}</small>
                       <span className="row wrap" style={{ marginTop: 6, gap: 6 }}>
-                        <Chip tone="brand">DSKP {topic.code}</Chip>
+                        <Chip tone="brand">{topicCodeLabel(lang, topic.subject, topic.code)}</Chip>
                         {best !== null ? (
                           <Chip tone={best >= 80 ? 'success' : best >= 60 ? 'warn' : 'danger'}>
                             {t('common.best')} {best}%

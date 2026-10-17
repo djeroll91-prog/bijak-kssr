@@ -793,6 +793,16 @@ export function yearLabel(lang: Lang, year: number): string {
   return lang === 'en' ? `Year ${year}` : `Tahun ${year}`;
 }
 
+/**
+ * Sejarah dinomborkan mengikut Tajuk DSKP (Tajuk 6.1), bukan standard kandungan
+ * (DSKP 1.0). Subjek lain kekal "DSKP x.y" supaya kod yang dipaparkan kepada
+ * murid padan dokumen rasmi.
+ */
+export function topicCodeLabel(lang: Lang, subject: string, code: string): string {
+  if (subject === 'sejarah') return lang === 'en' ? `Topic ${code}` : `Tajuk ${code}`;
+  return `DSKP ${code}`;
+}
+
 const YEAR_THEME_EN: Record<number, string> = {
   1: 'Basic literacy and numeracy',
   2: 'Building foundations',

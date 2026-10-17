@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useStore, useT } from '../state/store';
 import { Btn, Chip, NoteCard, TopBar } from '../components/ui';
 import { subjectById, gamesForSubject } from '../data/subjects';
-import { gameBlurb, gameName, subjectName, yearLabel } from '../lib/i18n';
+import { gameBlurb, gameName, subjectName, topicCodeLabel, yearLabel } from '../lib/i18n';
 import { topicById } from '../data/catalog';
 import { contributorFor } from '../data/contributors';
 import { sound, voice } from '../lib/audio';
@@ -47,7 +47,7 @@ export function NotesScreen() {
       <TopBar
         onBack={back}
         title={topic.title}
-        subtitle={`${subjectName(lang, topic.subject, meta.name)} • DSKP ${topic.code}`}
+        subtitle={`${subjectName(lang, topic.subject, meta.name)} • ${topicCodeLabel(lang, topic.subject, topic.code)}`}
         right={
           <span className="icon-btn" aria-hidden="true" style={{ background: `${meta.color}1a` }}>
             {topic.emoji}

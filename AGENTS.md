@@ -108,16 +108,30 @@ jadi ia **mesti padan nombor tajuk DSKP sebenar**. Dua pembetulan dibuat:
 - **Sains Tahun 2** ada **8** standard kandungan: 7.0 Elektrik dan 8.0 Campuran
   (kedua-duanya sebelum ini tiada).
 
-**Sejarah guna penomboran TAJUK, bukan standard kandungan.** DSKP Sejarah Tahun 5
-mengandungi Tajuk 6-8 dan Tahun 6 Tajuk 9-12; medan `code` Sejarah belum diselaraskan
-dengan skema ini. Jangan tukar nombor Sejarah tanpa merujuk DSKP penuh dahulu —
-terutama Tahun 6, yang turut ada sub-tajuk 12.4 Malaysia dan Dunia.
+**Sejarah guna penomboran TAJUK berterusan, bukan standard kandungan.** DSKP Sejarah
+Tahun 4 = Tajuk 1-5, Tahun 5 = Tajuk 6-9, Tahun 6 = Tajuk 10-12. Kod topik Sejarah
+kini mengikut skema ini (cth. `6.1`, `7.1`, `10.2`, `12.4`). Kerana Sejarah tidak
+menggunakan "DSKP x.0", antara muka memaparkan label **"Tajuk"** untuk Sejarah dan
+**"DSKP"** untuk subjek lain melalui `topicCodeLabel()` dalam `src/lib/i18n.ts`.
+Jangan tukar nombor Sejarah tanpa merujuk DSKP penuh dahulu.
+
+**Bahasa Melayu hanya ada standard 1.0-5.0**, iaitu 1.0 Mendengar & Bertutur,
+2.0 Membaca, 3.0 Menulis, 4.0 Seni Bahasa, 5.0 Tatabahasa. Tiada 6.0. Setiap tahun
+T1-T6 kini meliputi kesemua lima standard, dengan sub-nombor unik (cth. `5.1`, `5.2`)
+supaya kod tidak bertindih dalam tahun yang sama.
+
+**Sains setiap tahun bermula 1.0 Kemahiran Saintifik dan 2.0 Peraturan Bilik Sains**
+(T1-T6), disahkan daripada DSKP Sains rasmi. Tahun 4-6 turut ada topik 1.0 yang
+mengajar kemahiran mengawal pemboleh ubah dan membuat hipotesis.
+
+Semakan automatik: `node verify-dskp.mjs` mengesahkan tiada kod bertindih, liputan
+standard BM 1.0-5.0, penomboran Sains dan Sejarah, serta label kod yang betul.
 
 ## Struktur
 
 - `src/screens/` — skrin utama (Home, Subjects, Games, Progress, Profile)
 - `src/lib/i18n.ts` — kamus BM (`MS`) dan EN; kira-kira 221 kunci setiap satu
-- `src/data/topics/` — nota asas topik DSKP (374 nota)
+- `src/data/topics/` — nota asas topik DSKP (kira-kira 725 nota, 159 topik)
 - `src/data/notes-extra.ts` — nota ringkas tambahan setiap topik (248 nota);
   digabungkan dalam `src/data/catalog.ts` semasa muat. Untuk tambah nota,
   letak kunci mengikut `id` topik dalam `EXTRA_NOTES`. Nota baharu perlu
@@ -142,6 +156,8 @@ terutama Tahun 6, yang turut ada sub-tajuk 12.4 Malaysia dan Dunia.
   harian dan kredit guru
 - `verify-review.mjs` — semakan enjin SRS (kotak, jarak, lapses)
 - `verify-migrate.mjs` — semakan migrasi data (rekod lama kekal, kad dibina)
+- `verify-dskp.mjs` — semakan pematuhan DSKP: tiada kod bertindih, liputan
+  standard Bahasa Melayu 1.0-5.0, penomboran Sains dan Sejarah, label kod
 - `test-review-ui.mjs` / `test-review-flow.mjs` — ujian jsdom pada `dist/`:
   kad ulangan muncul, sesi berselang merentas topik, kad dikemas kini
 

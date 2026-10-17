@@ -1185,7 +1185,207 @@ function bm6Komsas(_y: number, rng: Rng, count: number): Question[] {
   });
 }
 
+/**
+ * Standard 1.0 Mendengar dan Bertutur. Satu penjana untuk semua tahun —
+ * aras soalan mengikut tahun supaya murid Tahun 1 dapat soalan mudah dan
+ * murid Tahun 6 dapat soalan yang lebih mencabar.
+ */
+function bmMendengarBertutur(y: number, rng: Rng, count: number): Question[] {
+  const situasi = [
+    { s: 'Kamu bertemu guru pada waktu pagi.', j: 'Selamat pagi, cikgu.' },
+    { s: 'Kamu hendak meminjam buku daripada kawan.', j: 'Bolehkah saya pinjam buku kamu?' },
+    { s: 'Kamu tersalah langkah pada kaki rakan.', j: 'Maafkan saya, saya tidak sengaja.' },
+    { s: 'Kawan kamu membantu mengangkat kerusi.', j: 'Terima kasih kerana menolong saya.' },
+    { s: 'Kamu hendak bertanya arah ke tandas.', j: 'Maaf, boleh saya tahu di mana tandas?' },
+    { s: 'Kamu hendak masuk ke kelas selepas loceng.', j: 'Maaf, cikgu. Boleh saya masuk?' },
+    { s: 'Kamu mahu meminta rakan berhenti bising.', j: 'Tolong jangan bising, saya sedang membaca.' },
+    { s: 'Kamu dipanggil menjawab soalan guru.', j: 'Ya, cikgu. Saya akan cuba menjawab.' },
+  ];
+  const nada = [
+    { s: 'Kamu membaca pengumuman di perhimpunan sekolah.', n: 'Nada tegas dan jelas' },
+    { s: 'Kamu menceritakan kisah lucu kepada kawan.', n: 'Nada ceria dan santai' },
+    { s: 'Kamu meminta maaf kerana melakukan kesalahan.', n: 'Nada lembut dan bersungguh' },
+    { s: 'Kamu membentangkan hasil kerja di hadapan kelas.', n: 'Nada yakin dan teratur' },
+    { s: 'Kamu menenangkan kawan yang menangis.', n: 'Nada tenang dan penyayang' },
+  ];
+  const dengar = [
+    { a: 'Sila ambil buku latihan dan buka halaman dua puluh.', t: 'Arahan supaya murid membuka buku latihan.' },
+    { a: 'Jangan berlari di sepanjang koridor sekolah.', t: 'Larangan supaya murid tidak berlari.' },
+    { a: 'Bawa payung kerana hari mungkin hujan petang ini.', t: 'Nasihat supaya murid bersedia dengan payung.' },
+    { a: 'Tolong padamkan lampu sebelum keluar dari bilik.', t: 'Permintaan supaya mematikan lampu.' },
+    { a: 'Semua murid berkumpul di padang selepas rehat.', t: 'Arahan supaya murid berkumpul di padang.' },
+  ];
+  const bertutur = [
+    { a: 'Menjawab soalan guru dengan ayat lengkap', t: 'Kemahiran bertutur' },
+    { a: 'Mendengar arahan sebelum bertindak', t: 'Kemahiran mendengar' },
+    { a: 'Bercerita mengikut turutan yang betul', t: 'Kemahiran bertutur' },
+    { a: 'Menulis jawapan di dalam buku', t: 'Bukan kemahiran bertutur' },
+    { a: 'Mengangguk semasa rakan bercakap', t: 'Kemahiran mendengar' },
+  ];
+  // Tahap 1 (Tahun 1-3): sapaan dan arahan mudah. Tahap 2 (Tahun 4-6): nada dan situasi.
+  const gunaNada = y >= 4;
+  const gunaArahan = y >= 2;
+  return fill(count, (i) => {
+    const modes = gunaNada ? 5 : gunaArahan ? 4 : 3;
+    const mode = i % modes;
+    if (mode === 0) {
+      const s = rng.pick(situasi);
+      return mcq(rng, {
+        prefix: 'bm-lisan',
+        prompt: `🗣️ ${s.s} Apakah ucapan yang sesuai?`,
+        answer: s.j,
+        distractors: rng.shuffle([
+          'Hoi, beri saya buku itu!',
+          'Saya tidak tahu apa-apa.',
+          'Jangan kacau saya.',
+          'Itu bukan urusan saya.',
+        ]).slice(0, 3),
+        explanation: `Ucapan yang sopan ialah "${s.j}".`,
+        emoji: '🗣️',
+        cols: 1,
+        speak: s.s,
+      });
+    }
+    if (mode === 1) {
+      const d = rng.pick(dengar);
+      return mcq(rng, {
+        prefix: 'bm-lisan',
+        prompt: `👂 Dengar arahan ini: "${d.a}" Apakah maksudnya?`,
+        answer: d.t,
+        distractors: rng.shuffle(dengar.filter((x) => x.t !== d.t)).slice(0, 3).map((x) => x.t),
+        explanation: `"${d.a}" bermaksud: ${d.t.toLowerCase()}`,
+        emoji: '👂',
+        cols: 1,
+        speak: d.a,
+      });
+    }
+    if (mode === 2) {
+      const b = rng.pick(bertutur);
+      return trueFalse({
+        prefix: 'bm-lisan',
+        prompt: `"${b.a}" ialah ${b.t.toLowerCase()}.`,
+        isTrue: b.t.startsWith('Kemahiran'),
+        explanation: `"${b.a}" — ${b.t}.`,
+        emoji: '💬',
+      });
+    }
+    if (mode === 3) {
+      const picked = rng.sample(situasi, 3);
+      return match({
+        prefix: 'bm-lisan',
+        prompt: 'Padankan situasi dengan ucapan yang sesuai.',
+        pairs: picked.map((s) => ({ left: s.s, right: s.j })),
+        explanation: 'Ucapan yang sopan mengikut situasi yang betul.',
+        emoji: '🤝',
+      });
+    }
+    const n = rng.pick(nada);
+    return mcq(rng, {
+      prefix: 'bm-lisan',
+      prompt: `🎤 ${n.s} Apakah nada suara yang sesuai?`,
+      answer: n.n,
+      distractors: rng.shuffle(nada.filter((x) => x.n !== n.n)).slice(0, 3).map((x) => x.n),
+      explanation: `${n.s} memerlukan ${n.n.toLowerCase()}.`,
+      emoji: '🎤',
+      cols: 1,
+    });
+  });
+}
+
+/** Standard 4.0 Seni Bahasa: pantun, sajak, peribahasa dan gaya bahasa. */
+function bmSeniBahasa(y: number, rng: Rng, count: number): Question[] {
+  const pantun = [
+    { p: 'Buah cempedak di luar pagar, / Ambil galah tolong jolokkan; / Saya budak baru belajar, / Kalau salah tolong tunjukkan.', m: 'Nasihat dan kerendahan hati' },
+    { p: 'Air pasang di tepi pantai, / Nampak jelas dari perahu; / Hati riang tidak terperi, / Dapat hadiah daripada guru.', m: 'Perasaan gembira' },
+    { p: 'Bunga melati di dalam taman, / Harum semerbak sepanjang hari; / Belajar rajin setiap malam, / Kejayaan pasti menanti.', m: 'Galakan supaya rajin belajar' },
+    { p: 'Pisang emas dibawa belayar, / Masak sebiji di atas peti; / Hutang emas boleh dibayar, / Hutang budi dibawa mati.', m: 'Jasa dan budi tidak boleh dilupakan' },
+  ];
+  const gaya = [
+    { a: 'Angin berbisik di telinga saya.', t: 'Personifikasi' },
+    { a: 'Wajahnya seputih kapas.', t: 'Simile (perbandingan)' },
+    { a: 'Dia berlari secepat kilat.', t: 'Hiperbola' },
+    { a: 'Dia membeli sebuah kereta baru.', t: 'Bahasa biasa' },
+    { a: 'Suara itu bagaikan guruh di langit.', t: 'Simile (perbandingan)' },
+  ];
+  const peribahasa = [
+    { a: 'Bagai aur dengan tebing', t: 'Saling menolong antara satu sama lain' },
+    { a: 'Sedikit-sedikit lama-lama menjadi bukit', t: 'Usaha yang berterusan membawa kejayaan' },
+    { a: 'Sediakan payung sebelum hujan', t: 'Bersedia sebelum berlakunya kesusahan' },
+    { a: 'Seperti katak di bawah tempurung', t: 'Kurang pengetahuan tentang dunia luar' },
+    { a: 'Tak kenal maka tak cinta', t: 'Perlu mengenal sesuatu sebelum menyayanginya' },
+  ];
+  const sajak = [
+    { t: 'Bahasa Melayu', m: 'Memartabatkan bahasa kebangsaan' },
+    { t: 'Kebersihan', m: 'Menjaga kebersihan diri dan alam sekitar' },
+    { t: 'Kemerdekaan', m: 'Menghargai pengorbanan pejuang negara' },
+    { t: 'Perpaduan', m: 'Hidup bersatu dalam masyarakat pelbagai kaum' },
+  ];
+  const adaLirik = y >= 3;
+  return fill(count, (i) => {
+    const modes = adaLirik ? 5 : 4;
+    const mode = i % modes;
+    if (mode === 0) {
+      const x = rng.pick(pantun);
+      return mcq(rng, {
+        prefix: 'bm-seni',
+        prompt: `📜 Apakah maksud pantun ini?\n\n${x.p}`,
+        answer: x.m,
+        distractors: rng.shuffle(pantun.filter((p) => p.m !== x.m)).slice(0, 3).map((p) => p.m),
+        explanation: `Pantun ini menyampaikan maksud: ${x.m.toLowerCase()}.`,
+        emoji: '📜',
+        cols: 1,
+      });
+    }
+    if (mode === 1) {
+      const g = rng.pick(gaya);
+      return mcq(rng, {
+        prefix: 'bm-seni',
+        prompt: `🎨 Apakah gaya bahasa dalam ayat ini?\n\n"${g.a}"`,
+        answer: g.t,
+        distractors: ['Personifikasi', 'Simile (perbandingan)', 'Hiperbola', 'Bahasa biasa'].filter((t) => t !== g.t).slice(0, 3),
+        explanation: `"${g.a}" menggunakan gaya bahasa ${g.t.toLowerCase()}.`,
+        emoji: '🎨',
+        cols: 1,
+      });
+    }
+    if (mode === 2) {
+      const p = rng.pick(peribahasa);
+      return mcq(rng, {
+        prefix: 'bm-seni',
+        prompt: `💬 Apakah maksud peribahasa "${p.a}"?`,
+        answer: p.t,
+        distractors: rng.shuffle(peribahasa.filter((x) => x.t !== p.t)).slice(0, 3).map((x) => x.t),
+        explanation: `"${p.a}" bermaksud ${p.t.toLowerCase()}.`,
+        emoji: '💬',
+        cols: 1,
+      });
+    }
+    if (mode === 3) {
+      const picked = rng.sample(peribahasa, 3);
+      return match({
+        prefix: 'bm-seni',
+        prompt: 'Padankan peribahasa dengan maksudnya.',
+        pairs: picked.map((p) => ({ left: p.a, right: p.t })),
+        explanation: 'Peribahasa ialah warisan bahasa yang indah.',
+        emoji: '🧩',
+      });
+    }
+    const s = rng.pick(sajak);
+    return mcq(rng, {
+      prefix: 'bm-seni',
+      prompt: `🎼 Sajak bertajuk "${s.t}" bertemakan apa?`,
+      answer: s.m,
+      distractors: rng.shuffle(sajak.filter((x) => x.m !== s.m)).slice(0, 3).map((x) => x.m),
+      explanation: `Sajak "${s.t}" bertemakan ${s.m.toLowerCase()}.`,
+      emoji: '🎼',
+      cols: 1,
+    });
+  });
+}
+
 export const BAHASA_MELAYU_GENERATORS: Record<string, (y: number, r: Rng, c: number) => Question[]> = {
+  'bm-mendengar-bertutur': bmMendengarBertutur,
+  'bm-seni-bahasa': bmSeniBahasa,
   'bm1-huruf-suku-kata': bm1HurufSukuKata,
   'bm1-membaca-perkataan': bm1MembacaPerkataan,
   'bm1-menulis-ayat': bm1MenulisAyat,

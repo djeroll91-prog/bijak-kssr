@@ -1260,8 +1260,157 @@ function sn6BumiUntukKehidupan(_y: number, rng: Rng, count: number): Question[] 
   });
 }
 
+/**
+ * Kemahiran saintifik Tahap 2 (Tahun 4-6). DSKP menambah kemahiran mengawal
+ * pemboleh ubah dan membuat hipotesis berbanding senarai Tahap 1.
+ */
+function snTahap2KemahiranSaintifik(_y: number, rng: Rng, count: number): Question[] {
+  const skills = [
+    { t: 'Memerhati', d: 'Menggunakan deria dan alat untuk mengkaji objek', e: '👁️' },
+    { t: 'Mengelas', d: 'Mengumpulkan objek mengikut ciri yang sama', e: '🗂️' },
+    { t: 'Mengukur dan menggunakan nombor', d: 'Mengukur dengan alat dan unit yang betul', e: '📏' },
+    { t: 'Membuat inferens', d: 'Membuat andaian berdasarkan pemerhatian', e: '🧠' },
+    { t: 'Meramal', d: 'Membuat jangkaan tentang apa yang akan berlaku', e: '🔮' },
+    { t: 'Berkomunikasi', d: 'Menyampaikan maklumat dalam pelbagai bentuk', e: '🗣️' },
+    { t: 'Mengawal pemboleh ubah', d: 'Menetapkan perkara yang diubah dan dimalarkan', e: '🎛️' },
+    { t: 'Membuat hipotesis', d: 'Menyatakan jawapan awal yang boleh diuji', e: '💡' },
+  ];
+  const rules = [
+    'Tidak makan atau minum di dalam bilik sains',
+    'Mendengar arahan guru dengan teliti',
+    'Tidak berlari di dalam bilik sains',
+    'Mencuci tangan selepas menjalankan eksperimen',
+    'Berhati-hati dengan bahan kimia dan api',
+  ];
+  return fill(count, (i) => {
+    const mode = i % 4;
+    if (mode === 0) {
+      const s = rng.pick(skills);
+      return mcq(rng, {
+        prefix: 'sn-skill2',
+        prompt: `${s.e} Apakah maksud kemahiran "${s.t}"?`,
+        answer: s.d,
+        distractors: skills.filter((x) => x.t !== s.t).map((x) => x.d),
+        explanation: `"${s.t}": ${s.d.toLowerCase()}.`,
+        emoji: '🔬',
+        cols: 1,
+        speak: `Apakah maksud ${s.t}?`,
+      });
+    }
+    if (mode === 1) {
+      const picked = rng.sample(skills, 3);
+      return match({
+        prefix: 'sn-skill2',
+        prompt: 'Padankan kemahiran proses sains dengan maksudnya.',
+        pairs: picked.map((s) => ({ left: s.t, right: s.d })),
+        explanation: 'Kemahiran proses sains digunakan sepanjang penyiasatan.',
+        emoji: '🧭',
+      });
+    }
+    if (mode === 2) {
+      const s = rng.pick(skills);
+      return trueFalse({
+        prefix: 'sn-skill2',
+        prompt: `Kemahiran "${s.t}" bermaksud ${s.d.toLowerCase()}.`,
+        isTrue: true,
+        explanation: `Betul! "${s.t}" ialah ${s.d.toLowerCase()}.`,
+        emoji: s.e,
+      });
+    }
+    const good = rng.chance(0.5);
+    const r = rng.pick(rules);
+    return trueFalse({
+      prefix: 'sn-skill2',
+      prompt: good
+        ? `Peraturan bilik sains: "${r}."`
+        : 'Kita boleh merasa semua bahan kimia untuk mengenal pastinya.',
+      isTrue: good,
+      explanation: good
+        ? 'Betul! Peraturan ini menjaga keselamatan kita di bilik sains.'
+        : 'Salah. Bahan kimia tidak boleh dirasa — ia mungkin berbahaya.',
+      emoji: good ? '🦺' : '⚠️',
+    });
+  });
+}
+
+/** Peraturan bilik sains — standard kandungan 2.0 dalam setiap tahun Sains. */
+function snPeraturanBilikSains(_y: number, rng: Rng, count: number): Question[] {
+  const patuh = [
+    'Mendengar arahan guru sebelum memulakan aktiviti',
+    'Mencuci tangan selepas menjalankan eksperimen',
+    'Menggunakan gogal dan sarung tangan apabila perlu',
+    'Memberitahu guru dengan segera jika ada kemalangan',
+    'Menyimpan alat sains di tempatnya selepas digunakan',
+  ];
+  const langgar = [
+    'Makan dan minum di dalam bilik sains',
+    'Berlari dan bergurau di dalam bilik sains',
+    'Merasa bahan kimia untuk mengenal pastinya',
+    'Membawa keluar alat sains tanpa kebenaran guru',
+    'Membiarkan bahan mudah terbakar berhampiran api',
+  ];
+  const sebab = [
+    { t: 'Tidak makan atau minum', d: 'Supaya kita tidak termakan bahan kimia berbahaya', e: '🚫🍽️' },
+    { t: 'Tidak berlari', d: 'Supaya kita tidak tersandung atau memecahkan alat', e: '🏃🚫' },
+    { t: 'Mencuci tangan', d: 'Supaya bahan kimia tidak masuk ke dalam badan', e: '🧼' },
+    { t: 'Memakai gogal', d: 'Supaya mata kita dilindungi daripada percikan', e: '🥽' },
+  ];
+  return fill(count, (i) => {
+    const mode = i % 4;
+    if (mode === 0) {
+      const baik = rng.chance(0.5);
+      const r = baik ? rng.pick(patuh) : rng.pick(langgar);
+      return trueFalse({
+        prefix: 'sn-rules',
+        prompt: `Peraturan bilik sains: "${r}."`,
+        isTrue: baik,
+        explanation: baik
+          ? 'Betul! Ini peraturan bilik sains yang mesti dipatuhi.'
+          : 'Salah. Perbuatan ini melanggar peraturan dan boleh mendatangkan bahaya.',
+        emoji: baik ? '🦺' : '⚠️',
+      });
+    }
+    if (mode === 1) {
+      const s = rng.pick(sebab);
+      return mcq(rng, {
+        prefix: 'sn-rules',
+        prompt: `${s.e} Mengapa kita perlu mematuhi peraturan "${s.t}" di bilik sains?`,
+        answer: s.d,
+        distractors: sebab.filter((x) => x.t !== s.t).map((x) => x.d),
+        explanation: `${s.t}: ${s.d.toLowerCase()}.`,
+        emoji: '🧪',
+        cols: 1,
+      });
+    }
+    if (mode === 2) {
+      const picked = rng.sample(sebab, 3);
+      return match({
+        prefix: 'sn-rules',
+        prompt: 'Padankan peraturan bilik sains dengan sebabnya.',
+        pairs: picked.map((s) => ({ left: s.t, right: s.d })),
+        explanation: 'Setiap peraturan bilik sains ada sebab demi keselamatan kita.',
+        emoji: '🔗',
+      });
+    }
+    return mcq(rng, {
+      prefix: 'sn-rules',
+      prompt: 'Kamu tertumpah air di lantai bilik sains. Apakah yang patut kamu lakukan?',
+      answer: 'Beritahu guru dengan segera',
+      distractors: ['Biarkan sahaja', 'Lap dengan tangan kosong', 'Terus berlari keluar'],
+      explanation: 'Lantai basah boleh menyebabkan tergelincir. Beritahu guru dengan segera.',
+      emoji: '🆘',
+      cols: 1,
+    });
+  });
+}
+
 export const SAINS_GENERATORS: Record<string, (y: number, r: Rng, c: number) => Question[]> = {
   'sn1-kemahiran-saintifik': sn1KemahiranSaintifik,
+  'sn2-kemahiran-saintifik': sn3KemahiranSaintifik,
+  'sn4-kemahiran-saintifik': snTahap2KemahiranSaintifik,
+  'sn5-kemahiran-saintifik': snTahap2KemahiranSaintifik,
+  'sn6-kemahiran-saintifik': snTahap2KemahiranSaintifik,
+  'sn-peraturan-bilik-sains': snPeraturanBilikSains,
   'sn1-deria-benda-hidup': sn1DeriaBendaHidup,
   'sn1-benda-hidup-bukan-hidup': sn1BendaHidupBukanHidup,
   'sn1-magnet-penyerapan': sn1MagnetPenyerapan,
