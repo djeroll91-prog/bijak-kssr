@@ -134,9 +134,10 @@ check('Tiada aset hilang', missing.length === 0, missing.join(', '));
 check('Tiada ralat JavaScript', errors.length === 0, errors.slice(0, 3).join(' | '));
 
 // Kandungan yang dijangka daripada aplikasi sebenar (dwibahasa BM lalai).
-check('Teks Bahasa Melayu muncul', /Selamat Datang|Pilih Darjah|Utama|Subjek|Permainan|Kemajuan|Profil/.test(text));
+check('Teks Bahasa Melayu muncul', /Selamat Datang|Pilih Tahun|Utama|Subjek|Permainan|Kemajuan|Profil/.test(text));
 check('Nama aplikasi muncul', /Bijak KSSR|Selamat/.test(text));
 check('Ikon bintang/emoji muncul', /[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/u.test(text));
+check('Tiada istilah lapuk "Darjah"', !/Darjah/.test(text));
 
 // Sahkan semua fail yang dirujuk index.html benar-benar diminta/dijumpai.
 const refs = [...html.matchAll(/(?:src|href)="([^"]+)"/g)]
