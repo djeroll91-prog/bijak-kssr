@@ -176,9 +176,44 @@ export const sound = new SoundEngine();
  * Nota penting: ada peranti/penyemak imbas yang tidak menyediakan suara
  * Bahasa Melayu. Enjin ini memilih suara terbaik yang ada dan memecahkan
  * teks panjang kepada bahagian kecil supaya bacaan tidak terhenti.
+ * Jika tiada suara Melayu, ia jatuh ke suara Indonesia — sebab itu skrin
+ * Profil membenarkan pengguna memilih suara sendiri.
  */
+
+/** Kategori suara supaya senarai pilihan mudah difahami. */
+export type VoiceKind = 'malay' | 'indonesian' | 'english' | 'other';
+
+export interface VoiceOption {
+  uri: string;
+  name: string;
+  lang: string;
+  /** Suara tempatan berfungsi luar talian; suara awan perlukan internet. */
+  local: boolean;
+  kind: VoiceKind;
+}
+
+function kindOf(v: SpeechSynthesisVoice): VoiceKind {
+  if (/^ms/i.test(v.lang) || /malay|melayu/i.test(v.name)) return 'malay';
+  if (/^id/i.test(v.lang) || /indones/i.test(v.name)) return 'indonesian';
+  if (/^en/i.test(v.lang)) return 'english';
+  return 'other';
+}
+
+function toOption(v: SpeechSynthesisVoice): VoiceOption {
+  return {
+    uri: v.voiceURI,
+    name: v.name,
+    lang: v.lang,
+    local: v.localService !== false,
+    kind: kindOf(v),
+  };
+}
+
 class VoiceEngine {
   private enabled = false;
+  private prefMs: string | null = null;
+  private prefEn: string | null = null;
+  private voices: SpeechSynthesisVoice[] = [];
   private voiceMs: SpeechSynthesisVoice | null = null;
   private voiceEn: SpeechSynthesisVoice | null = null;
   private queue: string[] = [];
@@ -204,20 +239,72 @@ class VoiceEngine {
     return this.enabled;
   }
 
+  /**
+   * Suara Melayu terbaik: pilihan pengguna dahulu (jika masih ada pada
+   * peranti ini), kemudian suara Melayu sistem, dan akhirnya Indonesia
+   * kerana sebutannya paling hampir.
+   */
+  private pickMs(): SpeechSynthesisVoice | null {
+    const all = this.voices;
+    return (
+      all.find((v) => v.voiceURI === this.prefMs) ??
+      all.find((v) => /^ms/i.test(v.lang)) ??
+      all.find((v) => /malay|melayu/i.test(v.name)) ??
+      all.find((v) => /^id/i.test(v.lang)) ??
+      null
+    );
+  }
+
+  private pickEn(): SpeechSynthesisVoice | null {
+    const all = this.voices;
+    return (
+      all.find((v) => v.voiceURI === this.prefEn) ??
+      all.find((v) => /^en-GB/i.test(v.lang)) ??
+      all.find((v) => /^en/i.test(v.lang)) ??
+      null
+    );
+  }
+
   loadVoices(): void {
     if (!this.supported) return;
     const voices = window.speechSynthesis.getVoices();
     if (voices.length === 0) return;
-    // Utamakan suara Bahasa Melayu; jika tiada, Indonesia paling hampir.
-    this.voiceMs =
-      voices.find((v) => /^ms/i.test(v.lang)) ??
-      voices.find((v) => /malay|melayu/i.test(v.name)) ??
-      voices.find((v) => /^id/i.test(v.lang)) ??
-      null;
-    this.voiceEn =
-      voices.find((v) => /^en-GB/i.test(v.lang)) ??
-      voices.find((v) => /^en/i.test(v.lang)) ??
-      null;
+    this.voices = voices;
+    this.voiceMs = this.pickMs();
+    this.voiceEn = this.pickEn();
+  }
+
+  /** Suara Melayu dan Inggeris sahaja, disusun Melayu dahulu. */
+  listVoices(): VoiceOption[] {
+    if (!this.supported) return [];
+    if (this.voices.length === 0) this.loadVoices();
+    const rank: Record<VoiceKind, number> = { malay: 0, indonesian: 1, english: 2, other: 3 };
+    return this.voices
+      .filter((v) => kindOf(v) !== 'other')
+      .map(toOption)
+      .sort((a, b) => rank[a.kind] - rank[b.kind] || a.name.localeCompare(b.name));
+  }
+
+  /** Suara yang benar-benar akan digunakan untuk Bahasa Melayu. */
+  get activeMsVoice(): VoiceOption | null {
+    return this.voiceMs ? toOption(this.voiceMs) : null;
+  }
+
+  /** Suara yang benar-benar akan digunakan untuk Bahasa Inggeris. */
+  get activeEnVoice(): VoiceOption | null {
+    return this.voiceEn ? toOption(this.voiceEn) : null;
+  }
+
+  /** Adakah peranti ini langsung tiada suara Bahasa Melayu? */
+  get hasMalayVoice(): boolean {
+    return this.listVoices().some((v) => v.kind === 'malay');
+  }
+
+  /** Tetapkan suara pilihan; `null` bermakna ikut pilihan automatik. */
+  setPreference(lang: 'ms' | 'en', uri: string | null): void {
+    if (lang === 'en') this.prefEn = uri;
+    else this.prefMs = uri;
+    this.loadVoices();
   }
 
   /** Pecahkan teks panjang kepada ayat supaya setiap bahagian dibaca lancar. */

@@ -251,6 +251,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     voice.setEnabled(settings.voice);
   }, [settings.voice]);
 
+  // Suara pilihan murid/guru: dipakai sebaik sahaja senarai suara tersedia.
+  useEffect(() => {
+    voice.setPreference('ms', settings.voiceMsUri ?? null);
+    voice.setPreference('en', settings.voiceEnUri ?? null);
+  }, [settings.voiceMsUri, settings.voiceEnUri]);
+
   // Bahasa antara muka disimpan bersama data aplikasi.
   const lang: Lang = data.lang;
 

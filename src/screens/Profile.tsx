@@ -1,6 +1,6 @@
 /** Skrin profil, tetapan, pengurusan murid dan data. */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore, useT } from '../state/store';
 import { Btn, Chip, Sheet, ToggleRow, TopBar } from '../components/ui';
 import { ParentLockSheet, useParentGate } from '../components/ParentLock';
@@ -14,7 +14,7 @@ import { copyText, shareUrl } from '../lib/share';
 import type { YearNum } from '../data/types';
 
 const AVATARS = ['🦊', '🐼', '🐯', '🐨', '🐸', '🦉', '🐙', '🦄', '🐲', '🐰', '🐵', '🐧'];
-const APP_VERSION = '1.11.0';
+const APP_VERSION = '1.12.0';
 
 export function ProfileScreen() {
   const {
@@ -39,6 +39,12 @@ export function ProfileScreen() {
 
   const [screenLayout, setScreenLayout] = useScreenLayout();
   const [sheet, setSheet] = useState<null | 'name' | 'year' | 'avatar' | 'switch' | 'add' | 'reset'>(null);
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  /** Tab dalam pemilih suara: Melayu atau Inggeris. */
+  const [voiceTab, setVoiceTab] = useState<'ms' | 'en'>('ms');
+  /** Senarai suara dimuat secara tak segerak; elak senarai kosong pada buka pertama. */
+  const [voiceTick, setVoiceTick] = useState(0);
+  const voices = useMemo(() => voice.listVoices(), [voiceTick]);
   const [lockSheet, setLockSheet] = useState<null | 'set'>(null);
   /** Benar apabila PIN disemak khusus untuk membenarkan tukar PIN. */
   const [verifyForChange, setVerifyForChange] = useState(false);
@@ -60,6 +66,37 @@ export function ProfileScreen() {
   useEffect(() => {
     setNameDraft(profile?.name ?? '');
   }, [profile?.name]);
+
+  // Senarai suara dimuat secara tak segerak dalam kebanyakan pelayar.
+  useEffect(() => {
+    if (!voice.supported) return;
+    const sync = () => setVoiceTick((n) => n + 1);
+    sync();
+    window.speechSynthesis.addEventListener?.('voiceschanged', sync);
+    const timer = window.setTimeout(sync, 400);
+    return () => {
+      window.speechSynthesis.removeEventListener?.('voiceschanged', sync);
+      window.clearTimeout(timer);
+    };
+  }, []);
+
+  const activeVoice = voiceTab === 'en' ? voice.activeEnVoice : voice.activeMsVoice;
+  const hasMalay = voices.some((v) => v.kind === 'malay');
+
+  /** Label ringkas suara aktif untuk paparan baris tetapan. */
+  const voiceLabel = (v: { name: string; lang: string; local: boolean } | null): string => {
+    if (!v) return t('profile.voiceNone');
+    return `${v.name} · ${v.lang}`;
+  };
+
+  /** Pilih suara: simpan pilihan dan baca contoh supaya murid dapat dengar. */
+  const chooseVoice = (uri: string | null) => {
+    setSetting(voiceTab === 'en' ? 'voiceEnUri' : 'voiceMsUri', uri ?? undefined);
+    setVoiceTick((n) => n + 1);
+    showToast(t('profile.voiceSaved'));
+    const sample = voiceTab === 'en' ? 'Hello, this is my voice.' : 'Selamat datang ke Bijak KSSR.';
+    window.setTimeout(() => voice.speak(sample, voiceTab), 150);
+  };
 
   const stats = catalogStats();
   const pstats = profile ? profileStats(profile) : null;
@@ -170,11 +207,36 @@ export function ProfileScreen() {
               if (v) setTimeout(() => voice.speak(t('profile.voiceOn'), lang), 120);
             }}
           />
-          {!voice.supported ? (
+          {voice.supported ? (
+            <>
+              <button
+                type="button"
+                className="settings-row"
+                onClick={() => {
+                  sound.play('tap');
+                  setVoiceOpen(true);
+                }}
+              >
+                <span className="lead" aria-hidden="true">
+                  🔊
+                </span>
+                <span className="grow">
+                  <b>{t('profile.voicePick')}</b>
+                  <small>{voiceLabel(activeVoice)}</small>
+                </span>
+                <span aria-hidden="true">›</span>
+              </button>
+              {!hasMalay && voices.length > 0 ? (
+                <p className="tiny muted" style={{ margin: '-6px 4px 4px' }}>
+                  ⚠️ {t('profile.voiceWarnId')}
+                </p>
+              ) : null}
+            </>
+          ) : (
             <p className="tiny muted" style={{ margin: '-6px 4px 4px' }}>
               ℹ️ {t('profile.voiceNoSupport')}
             </p>
-          ) : null}
+          )}
           <ToggleRow
             lead="✨"
             title={t('profile.motion')}
@@ -593,6 +655,78 @@ export function ProfileScreen() {
           >
             {t('profile.reset')}
           </Btn>
+        </div>
+      </Sheet>
+
+      {/* Helaian: pilih suara bacaan */}
+      <Sheet open={voiceOpen} onClose={() => setVoiceOpen(false)} title={t('profile.voicePickTitle')}>
+        <div className="stack">
+          <div className="row" style={{ gap: 6 }}>
+            {(['ms', 'en'] as const).map((l) => (
+              <button
+                key={l}
+                type="button"
+                className="chip"
+                style={voiceTab === l ? { background: 'var(--brand)', color: '#fff' } : undefined}
+                onClick={() => {
+                  sound.play('pop');
+                  setVoiceTab(l);
+                }}
+              >
+                {l === 'ms' ? t('profile.voiceGroupMs') : t('profile.voiceGroupEn')}
+              </button>
+            ))}
+          </div>
+
+          <p className="tiny muted">{voiceLabel(activeVoice)}</p>
+
+          <button
+            type="button"
+            className="settings-row"
+            aria-pressed={!(voiceTab === 'en' ? settings.voiceEnUri : settings.voiceMsUri)}
+            onClick={() => chooseVoice(null)}
+          >
+            <span className="lead" aria-hidden="true">
+              ✨
+            </span>
+            <span className="grow">
+              <b>{t('profile.voiceAuto')}</b>
+              <small>{t('profile.voiceAutoDesc')}</small>
+            </span>
+            {!(voiceTab === 'en' ? settings.voiceEnUri : settings.voiceMsUri) ? (
+              <span aria-hidden="true">✓</span>
+            ) : null}
+          </button>
+
+          {voices.length === 0 ? (
+            <p className="tiny muted">{t('profile.voiceNone')}</p>
+          ) : (
+            voices
+              .filter((v) => (voiceTab === 'en' ? v.kind === 'english' : v.kind !== 'english'))
+              .map((v) => {
+                const picked = (voiceTab === 'en' ? settings.voiceEnUri : settings.voiceMsUri) === v.uri;
+                return (
+                  <button
+                    key={v.uri}
+                    type="button"
+                    className="settings-row"
+                    aria-pressed={picked}
+                    onClick={() => chooseVoice(v.uri)}
+                  >
+                    <span className="lead" aria-hidden="true">
+                      {v.kind === 'malay' ? '🇲🇾' : v.kind === 'indonesian' ? '🇮🇩' : '🌐'}
+                    </span>
+                    <span className="grow">
+                      <b>{v.name}</b>
+                      <small>
+                        {v.lang} · {v.local ? t('profile.voiceOffline') : t('profile.voiceOnline')}
+                      </small>
+                    </span>
+                    {picked ? <span aria-hidden="true">✓</span> : null}
+                  </button>
+                );
+              })
+          )}
         </div>
       </Sheet>
 

@@ -225,6 +225,9 @@ export interface Settings {
   /** Mod gelap: latar gelap dengan kotak bercahaya. */
   dark: boolean;
   fontScale: number;
+  /** Suara bacaan pilihan (voiceURI). Kosong = pilih automatik. */
+  voiceMsUri?: string;
+  voiceEnUri?: string;
   /** Cincangan SHA-256 PIN gerbang ibu bapa, jika ditetapkan. */
   parentPinHash?: string;
 }

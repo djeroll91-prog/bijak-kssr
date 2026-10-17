@@ -223,6 +223,9 @@ function repairSettings(raw: unknown): Settings {
     dark: raw.dark === true,
     fontScale: clampFont(Number(raw.fontScale)),
   };
+  // Suara pilihan: hanya simpan rentetan yang munasabah.
+  if (typeof raw.voiceMsUri === 'string' && raw.voiceMsUri) out.voiceMsUri = raw.voiceMsUri;
+  if (typeof raw.voiceEnUri === 'string' && raw.voiceEnUri) out.voiceEnUri = raw.voiceEnUri;
   // Gerbang ibu bapa: hanya terima cincangan berbentuk betul.
   if (typeof raw.parentPinHash === 'string' && /^[0-9a-f]{64}$/.test(raw.parentPinHash)) {
     out.parentPinHash = raw.parentPinHash;

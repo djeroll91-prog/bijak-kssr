@@ -31,8 +31,8 @@ echo "==> 3/7 paut sumber + manifest (aapt2 link)"
   --java "$OUT/gen" \
   --min-sdk-version 24 \
   --target-sdk-version 34 \
-  --version-code 11 \
-  --version-name 1.11.0 \
+  --version-code 12 \
+  --version-name 1.12.0 \
   "$OUT/compiled/res.zip"
 
 echo "==> 4/7 kompil Java (javac)"

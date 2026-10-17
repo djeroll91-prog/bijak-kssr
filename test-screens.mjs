@@ -162,6 +162,15 @@ const btn = (label) =>
   buttons().find((b) => (b.textContent || '').replace(/\s+/g, ' ').trim() === label) ??
   buttons().find((b) => (b.textContent || '').replace(/\s+/g, ' ').includes(label));
 const rendered = () => (doc.getElementById('root')?.innerHTML.length ?? 0) > 200;
+/** Tunggu sehingga syarat dipenuhi; elak kegagalan masa yang tidak stabil. */
+const waitFor = async (fn, timeout = 4000) => {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    if (fn()) return true;
+    await sleep(50);
+  }
+  return false;
+};
 /** Kembali ke skrin utama melalui butang kembali tab bawah. */
 const goHome = async () => {
   click(btn('Utama'));
@@ -251,8 +260,9 @@ await goHome();
   click(btn('Nombor Bulat Hingga 100'));
   await sleep(500);
   click(btn('Mula Belajar') ?? btn('Latihan') ?? btn('Mula'));
-  await sleep(700);
-  const quizOk = rendered() && /Soalan|Betul|Pilih|Jawapan|manakah|Apakah|Berapakah/i.test(text());
+  const quizOk =
+    (await waitFor(() => /Soalan|Betul|Pilih|Jawapan|manakah|Apakah|Berapakah/i.test(text()))) &&
+    rendered();
   check('Kuiz: skrin soalan dirender', quizOk, text().slice(0, 70));
   check('Kuiz: tiada ralat JS', errors.length === before, errors.slice(before, before + 2).join(' | '));
 }

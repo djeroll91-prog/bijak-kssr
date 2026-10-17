@@ -24,7 +24,9 @@ bash scripts/build-apk.sh                      # bina dist/bijak-kssr.apk
 ## Persekitaran Android SDK (dipasang dalam sandbox)
 
 - SDK: `/workspace/android-sdk` (`export ANDROID_HOME=/workspace/android-sdk`)
-- JAVA_HOME: `/usr/lib/jvm/java-21-openjdk-amd64`
+- JAVA_HOME: `/workspace/jdk-21.0.12.1+1` (dipasang semula ke lokasi ini selepas
+  sandbox set semula; laluan lama `/usr/lib/jvm/java-21-openjdk-amd64` sudah tiada).
+  Sahkan dengan `ls -d /workspace/jdk-*` sebelum membina.
 - Komponen dipasang: `cmdline-tools/latest`, `platform-tools`, `platforms;android-34`,
   `build-tools;34.0.0`, `build-tools;35.0.1`
 
@@ -130,7 +132,7 @@ standard BM 1.0-5.0, penomboran Sains dan Sejarah, serta label kod yang betul.
 ## Struktur
 
 - `src/screens/` — skrin utama (Home, Subjects, Games, Progress, Profile)
-- `src/lib/i18n.ts` — kamus BM (`MS`) dan EN; kira-kira 221 kunci setiap satu
+- `src/lib/i18n.ts` — kamus BM (`MS`) dan EN; kira-kira 469 kunci setiap satu (semak dengan `node audit-i18n.mjs`)
 - `src/data/topics/` — nota asas topik DSKP (kira-kira 725 nota, 159 topik)
 - `src/data/notes-extra.ts` — nota ringkas tambahan setiap topik (248 nota);
   digabungkan dalam `src/data/catalog.ts` semasa muat. Untuk tambah nota,
@@ -228,6 +230,16 @@ berulang tanpa disedari.
   turut menggunakan kelas `chart` — carta trend kini `chart chart-trend` supaya
   ujian boleh memilih bulatan dengan tepat.
 - `test-apk-load.mjs` memerlukan `PAYLOAD_DIR` (guna `dist` atau `docs`).
+  Ia juga memerlukan muatan APK diekstrak ke `/tmp/apk-payload` dahulu
+  (`unzip -o dist/bijak-kssr.apk 'assets/www/*'`), jika tidak ia gagal serta-merta.
+- `test-voice-picker.mjs` — menguji pemilih suara bacaan dengan senarai suara
+  tiruan bagi setiap platform (ada/tak ada Melayu, suara awan Edge, tiada suara).
+  Perangkap harness: jsdom tiada `SpeechSynthesisUtterance`, jadi ujian mesti
+  menyediakan kelas tiruan atau klik pilih suara akan gagal.
+- **Ujian navigasi guna `waitFor`, bukan `sleep` tetap.** Rantaian klik seperti
+  "Subjek ŌåÆ Matematik ŌåÆ topik ŌåÆ Mula Belajar" kadangkala melebihi `sleep(700)`
+  apabila mesin sibuk (gagal sekali-sekala, bukan pepijat kod). Guna corak
+  `await waitFor(() => /.../.test(text()))` untuk keputusan yang stabil.
 
 ## Ciri ulangan berjarak (v1.4.0)
 
@@ -308,3 +320,32 @@ panjang kepada ayat supaya bacaan tidak terhenti. UI menunjukkan makluman
 `profile.voiceNoSupport` bila peranti tiada enjin suara. Jika pengguna kata
 butang baca "tak berfungsi", semak `voice.supported` dahulu — ia bukan pepijat
 kod jika peranti tiada enjin TTS.
+
+### Pemilih suara (v1.12.0)
+
+Masalah sebenar pengguna: macOS **tiada** suara Melayu, jadi enjin jatuh ke suara
+Indonesia (`id-ID`) dan sebutan berbunyi Indonesia. Penyelesaian ialah pemilih
+suara dalam aplikasi (Profil ŌåÆ Pilih Suara):
+
+- Pilihan disimpan dalam `settings.voiceMsUri` dan `settings.voiceEnUri` (URI
+  suara, bukan indeks — indeks berubah antara sesi/peranti).
+- `voice.setPreference('ms'|'en', uri|null)`; `null` bermakna automatik.
+- Susunan pemilihan: pilihan pengguna (jika masih ada pada peranti) ŌåÆ padanan
+  `ms-MY` ŌåÆ nama mengandungi "malay"/"melayu" ŌåÆ `id-ID` ŌåÆ senyap.
+- Jika pilihan pengguna hilang dari peranti (contoh suara awan Edge dimatikan),
+  ia diabaikan dengan selamat dan pemilihan automatik digunakan semula.
+- UI mengelompokkan suara kepada tab Bahasa Melayu / Bahasa Inggeris dan melabel
+  suara awan sebagai "Perlu internet" (`localService === false`).
+- Amaran `profile.voiceWarnId` dipaparkan hanya apabila suara Indonesia benar-benar
+  dipakai, supaya pengguna tahu sebutan mungkin berbunyi Indonesia.
+
+Rujukan suara Melayu mengikut platform (untuk menyokong pengguna):
+
+- Windows 11: suara sistem "Microsoft Rizwan" `[ms-MY]`; Edge ada
+  "Microsoft Yasmin Online (Natural) - Malay (Malaysia)" `[ms-MY]`.
+- macOS: tiada suara Melayu tersedia — pengguna perlu pilih suara lain atau
+  terima amaran Indonesia.
+- Linux (espeak-ng): menyertakan fail suara `ms` dan `id`.
+
+Ujian: `node test-voice-picker.mjs` (jsdom, senarai suara tiruan bagi setiap
+platform di atas).
