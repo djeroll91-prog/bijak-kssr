@@ -1274,6 +1274,21 @@ function snTahap2KemahiranSaintifik(_y: number, rng: Rng, count: number): Questi
     { t: 'Berkomunikasi', d: 'Menyampaikan maklumat dalam pelbagai bentuk', e: '🗣️' },
     { t: 'Mengawal pemboleh ubah', d: 'Menetapkan perkara yang diubah dan dimalarkan', e: '🎛️' },
     { t: 'Membuat hipotesis', d: 'Menyatakan jawapan awal yang boleh diuji', e: '💡' },
+    { t: 'Menginterpretasi data', d: 'Menjelaskan maksud data yang dikumpul', e: '📊' },
+    { t: 'Mendefinisi secara operasi', d: 'Menerangkan sesuatu berdasarkan cara ia diukur', e: '📝' },
+    { t: 'Menggunakan hubungan masa dan ruang', d: 'Menghubungkan peristiwa mengikut masa dan tempat', e: '⏳' },
+    { t: 'Mengelaskan', d: 'Menyusun objek mengikut urutan tertentu', e: '🔢' },
+    { t: 'Menganalisis', d: 'Memecahkan maklumat kepada bahagian kecil', e: '🔍' },
+    { t: 'Membuat kesimpulan', d: 'Menyatakan hasil akhir berdasarkan bukti', e: '🏁' },
+    { t: 'Mengawal pemboleh ubah dimanipulasi', d: 'Perkara yang sengaja diubah dalam penyiasatan', e: '🎚️' },
+    { t: 'Mengawal pemboleh ubah bergerak balas', d: 'Perkara yang berubah akibat perubahan yang dibuat', e: '📈' },
+    { t: 'Mengawal pemboleh ubah dimalarkan', d: 'Perkara yang dikekalkan sama sepanjang penyiasatan', e: '🔒' },
+    { t: 'Mengukur dengan unit piawai', d: 'Menggunakan unit seperti cm, g dan ml', e: '📐' },
+    { t: 'Merekod data', d: 'Mencatat pemerhatian dalam jadual atau rajah', e: '🗒️' },
+    { t: 'Membina graf', d: 'Melukis graf untuk menunjukkan data dengan jelas', e: '📉' },
+    { t: 'Mengenal pasti masalah', d: 'Menentukan persoalan yang hendak dikaji', e: '❓' },
+    { t: 'Menjalankan eksperimen', d: 'Melakukan ujian mengikut langkah yang betul', e: '🧪' },
+    { t: 'Menghubung kait', d: 'Mengaitkan konsep baharu dengan yang lama', e: '🔗' },
   ];
   const rules = [
     'Tidak makan atau minum di dalam bilik sains',
@@ -1341,6 +1356,10 @@ function snPeraturanBilikSains(_y: number, rng: Rng, count: number): Question[] 
     'Menggunakan gogal dan sarung tangan apabila perlu',
     'Memberitahu guru dengan segera jika ada kemalangan',
     'Menyimpan alat sains di tempatnya selepas digunakan',
+    'Memakai apron semasa menjalankan eksperimen',
+    'Membaca arahan dengan teliti sebelum memulakan aktiviti',
+    'Melaporkan alat yang rosak kepada guru',
+    'Menjaga meja eksperimen supaya sentiasa bersih',
   ];
   const langgar = [
     'Makan dan minum di dalam bilik sains',
@@ -1348,12 +1367,21 @@ function snPeraturanBilikSains(_y: number, rng: Rng, count: number): Question[] 
     'Merasa bahan kimia untuk mengenal pastinya',
     'Membawa keluar alat sains tanpa kebenaran guru',
     'Membiarkan bahan mudah terbakar berhampiran api',
+    'Menggunakan alat kaca yang retak',
+    'Menyentuh alat elektrik dengan tangan basah',
+    'Membuang bahan kimia ke dalam sinki tanpa arahan',
+    'Mengabaikan arahan guru semasa eksperimen',
   ];
   const sebab = [
     { t: 'Tidak makan atau minum', d: 'Supaya kita tidak termakan bahan kimia berbahaya', e: '🚫🍽️' },
     { t: 'Tidak berlari', d: 'Supaya kita tidak tersandung atau memecahkan alat', e: '🏃🚫' },
     { t: 'Mencuci tangan', d: 'Supaya bahan kimia tidak masuk ke dalam badan', e: '🧼' },
     { t: 'Memakai gogal', d: 'Supaya mata kita dilindungi daripada percikan', e: '🥽' },
+    { t: 'Tidak menggunakan alat kaca retak', d: 'Supaya kita tidak terluka', e: '🔪' },
+    { t: 'Tidak menyentuh alat elektrik dengan tangan basah', d: 'Supaya kita tidak terkena renjatan elektrik', e: '⚡' },
+    { t: 'Membaca arahan sebelum mula', d: 'Supaya eksperimen dijalankan dengan betul dan selamat', e: '📖' },
+    { t: 'Memakai apron', d: 'Supaya pakaian kita tidak terkena bahan kimia', e: '🧥' },
+    { t: 'Melaporkan alat yang rosak', d: 'Supaya alat rosak diganti dan tidak mendatangkan bahaya', e: '🔧' },
   ];
   return fill(count, (i) => {
     const mode = i % 4;

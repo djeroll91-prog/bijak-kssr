@@ -349,3 +349,24 @@ Rujukan suara Melayu mengikut platform (untuk menyokong pengguna):
 
 Ujian: `node test-voice-picker.mjs` (jsdom, senarai suara tiruan bagi setiap
 platform di atas).
+
+## Bank soalan & kepelbagaian kertas (v1.13.0)
+
+Kertas peperiksaan percubaan dijana daripada penjana + bank tambahan. Supaya
+murid tidak melihat soalan yang sama berulang kali:
+
+- `src/lib/generators/extra-*.ts` mengandungi `EXTRA_QUESTIONS` (jenis
+  `ExtraTopic`) yang digabungkan dalam `extra-bank.ts`, kemudian dipakai oleh
+  `generateQuestions()` dalam `src/data/catalog.ts` sebagai lapisan dedup
+  (prompt dinormalkan, item bertindih dilangkau).
+- `buildExamPaper(year, subject, seed, avoid?)` menerima senarai prompt
+  percubaan lepas. Soalan baharu diutamakan; soalan lama hanya diambil sebagai
+  sandaran apabila bank sesuatu subjek terlalu kecil — jadi kertas sentiasa
+  cukup soalan.
+- `Profile.lastExamPrompts` (disimpan oleh `saveExam`) menyimpan prompt kertas
+  terakhir bagi setiap subjek. `MockExam` menghantarnya sebagai `avoid`.
+- Setiap item dalam bank tambahan mesti ada 4 pilihan unik selepas normalisasi
+  huruf kecil (lihat `cleanDistractors`). Elakkan pilihan yang hanya berbeza
+  dari segi huruf besar/kecil.
+- Ujian: `node verify-exam.mjs` (kepelbagaian + elak ulangan) dan
+  `node verify-generators.mjs` (bank sihat).

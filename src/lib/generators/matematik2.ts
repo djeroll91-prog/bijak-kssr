@@ -151,14 +151,16 @@ function mt3PecahanPerpuluhan(_y: number, rng: Rng, count: number): Question[] {
       });
     }
     if (mode === 2) {
-      const whole = rng.pick([24, 36, 48, 60, 72]);
       const den = rng.pick([3, 4, 6, 8]);
       const num = rng.int(1, den - 1);
+      // Gandaan penyebut supaya setiap bahagian nombor bulat.
+      const k = rng.int(4, 12);
+      const whole = den * k;
       return numeric({
         prefix: 'mt3-frac',
         prompt: `${num}/${den} daripada ${whole} = ?`,
-        answer: (whole / den) * num,
-        explanation: `${whole} ÷ ${den} = ${whole / den}, kemudian × ${num} = ${(whole / den) * num}.`,
+        answer: k * num,
+        explanation: `${whole} ÷ ${den} = ${k}, kemudian × ${num} = ${k * num}.`,
         emoji: '🍩',
         speak: `${num} per ${den} daripada ${whole}`,
       });

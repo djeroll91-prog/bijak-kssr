@@ -327,6 +327,7 @@ function en3GrammarBasics(_y: number, rng: Rng, count: number): Question[] {
     const word = rng.pick(NOUNS);
     return trueFalse({
       prefix: 'en3-grammar',
+      lang: 'en',
       prompt: `The word "${word.w}" is a noun.`,
       isTrue: true,
       explanation: `"${word.w}" (${word.ms}) is a noun because it names a thing.`,
@@ -432,6 +433,7 @@ function en3Writing(_y: number, rng: Rng, count: number): Question[] {
     }
     return trueFalse({
       prefix: 'en3-writing',
+      lang: 'en',
       prompt: `Every English sentence should begin with a capital letter.`,
       isTrue: true,
       explanation: 'Correct! Sentences always start with a capital letter.',
@@ -454,6 +456,21 @@ function en4Grammar(_y: number, rng: Rng, count: number): Question[] {
     { s: 'The book ____ written by a famous author.', a: 'was', opts: ['is', 'was', 'were', 'are'] },
     { s: 'If it rains, we ____ stay at home.', a: 'will', opts: ['will', 'would', 'were', 'was'] },
     { s: 'She is the ____ student in the class.', a: 'best', opts: ['good', 'better', 'best', 'well'] },
+    { s: 'My brother ____ his teeth twice a day.', a: 'brushes', opts: ['brush', 'brushes', 'brushing', 'brushed'] },
+    { s: 'The children ____ in the playground now.', a: 'are playing', opts: ['is playing', 'are playing', 'was playing', 'plays'] },
+    { s: 'We ____ to the beach last weekend.', a: 'went', opts: ['go', 'goes', 'went', 'going'] },
+    { s: 'She has ____ her homework already.', a: 'finished', opts: ['finish', 'finishes', 'finished', 'finishing'] },
+    { s: 'This bag is ____ than that one.', a: 'heavier', opts: ['heavy', 'heavier', 'heaviest', 'more heavy'] },
+    { s: 'There ____ many books on the shelf.', a: 'are', opts: ['is', 'are', 'was', 'am'] },
+    { s: 'He did not ____ to school yesterday.', a: 'come', opts: ['came', 'come', 'comes', 'coming'] },
+    { s: 'The sun ____ in the east.', a: 'rises', opts: ['rise', 'rises', 'rising', 'rose'] },
+    { s: 'I have lived here ____ 2015.', a: 'since', opts: ['for', 'since', 'from', 'at'] },
+    { s: 'The cat is hiding ____ the table.', a: 'under', opts: ['under', 'on', 'in', 'at'] },
+    { s: 'She sings ____ than her sister.', a: 'better', opts: ['good', 'well', 'better', 'best'] },
+    { s: 'They ____ watching a film when I called.', a: 'were', opts: ['was', 'were', 'is', 'are'] },
+    { s: 'Please ____ the door quietly.', a: 'close', opts: ['closes', 'close', 'closing', 'closed'] },
+    { s: 'Ali is the ____ boy in the class.', a: 'tallest', opts: ['tall', 'taller', 'tallest', 'more tall'] },
+    { s: 'We must ____ our homework every day.', a: 'do', opts: ['does', 'do', 'doing', 'did'] },
   ];
   return fill(count, (i) => {
     const it = rng.pick(items);
@@ -470,8 +487,15 @@ function en4Grammar(_y: number, rng: Rng, count: number): Question[] {
         speak: it.s.replace('____', 'blank'),
       });
     }
-    const word = rng.pick(['happy', 'quick', 'careful', 'loud', 'bright']);
-    const adv = word === 'happy' ? 'happily' : word === 'quick' ? 'quickly' : word === 'careful' ? 'carefully' : word === 'loud' ? 'loudly' : 'brightly';
+    const ADV: [string, string][] = [
+      ['happy', 'happily'], ['quick', 'quickly'], ['careful', 'carefully'],
+      ['loud', 'loudly'], ['bright', 'brightly'], ['quiet', 'quietly'],
+      ['slow', 'slowly'], ['polite', 'politely'], ['sudden', 'suddenly'],
+      ['gentle', 'gently'], ['angry', 'angrily'], ['brave', 'bravely'],
+    ];
+    const pair = rng.pick(ADV);
+    const word = pair[0];
+    const adv = pair[1];
     return mcq(rng, {
       prefix: 'en4-grammar',
       prompt: `What is the adverb form of "${word}"?`,
@@ -481,6 +505,16 @@ function en4Grammar(_y: number, rng: Rng, count: number): Question[] {
       emoji: '🏃',
       cols: 2,
     });
+  });
+}
+
+/** Buang kata yang berulang supaya soalan padanan tidak bertindih label. */
+function uniqueByWord<T extends { w: string }>(sets: readonly T[]): T[] {
+  const seen = new Set<string>();
+  return sets.filter((s) => {
+    if (seen.has(s.w)) return false;
+    seen.add(s.w);
+    return true;
   });
 }
 
@@ -494,10 +528,25 @@ function en4Vocabulary(_y: number, rng: Rng, count: number): Question[] {
     { w: 'ancient', m: 'very old', ms: 'purba', d: ['brand new', 'modern', 'fresh'] },
     { w: 'curious', m: 'wanting to know', ms: 'ingin tahu', d: ['bored', 'sleepy', 'careless'] },
     { w: 'delicious', m: 'tastes very good', ms: 'sedap', d: ['tasteless', 'bitter', 'poisonous'] },
+    { w: 'fragile', m: 'easily broken', ms: 'mudah pecah', d: ['very strong', 'very heavy', 'very light'] },
+    { w: 'generous', m: 'willing to give to others', ms: 'pemurah', d: ['greedy', 'selfish', 'careless'] },
+    { w: 'tranquil', m: 'calm and peaceful', ms: 'tenang', d: ['noisy', 'busy', 'dangerous'] },
+    { w: 'enormous', m: 'very large in size', ms: 'sangat besar', d: ['very small', 'very thin', 'very short'] },
+    { w: 'gigantic', m: 'extremely big', ms: 'besar sekali', d: ['tiny', 'narrow', 'shallow'] },
+    { w: 'polite', m: 'showing good manners', ms: 'beradab', d: ['rude', 'lazy', 'noisy'] },
+    { w: 'honest', m: 'always telling the truth', ms: 'jujur', d: ['dishonest', 'silly', 'slow'] },
+    { w: 'diligent', m: 'working hard and carefully', ms: 'rajin', d: ['lazy', 'careless', 'slow'] },
+    { w: 'brave', m: 'not afraid of danger', ms: 'berani', d: ['afraid', 'weak', 'shy'] },
+    { w: 'ancient', m: 'from a very long time ago', ms: 'purba', d: ['modern', 'brand new', 'recent'] },
+    { w: 'curious', m: 'eager to know something', ms: 'ingin tahu', d: ['bored', 'sleepy', 'angry'] },
+    { w: 'tidy', m: 'neat and in order', ms: 'kemas', d: ['messy', 'dirty', 'crowded'] },
+    { w: 'scarce', m: 'not enough or hard to find', ms: 'sukar didapati', d: ['plentiful', 'cheap', 'useless'] },
+    { w: 'rapid', m: 'very fast', ms: 'cepat', d: ['slow', 'steady', 'gentle'] },
   ];
   return fill(count, (i) => {
     if (i % 3 === 0) {
-      const picked = rng.sample(sets, 3);
+      // Buang kata berulang supaya soalan padanan tiada label kiri bertindih.
+      const picked = rng.sample(uniqueByWord(sets), 3);
       return match({
         prefix: 'en4-vocab',
         prompt: 'Match each word with its meaning.',
@@ -561,6 +610,41 @@ function en4ReadingComprehension(_y: number, rng: Rng, count: number): Question[
       d: ['Christmas and Easter', 'Songkran and Loy Krathong', 'Halloween and Thanksgiving'],
       why: 'The third sentence lists the festivals mentioned.',
     },
+    {
+      t: 'Reading is a habit that benefits us for life. It improves our vocabulary and strengthens our imagination. Readers also learn to concentrate for longer periods. A good habit is to read for twenty minutes every day.',
+      q: 'What does reading improve according to the text?',
+      a: 'Vocabulary and imagination',
+      d: ['Height and weight', 'Speed and strength', 'Appetite and sleep'],
+      why: 'The second sentence says reading improves vocabulary and imagination.',
+    },
+    {
+      t: 'Water is essential for all living things. Plants need water to make food, while animals and humans need it to stay healthy. Saving water means turning off taps and fixing leaks. Every drop we save helps the environment.',
+      q: 'Why do plants need water?',
+      a: 'To make food',
+      d: ['To stay warm', 'To grow taller than trees', 'To change colour'],
+      why: 'The text says plants need water to make food.',
+    },
+    {
+      t: 'Road safety begins with good habits. Pedestrians should use zebra crossings and look both ways before crossing. Wearing a helmet protects cyclists from serious injury. Following traffic rules keeps everyone safe.',
+      q: 'What should pedestrians use when crossing the road?',
+      a: 'Zebra crossings',
+      d: ['Any part of the road', 'Bus stops', 'Car parks'],
+      why: 'The text states pedestrians should use zebra crossings.',
+    },
+    {
+      t: 'Breakfast is often called the most important meal of the day. It gives us energy to start the morning well. Students who eat breakfast find it easier to concentrate in class. A simple meal of bread and fruit is enough.',
+      q: 'Why is breakfast important?',
+      a: 'It gives us energy for the morning',
+      d: ['It makes us sleepy', 'It replaces lunch', 'It is the cheapest meal'],
+      why: 'The second sentence explains that breakfast gives us energy.',
+    },
+    {
+      t: 'Bees play a vital role in nature. As they collect nectar, they carry pollen from flower to flower. This process allows plants to produce fruits and seeds. Without bees, many of our favourite foods would disappear.',
+      q: 'What do bees carry from flower to flower?',
+      a: 'Pollen',
+      d: ['Water', 'Soil', 'Leaves'],
+      why: 'The text says bees carry pollen from flower to flower.',
+    },
   ];
   return fill(count, (i) => {
     const p = rng.pick(passages);
@@ -594,6 +678,14 @@ function en4Writing(_y: number, rng: Rng, count: number): Question[] {
     { t: 'My Best Holiday', o: 'In the beginning', b: 'my family and I travelled to Penang' },
     { t: 'An Unforgettable Day', o: 'It started when', b: 'I woke up late for school' },
     { t: 'Cleanliness Campaign', o: 'To begin with', b: 'the pupils gathered at the school hall' },
+    { t: 'A Day at the Beach', o: 'Early in the morning', b: 'we set off for the beach with our picnic basket' },
+    { t: 'The Lost Wallet', o: 'While walking home', b: 'I noticed a wallet lying on the pavement' },
+    { t: 'My First Day at School', o: 'On my first day', b: 'I felt nervous as I entered the classroom' },
+    { t: 'A Rainy Afternoon', o: 'The sky turned dark', b: 'and heavy rain began to fall' },
+    { t: 'The School Sports Day', o: 'The sports day began', b: 'with a march past by all the houses' },
+    { t: 'Helping My Mother', o: 'Last Saturday morning', b: 'I decided to help my mother in the kitchen' },
+    { t: 'A Fire in the Neighbourhood', o: 'It was past midnight when', b: 'I heard shouting from the street' },
+    { t: 'My Favourite Teacher', o: 'The teacher I admire most', b: 'is always patient and kind to us' },
   ];
   return fill(count, (i) => {
     const it = rng.pick(items);
@@ -626,6 +718,7 @@ function en4Writing(_y: number, rng: Rng, count: number): Question[] {
     }
     return trueFalse({
       prefix: 'en4-writing',
+      lang: 'en',
       prompt: 'A paragraph should focus on one main idea.',
       isTrue: true,
       explanation: 'Correct! Each paragraph should develop one main idea.',
@@ -644,6 +737,21 @@ function en5GrammarAdvanced(_y: number, rng: Rng, count: number): Question[] {
     { s: 'She is used ____ getting up early.', a: 'to', opts: ['to', 'for', 'of', 'at'] },
     { s: 'The more you practise, the ____ you become.', a: 'better', opts: ['good', 'best', 'better', 'well'] },
     { s: 'Hardly ____ he arrived when it started to rain.', a: 'had', opts: ['has', 'had', 'have', 'having'] },
+    { s: 'The teacher told us that the earth ____ round.', a: 'is', opts: ['is', 'was', 'were', 'be'] },
+    { s: 'She apologised ____ being late.', a: 'for', opts: ['for', 'of', 'to', 'at'] },
+    { s: 'This is the house ____ my grandfather built.', a: 'which', opts: ['who', 'which', 'whose', 'whom'] },
+    { s: 'He would rather read ____ watch television.', a: 'than', opts: ['then', 'than', 'that', 'to'] },
+    { s: 'By next year, she ____ finished her studies.', a: 'will have', opts: ['will has', 'will have', 'has', 'had'] },
+    { s: 'The children were excited ____ the trip.', a: 'about', opts: ['about', 'of', 'at', 'for'] },
+    { s: 'Not until midnight ____ the rain stop.', a: 'did', opts: ['did', 'does', 'do', 'done'] },
+    { s: 'She spoke as if she ____ everything.', a: 'knew', opts: ['know', 'knows', 'knew', 'known'] },
+    { s: 'The work must ____ completed today.', a: 'be', opts: ['be', 'is', 'was', 'been'] },
+    { s: 'It was the best film ____ I have ever seen.', a: 'that', opts: ['that', 'who', 'whose', 'whom'] },
+    { s: 'We had better ____ now before it rains.', a: 'leave', opts: ['leave', 'leaves', 'left', 'leaving'] },
+    { s: 'She is the girl ____ bag was stolen.', a: 'whose', opts: ['who', 'whose', 'which', 'whom'] },
+    { s: 'The meeting was postponed ____ the flood.', a: 'because of', opts: ['because', 'because of', 'although', 'despite of'] },
+    { s: 'No sooner had he sat down ____ the bell rang.', a: 'than', opts: ['then', 'than', 'when', 'that'] },
+    { s: 'Neither of the answers ____ correct.', a: 'is', opts: ['is', 'are', 'were', 'be'] },
   ];
   return fill(count, (i) => {
     const it = rng.pick(items);
@@ -667,6 +775,20 @@ function en5GrammarAdvanced(_y: number, rng: Rng, count: number): Question[] {
       ['hit the books', 'study hard'],
       ['under the weather', 'feeling unwell'],
       ['cost an arm and a leg', 'very expensive'],
+      ['let the cat out of the bag', 'reveal a secret'],
+      ['a blessing in disguise', 'something good that seemed bad'],
+      ['bite the bullet', 'face something difficult bravely'],
+      ['the ball is in your court', 'it is your turn to decide'],
+      ['burn the midnight oil', 'study or work late at night'],
+      ['a drop in the ocean', 'a very small amount'],
+      ['on cloud nine', 'extremely happy'],
+      ['pull someone\'s leg', 'tease someone as a joke'],
+      ['see eye to eye', 'agree with each other'],
+      ['turn a blind eye', 'pretend not to notice'],
+      ['keep an eye on', 'watch carefully'],
+      ['get cold feet', 'become nervous and hesitant'],
+      ['a piece of advice', 'a suggestion to help someone'],
+      ['out of the blue', 'suddenly and unexpectedly'],
     ];
     const it2 = rng.pick(idioms);
     return mcq(rng, {
@@ -705,6 +827,34 @@ function en5ReadingAdvanced(_y: number, rng: Rng, count: number): Question[] {
       d: ['Cooking and cleaning', 'Farming and fishing', 'Reading and writing'],
       why: 'The second sentence lists the uses of satellites.',
     },
+    {
+      t: 'Volunteering benefits both the community and the volunteer. Volunteers develop new skills and gain valuable experience. They also build friendships with people from different backgrounds. Communities with active volunteers tend to be stronger and more caring.',
+      q: 'What do volunteers gain according to the text?',
+      a: 'New skills and experience',
+      d: ['Large salaries', 'Free holidays', 'New houses'],
+      why: 'The second sentence says volunteers develop new skills and gain experience.',
+    },
+    {
+      t: 'Public transport reduces traffic congestion and air pollution. A single bus can carry as many passengers as forty cars. Using buses and trains also saves money on fuel and parking. Cities with good public transport are more pleasant to live in.',
+      q: 'How many cars can one bus replace?',
+      a: 'Forty',
+      d: ['Four', 'Fourteen', 'Four hundred'],
+      why: 'The text says a single bus can carry as many passengers as forty cars.',
+    },
+    {
+      t: 'Good time management helps students succeed. Planning a timetable allows them to balance study and rest. Breaking large tasks into smaller steps makes work less stressful. Students who plan ahead rarely rush their assignments.',
+      q: 'What does a timetable help students balance?',
+      a: 'Study and rest',
+      d: ['Money and food', 'Friends and family', 'Sport and music'],
+      why: 'The text says a timetable balances study and rest.',
+    },
+    {
+      t: 'Coral reefs are among the richest habitats in the sea. They shelter thousands of species of fish and other creatures. Rising sea temperatures, however, cause coral bleaching. Protecting reefs requires reducing pollution and limiting harmful fishing.',
+      q: 'What causes coral bleaching?',
+      a: 'Rising sea temperatures',
+      d: ['Heavy rainfall', 'Strong winds', 'Cold currents'],
+      why: 'The text states rising sea temperatures cause coral bleaching.',
+    },
   ];
   return fill(count, (i) => {
     const p = rng.pick(passages);
@@ -742,6 +892,22 @@ function en6GrammarMastery(_y: number, rng: Rng, count: number): Question[] {
     { s: 'The children, ____ parents were late, waited patiently.', a: 'whose', opts: ['who', 'whose', 'whom', 'which'] },
     { s: 'If she ____ harder, she would have passed.', a: 'had studied', opts: ['studied', 'had studied', 'studies', 'has studied'] },
     { s: 'He is regarded ____ one of the best players.', a: 'as', opts: ['as', 'like', 'for', 'to'] },
+    { s: 'The manager insisted that the report ____ submitted on time.', a: 'be', opts: ['is', 'be', 'was', 'were'] },
+    { s: 'Scarcely had she spoken ____ everyone applauded.', a: 'when', opts: ['then', 'when', 'than', 'that'] },
+    { s: 'The proposal, ____ merits were clear, was approved.', a: 'whose', opts: ['who', 'whose', 'which', 'that'] },
+    { s: 'He is accustomed ____ working under pressure.', a: 'to', opts: ['to', 'for', 'of', 'with'] },
+    { s: 'Were I ____ the opportunity, I would accept it.', a: 'given', opts: ['give', 'given', 'gave', 'giving'] },
+    { s: 'The scientists, together with their assistants, ____ the results.', a: 'published', opts: ['publish', 'published', 'publishing', 'publishes'] },
+    { s: 'It was not until dawn ____ the rescue team arrived.', a: 'that', opts: ['that', 'when', 'then', 'which'] },
+    { s: 'She would rather ____ the truth than hide it.', a: 'tell', opts: ['tell', 'tells', 'told', 'telling'] },
+    { s: 'Little ____ we know about the depth of the ocean.', a: 'do', opts: ['do', 'does', 'did', 'done'] },
+    { s: 'The evidence must ____ examined carefully.', a: 'be', opts: ['be', 'is', 'was', 'been'] },
+    { s: 'He was promoted ____ virtue of his hard work.', a: 'by', opts: ['by', 'in', 'on', 'at'] },
+    { s: 'Such was the noise ____ nobody could hear me.', a: 'that', opts: ['that', 'which', 'when', 'who'] },
+    { s: 'The committee has yet ____ reach a decision.', a: 'to', opts: ['to', 'for', 'of', 'at'] },
+    { s: 'If only I ____ listened to your advice.', a: 'had', opts: ['have', 'had', 'has', 'having'] },
+    { s: 'Hardly ever ____ she complain about her work.', a: 'does', opts: ['do', 'does', 'did', 'doing'] },
+    { s: 'The rules require that all forms ____ signed.', a: 'be', opts: ['are', 'be', 'were', 'is'] },
   ];
   return fill(count, (i) => {
     const it = rng.pick(items);
@@ -765,6 +931,24 @@ function en6GrammarMastery(_y: number, rng: Rng, count: number): Question[] {
       ['ambiguous', 'unclear or having more than one meaning'],
       ['profound', 'very deep or intense'],
       ['inevitable', 'certain to happen'],
+      ['tenacious', 'holding on firmly and not giving up'],
+      ['eloquent', 'speaking clearly and persuasively'],
+      ['prudent', 'acting with care and good judgement'],
+      ['vehement', 'showing very strong feeling'],
+      ['obsolete', 'no longer used or out of date'],
+      ['lucrative', 'producing a lot of money'],
+      ['arduous', 'needing much effort and hard work'],
+      ['candid', 'honest and direct'],
+      ['meticulous', 'very careful about small details'],
+      ['resilient', 'able to recover quickly from difficulty'],
+      ['ambiguous', 'unclear or having more than one meaning'],
+      ['benevolent', 'kind and generous'],
+      ['profound', 'very deep or intense'],
+      ['abundant', 'existing in large quantities'],
+      ['tedious', 'boring because it lasts too long'],
+      ['innovative', 'introducing new ideas or methods'],
+      ['diligent', 'careful and persistent in work'],
+      ['reluctant', 'unwilling and hesitant'],
     ];
     const it2 = rng.pick(prose);
     return mcq(rng, {
@@ -1000,6 +1184,7 @@ function en2Punctuation(_y: number, rng: Rng, count: number): Question[] {
     const it = rng.pick(fix);
     return trueFalse({
       prefix: 'en2-punct',
+      lang: 'en',
       prompt: `This sentence is correct: "${it.good}"`,
       isTrue: true,
       explanation: it.why,
@@ -1070,6 +1255,7 @@ function en5WritingPurposes(_y: number, rng: Rng, count: number): Question[] {
     const f = rng.pick(features);
     return trueFalse({
       prefix: 'en5-purpose',
+      lang: 'en',
       prompt: `"${f.ex}" is an example of a ${f.part.toLowerCase()}.`,
       isTrue: true,
       explanation: f.why,

@@ -2499,6 +2499,118 @@ ul {
   z-index: 68;
 }
 
+/* --------------------------------------------------------------------------
+   Pemilih subjek peperiksaan
+   -------------------------------------------------------------------------- */
+
+.subject-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.subject-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--surface-sunken);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.subject-chip[data-active='true'] {
+  background: var(--brand-soft);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+/* Nombor soalan Bahagian B dibezakan sedikit supaya mudah dikesan. */
+.exam-jump[data-part='B'] {
+  border-style: dashed;
+}
+
+/* --------------------------------------------------------------------------
+   Jawapan taip (Bahagian B)
+   -------------------------------------------------------------------------- */
+
+.typed-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.typed-unit {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: var(--radius-sm, 12px);
+  background: var(--surface-sunken);
+  color: var(--ink-soft);
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+/* Ruang conteng: kanvas nipis supaya mudah dikendalikan jari. */
+.workpad {
+  border: 2px dashed var(--surface-sunken);
+  border-radius: 14px;
+  padding: 10px;
+  background: var(--surface-soft);
+}
+
+.workpad-canvas {
+  display: block;
+  width: 100%;
+  height: 150px;
+  border-radius: 10px;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 27px,
+    var(--surface-sunken) 27px 28px
+  );
+  touch-action: none;
+  cursor: crosshair;
+}
+
+/* Kad langkah kerja: mengajar CARA mengira, bukan sekadar jawapan. */
+.steps-card {
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: var(--info-soft);
+  border: 1px solid rgba(61, 146, 214, 0.28);
+}
+
+.steps-title {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.steps-list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.steps-list li::marker {
+  color: var(--info);
+  font-weight: 900;
+}
+
 /* ------------------------------------------------------------------ */
 /* Tips menjawab                                                       */
 /* ------------------------------------------------------------------ */

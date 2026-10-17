@@ -9,10 +9,17 @@
 
 import type { Question, SubjectId, Topic, YearNum } from '../data/types';
 import { ALL_TOPICS, generateQuestions } from '../data/catalog';
+import { Rng } from './rng';
+import { WRITTEN } from './generators/written';
+import { typedCorrect } from './generators/written';
 
 /** Konfigurasi kertas mengikut tahun. */
 export interface ExamConfig {
-  /** Bilangan soalan dalam kertas. */
+  /** Bilangan soalan Bahagian A (pilihan jawapan A/B/C/D). */
+  partA: number;
+  /** Bilangan soalan Bahagian B (murid taip jawapan). */
+  partB: number;
+  /** Jumlah soalan dalam kertas. */
   questions: number;
   /** Tempoh masa dalam minit. */
   minutes: number;
@@ -30,10 +37,18 @@ export const EXAM_TOPIC_ID = 'exam';
 /**
  * Tahap 1 (Tahun 1-3) guna kertas pendek supaya murid tidak penat.
  * Tahap 2 (Tahun 4-6) guna kertas lebih panjang seperti peperiksaan sebenar.
+ * Setiap kertas ada dua bahagian: pilihan jawapan dan jawapan taip.
  */
 export function examConfig(year: YearNum): ExamConfig {
-  if (year <= 3) return { questions: 20, minutes: 30, passPct: 60 };
-  return { questions: 40, minutes: 60, passPct: 60 };
+  const partA = year <= 3 ? 12 : 20;
+  const partB = year <= 3 ? 6 : 10;
+  return {
+    partA,
+    partB,
+    questions: partA + partB,
+    minutes: year <= 3 ? 35 : 60,
+    passPct: 60,
+  };
 }
 
 /** Gred KSSR mengikut peratus markah. */
@@ -89,121 +104,254 @@ function shuffle<T>(arr: readonly T[], rnd: () => number): T[] {
 }
 
 /** Semua topik bagi sesuatu tahun, diselang-selikan antara subjek. */
-export function examTopics(year: YearNum, seed: number): Topic[] {
+export function examTopics(year: YearNum, subject: SubjectId, seed: number): Topic[] {
   const rnd = mulberry(seed);
-  const bySubject = new Map<SubjectId, Topic[]>();
-  for (const t of ALL_TOPICS) {
-    if (t.year !== year) continue;
-    const list = bySubject.get(t.subject) ?? [];
-    list.push(t);
-    bySubject.set(t.subject, list);
-  }
-  // Rawakkan setiap subjek dahulu, kemudian ambil giliran satu demi satu
-  // supaya soalan berselang antara subjek.
-  const pools = [...bySubject.keys()]
-    .sort()
-    .map((s) => shuffle(bySubject.get(s) ?? [], rnd));
-  const out: Topic[] = [];
-  let added = true;
-  while (added) {
-    added = false;
-    for (const pool of pools) {
-      const next = pool.shift();
-      if (next) {
-        out.push(next);
-        added = true;
-      }
-    }
-  }
-  return out;
+  const pool = ALL_TOPICS.filter((t) => t.year === year && t.subject === subject);
+  return shuffle(pool, rnd);
 }
 
 export interface ExamPaper {
   year: YearNum;
+  /** Subjek kertas ini. Satu kertas hanya mengandungi satu subjek. */
+  subject: SubjectId;
   config: ExamConfig;
   questions: Question[];
   /** Topik bagi setiap soalan (kunci = `Question.id`). */
   topicOf: Map<string, Topic>;
   /** Semua topik yang diuji dalam kertas ini. */
   topics: Topic[];
-  /** Subjek yang diuji dalam kertas ini. */
-  subjects: SubjectId[];
 }
 
 /**
- * Bina satu kertas peperiksaan percubaan.
+ * Bina satu kertas peperiksaan percubaan bagi SATU subjek.
  *
- * Soalan diagihkan secara adil ke atas topik tahun itu, kemudian
- * diselang-selikan supaya dua soalan berturut-turut tidak datang daripada
- * topik yang sama. Tiada dua soalan dengan teks yang sama dalam satu kertas,
- * dan benih berbeza menghasilkan kertas yang berbeza setiap percubaan.
+ * Kertas mengandungi dua bahagian seperti peperiksaan sebenar:
+ *   - Bahagian A: pilihan jawapan A, B, C dan D (tepat empat pilihan).
+ *   - Bahagian B: murid menaip jawapan sendiri.
+ *
+ * Semua soalan datang daripada subjek yang dipilih sahaja, jadi kertas
+ * Bahasa Melayu mengandungi soalan Bahasa Melayu sepenuhnya. Benih berbeza
+ * menghasilkan kertas berbeza, dan tiada soalan berulang dalam satu kertas.
  */
-export function buildExamPaper(year: YearNum, seed: number): ExamPaper {
+export function buildExamPaper(
+  year: YearNum,
+  subject: SubjectId,
+  seed: number,
+  avoid: readonly string[] = [],
+): ExamPaper {
   const config = examConfig(year);
-  const topics = examTopics(year, seed);
-  if (topics.length === 0) {
-    return { year, config, questions: [], topicOf: new Map(), topics: [], subjects: [] };
-  }
+  const topics = examTopics(year, subject, seed);
+  // Soalan percubaan lepas: utamakan soalan baharu, tetapi jangan sampai
+  // kertas tidak dapat diisi apabila bank soalan sesuatu subjek kecil.
+  const avoidSet = new Set(avoid.map(normalise));
+  const empty: ExamPaper = {
+    year,
+    subject,
+    config,
+    questions: [],
+    topicOf: new Map(),
+    topics: [],
+  };
+  if (topics.length === 0) return empty;
 
-  // Kuota setiap topik. Apabila topik lebih banyak daripada soalan, hanya
-  // sebahagian topik dipilih supaya jumlah soalan kekal seperti yang ditetapkan.
-  const base = Math.floor(config.questions / topics.length);
-  const rem = config.questions % topics.length;
-  const quotas = topics.map((_, i) => base + (i < rem ? 1 : 0));
-  // Kekalkan sekurang-kurangnya satu soalan setiap topik apabila ada ruang.
-  if (base === 0) {
-    // Jumlah soalan mencukupi atau lebih daripada topik: pilih sebahagian sahaja.
-    const picked = quotas.filter((q) => q > 0).length;
-    if (picked < config.questions) {
-      for (let i = picked; i < Math.min(topics.length, config.questions); i += 1) {
-        quotas[i] = 1;
-      }
-    }
-  }
-
-  // Jana soalan dan buang pertindihan teks supaya tiada soalan berulang.
   const seen = new Set<string>();
+  const topicOf = new Map<string, Topic>();
+  const used = new Set<string>();
+
+  /* ---------------- Bahagian B: jawapan taip ---------------- */
+
+  // Bahagian B dibina DAHULU kerana bahan jawapan taip lebih terhad
+  // berbanding soalan pilihan. Jika Part A dibina dahulu, ia akan menelan
+  // hampir semua soalan dan Part B tidak cukup untuk diisi (terutama
+  // Sejarah dan Sains yang bank soalnya kecil).
+  const pool = writtenPool(topics, seed);
+  const partB: Question[] = [];
+  const fallbackB: { question: Question; topic: Topic }[] = [];
+  for (const item of interleaveByTopic(pool)) {
+    if (partB.length >= config.partB) break;
+    const key = normalise(item.question.prompt);
+    if (seen.has(key)) continue;
+    if (avoidSet.has(key)) {
+      fallbackB.push(item);
+      continue;
+    }
+    seen.add(key);
+    const q: Question = { ...item.question, part: 'B' };
+    partB.push(q);
+    topicOf.set(q.id, item.topic);
+    used.add(item.topic.id);
+  }
+  for (const { question, topic } of interleaveByTopic(fallbackB)) {
+    if (partB.length >= config.partB) break;
+    const key = normalise(question.prompt);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const q: Question = { ...question, part: 'B' };
+    partB.push(q);
+    topicOf.set(q.id, topic);
+    used.add(topic.id);
+  }
+
+  /* ---------------- Bahagian A: pilihan jawapan ---------------- */
+
+  const partA: Question[] = [];
+  const quotas = distribute(config.partA, topics.length);
   const buckets: Question[][] = topics.map((topic, i) => {
     const quota = quotas[i];
     if (quota <= 0) return [];
     // Jana lebih sedikit daripada kuota supaya ada bahan ganti apabila
     // terdapat pertindihan teks dengan topik lain.
-    const qs = generateQuestions(topic.id, quota + 4, seed + i * 7919 + year * 104729);
+    const qs = generateQuestions(topic.id, quota + 8, seed + i * 7919 + year * 104729);
     const out: Question[] = [];
+    const reserve: Question[] = [];
     for (const q of qs) {
+      // Bahagian A hanya jenis pilihan jawapan dengan empat pilihan.
+      if (!isChoiceQuestion(q)) continue;
       const key = normalise(q.prompt);
       if (seen.has(key)) continue;
+      if (avoidSet.has(key)) {
+        reserve.push({ ...q, part: 'A' });
+        continue;
+      }
       seen.add(key);
-      out.push(q);
+      out.push({ ...q, part: 'A' });
       if (out.length >= quota) break;
     }
-    return out;
+    return out.length > 0 ? out : reserve;
   });
 
-  // Selang-selikan bucket supaya soalan berselang antara topik dan subjek.
-  const questions: Question[] = [];
-  const topicOf = new Map<string, Topic>();
-  const maxLen = Math.max(...buckets.map((b) => b.length));
+  const maxLen = Math.max(0, ...buckets.map((b) => b.length));
   for (let i = 0; i < maxLen; i += 1) {
     for (const [k, bucket] of buckets.entries()) {
       const q = bucket[i];
       if (!q) continue;
-      if (questions.length >= config.questions) break;
-      questions.push(q);
+      if (partA.length >= config.partA) break;
+      partA.push(q);
       topicOf.set(q.id, topics[k]);
+      used.add(topics[k].id);
     }
-    if (questions.length >= config.questions) break;
+    if (partA.length >= config.partA) break;
+  }
+
+  /* ---------------- Penuhkan sisa slot Bahagian A ---------------- */
+
+  // Jika sesetengah topik tidak menghasilkan cukup soalan empat pilihan,
+  // kumpul baki daripada semua topik supaya jumlah soalan seperti dijanjikan.
+  if (partA.length < config.partA) {
+    const spare: { q: Question; topic: Topic }[] = [];
+    for (const [k, topic] of topics.entries()) {
+      const extra = generateQuestions(
+        topic.id,
+        config.partA + 12,
+        seed + k * 7919 + year * 104729 + 424243,
+      );
+      for (const q of extra) {
+        if (isChoiceQuestion(q)) spare.push({ q, topic });
+      }
+    }
+    const spareFallback: { q: Question; topic: Topic }[] = [];
+    for (const item of interleaveByTopic(spare)) {
+      if (partA.length >= config.partA) break;
+      const key = normalise(item.q.prompt);
+      if (seen.has(key)) continue;
+      if (avoidSet.has(key)) {
+        spareFallback.push(item);
+        continue;
+      }
+      seen.add(key);
+      const qq: Question = { ...item.q, part: 'A' };
+      partA.push(qq);
+      topicOf.set(qq.id, item.topic);
+      used.add(item.topic.id);
+    }
+    for (const { q, topic } of interleaveByTopic(spareFallback)) {
+      if (partA.length >= config.partA) break;
+      const key = normalise(q.prompt);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const qq: Question = { ...q, part: 'A' };
+      partA.push(qq);
+      topicOf.set(qq.id, topic);
+      used.add(topic.id);
+    }
   }
 
   return {
     year,
+    subject,
     config,
-    questions,
+    questions: [...partA, ...partB],
     topicOf,
-    topics: topics.filter((_, i) => quotas[i] > 0),
-    subjects: [...new Set(topics.filter((_, i) => quotas[i] > 0).map((t) => t.subject))],
+    topics: topics.filter((t) => used.has(t.id)),
   };
 }
+
+/** Bahagian A hanya menerima soalan yang ada tepat empat pilihan jawapan. */
+export function isChoiceQuestion(q: Question): boolean {
+  if (q.kind === 'mcq' || q.kind === 'fillblank') {
+    return (q.options?.length ?? 0) === 4;
+  }
+  return false;
+}
+
+/** Agihkan `total` kuota ke atas `n` slot, selebihnya diberi kepada slot awal. */
+function distribute(total: number, n: number): number[] {
+  if (n <= 0) return [];
+  const base = Math.floor(total / n);
+  const rem = total % n;
+  return Array.from({ length: n }, (_, i) => base + (i < rem ? 1 : 0));
+}
+
+/**
+ * Bahan jawapan taip bagi semua topik, digabung merentas tahap kelonggaran.
+ *
+ * Tahap ketat didahulukan supaya soalan yang paling sesuai untuk ditaip
+ * muncul dahulu. Tahap longgar menambah bahan bagi subjek yang bank soalnya
+ * kecil (cth. Sejarah), jadi Bahagian B tetap boleh diisi.
+ */
+function writtenPool(
+  topics: Topic[],
+  seed: number,
+): { question: Question; topic: Topic }[] {
+  const tiers = ['strict', 'relaxed', 'any'] as const;
+  const seen = new Set<string>();
+  const out: { question: Question; topic: Topic }[] = [];
+  for (const [ti, tier] of tiers.entries()) {
+    const rnd = new Rng(seed ^ 0x5f3759df ^ (ti * 104729));
+    for (const topic of topics) {
+      const gen = WRITTEN[topic.subject];
+      if (!gen) continue;
+      for (const q of rnd.shuffle(gen(topic, rnd, tier))) {
+        const key = normalise(q.prompt);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push({ question: q, topic });
+      }
+    }
+  }
+  return out;
+}
+
+/** Selang-selikan bahan mengikut topik supaya kertas meliputi semua topik. */
+function interleaveByTopic<T extends { topic: Topic }>(list: T[]): T[] {
+  const byTopic = new Map<string, T[]>();
+  for (const item of list) {
+    const arr = byTopic.get(item.topic.id) ?? [];
+    arr.push(item);
+    byTopic.set(item.topic.id, arr);
+  }
+  const groups = [...byTopic.values()];
+  const out: T[] = [];
+  const maxLen = Math.max(0, ...groups.map((g) => g.length));
+  for (let i = 0; i < maxLen; i += 1) {
+    for (const g of groups) {
+      const item = g[i];
+      if (item) out.push(item);
+    }
+  }
+  return out;
+}
+
 
 /** Bentuk teks yang boleh dibandingkan untuk mengesan soalan bertindih. */
 function normalise(s: string): string {
@@ -236,7 +384,7 @@ export interface ExamScore {
 
 export function scoreExam(
   paper: ExamPaper,
-  answers: Record<string, { ok: boolean }>,
+  answers: Record<string, { ok: boolean; given?: string }>,
 ): ExamScore {
   const perTopic = new Map<string, { correct: number; total: number }>();
   const perSubject = new Map<SubjectId, { correct: number; total: number }>();
@@ -244,7 +392,11 @@ export function scoreExam(
   for (const q of paper.questions) {
     const topic = paper.topicOf.get(q.id);
     if (!topic) continue;
-    const ok = Boolean(answers[q.id]?.ok);
+    // Soalan taip disemak di sini supaya markah tidak bergantung pada UI.
+    const a = answers[q.id];
+    const ok = q.kind === 'shorttext'
+      ? typedCorrect(q, a?.given ?? '')
+      : Boolean(a?.ok);
 
     const t = perTopic.get(topic.id) ?? { correct: 0, total: 0 };
     t.total += 1;

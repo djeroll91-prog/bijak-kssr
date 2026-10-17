@@ -17,7 +17,9 @@ import { BAHASA_MELAYU_GENERATORS } from '../lib/generators/bahasa-melayu';
 import { ENGLISH_GENERATORS } from '../lib/generators/english';
 import { SAINS_GENERATORS } from '../lib/generators/sains';
 import { SEJARAH_GENERATORS } from '../lib/generators/sejarah';
+import { EXTRA_QUESTIONS } from '../lib/generators/extra-bank';
 import type { Generator } from '../lib/generators/shared';
+import { defaultHint, mcq } from '../lib/generators/shared';
 import { Rng } from '../lib/rng';
 
 export const ALL_TOPICS: Topic[] = [
@@ -74,6 +76,10 @@ export function hasGenerator(id: string): boolean {
 /**
  * Jana satu set soalan untuk topik tertentu.
  * Benih baharu menghasilkan set yang berbeza setiap sesi.
+ *
+ * Setiap soalan diberi petunjuk (hint) melalui `defaultHint` supaya murid
+ * yang tersekat sentiasa ada bantuan sebelum menjawab, walaupun penjana
+ * asal tidak menyediakan hint khusus.
  */
 export function generateQuestions(
   topicId: string,
@@ -86,10 +92,39 @@ export function generateQuestions(
   if (!gen) return [];
   const rng = new Rng(seed ?? Rng.sessionSeed());
   const questions = gen(topic.year, rng, count);
+
+  // Bank tambahan menambah kedalaman topik yang asalnya kecil.
+  const extra = EXTRA_QUESTIONS[topicId];
+  if (extra) {
+    const seen = new Set(questions.map((q) => normPrompt(q.prompt)));
+    for (const [prompt, answer, distractors] of extra.items) {
+      const key = normPrompt(prompt);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      questions.push(
+        mcq(rng, {
+          prefix: topicId,
+          prompt,
+          answer,
+          distractors,
+          explanation: `${answer} — jawapan yang betul.`,
+          emoji: extra.emoji,
+          cols: 1,
+        }),
+      );
+    }
+  }
+
   // Pastikan turutan rawak dan tiada id bertindih.
   const shuffled = rng.shuffle(questions);
-  return shuffled.map((q, i) => ({ ...q, id: `${topicId}#${seed ?? 0}#${i}` }));
+  return shuffled.map((q, i) => ({
+    ...q,
+    id: `${topicId}#${seed ?? 0}#${i}`,
+    hint: defaultHint(q),
+  }));
 }
+
+const normPrompt = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
 
 /** Senarai mata pelajaran yang sah untuk tahun tertentu. */
 export function subjectsForYear(year: YearNum): SubjectId[] {

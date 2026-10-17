@@ -659,8 +659,11 @@ function mt2Pecahan(year: number, rng: Rng, count: number): Question[] {
         emoji: '⚖️',
       });
     }
-    const whole = rng.pick([12, 16, 20, 24, 30]);
-    const part = whole / den;
+    // Pilih jumlah gula-gula yang merupakan gandaan penyebut supaya
+    // setiap bahagian ialah nombor bulat (elak jawapan 7.5 gula-gula).
+    const k = rng.int(2, 5);
+    const whole = den * k;
+    const part = k;
     return numeric({
       prefix: 'mt2-frac',
       prompt: `${num}/${den} daripada ${whole} gula-gula = ?`,

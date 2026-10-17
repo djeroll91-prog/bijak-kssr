@@ -137,8 +137,8 @@ const btn = (label) => buttons().find((b) => (b.textContent || '').replace(/\s+/
 /** Teks soalan yang sedang dipaparkan. */
 const promptText = () => (doc.querySelector('.q-prompt')?.textContent || '').replace(/\s+/g, ' ').trim();
 
-/** Chip kiraan "a/b dijawab" pada HUD (chip kedua). */
-const answeredChip = () => doc.querySelectorAll('.exam-hud .chip')[1]?.textContent || '';
+/** Chip kiraan "a/b dijawab" pada HUD (chip ketiga). */
+const answeredChip = () => doc.querySelectorAll('.exam-hud .chip')[2]?.textContent || '';
 /** Bilangan soalan yang sudah dijawab, dibaca dari chip kiraan. */
 function answeredCount() {
   const m = answeredChip().match(/(\d+)\s*\/\s*(\d+)/);
@@ -146,7 +146,7 @@ function answeredCount() {
 }
 function examTotal() {
   const m = answeredChip().match(/\d+\s*\/\s*(\d+)/);
-  return m ? Number(m[1]) : 20;
+  return m ? Number(m[1]) : 30;
 }
 
 /**
@@ -174,6 +174,21 @@ const check = (name, ok, detail = '') => report.push({ name, ok, detail });
 
 /** Jawab soalan semasa walau apa jenisnya (mcq, nombor, padan, susun). */
 async function answerOne() {
+  // Jenis "taip jawapan" (Bahagian B): isi kotak teks kemudian hantar.
+  const typed = doc.querySelector('.typed-answer .text-input');
+  if (typed) {
+    const setter = Object.getOwnPropertyDescriptor(
+      dom.window.HTMLInputElement.prototype, 'value',
+    )?.set;
+    setter?.call(typed, '1');
+    typed.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    await sleep(60);
+    const submit = [...doc.querySelectorAll('.typed-answer button')]
+      .find((b) => /Hantar/.test(b.textContent || ''));
+    click(submit);
+    return true;
+  }
+
   // Jenis "nombor": tekan satu digit kemudian hantar.
   const pad = doc.querySelector('.numeric-pad');
   if (pad) {
@@ -253,30 +268,52 @@ await sleep(500);
 click(btn('Peperiksaan Percubaan'));
 await sleep(600);
 check('Skrin intro peperiksaan dibuka', /Sedia untuk cuba/.test(text()), text().slice(0, 90));
-check('Chip 20 soalan dipaparkan', /20 soalan/.test(text()));
-check('Chip masa 30 minit dipaparkan', /30 minit/.test(text()));
+check('Pemilih subjek dipaparkan', doc.querySelectorAll('.subject-chip').length >= 4,
+  `${doc.querySelectorAll('.subject-chip').length}`);
+const partAExpected = Number((text().match(/Bahagian A: (\d+)/) || [])[1] || 0);
+const partBExpected = Number((text().match(/Bahagian B: (\d+)/) || [])[1] || 0);
+check('Chip Bahagian A dipaparkan', partAExpected > 0, `A=${partAExpected}`);
+check('Chip Bahagian B dipaparkan', partBExpected > 0, `B=${partBExpected}`);
+check('Chip masa dipaparkan', /\d+ minit/.test(text()),
+  (text().match(/\d+ minit/) || [''])[0]);
 check('Peraturan dipaparkan', /Peraturan Peperiksaan/.test(text()));
 check('Tiada ralat JS semasa intro', errors.length === 0, errors.slice(0, 2).join(' | '));
+
+// 1b. Tukar subjek kertas -> soalan yang dijanjikan mesti berubah.
+const chips = [...doc.querySelectorAll('.subject-chip')];
+const beforeTitle = (doc.querySelector('.hero-card h3')?.textContent || '').trim();
+click(chips[chips.length - 1]);
+await sleep(500);
+const afterTitle = (doc.querySelector('.hero-card h3')?.textContent || '').trim();
+check('Boleh tukar subjek kertas', afterTitle !== beforeTitle && afterTitle.length > 0,
+  `${beforeTitle} -> ${afterTitle}`);
 
 // 2. Mula peperiksaan.
 click(btn('Mula Peperiksaan'));
 await sleep(700);
 check('HUD pemasa muncul', doc.querySelector('.exam-hud') !== null);
-check('Pemasa bermula 30:00', /29:5\d|30:00/.test(text()), (doc.querySelector('.exam-hud')?.textContent || '').trim());
+check('Pemasa bermula 35:00', /34:5\d|35:00/.test(text()), (doc.querySelector('.exam-hud')?.textContent || '').trim());
+check('HUD tunjuk Bahagian A', /Bahagian A/.test(doc.querySelector('.exam-hud')?.textContent || ''));
 check('Bar kemajuan soalan ada', doc.querySelector('.q-progress') !== null);
 
-// 3. Jawab semua 20 soalan, catat teks soalan untuk semakan pertukaran.
+// 3. Jawab semua soalan, catat teks soalan untuk semakan pertukaran.
+const total = examTotal();
+check('Jumlah soalan munasabah', total >= 12 && total <= 30, `${total}`);
 const promptsA = [];
 const answeredA = await answerAll(promptsA);
-check('20 soalan dijawab', answeredA === 20, `${answeredA}/20`);
-check('Kiraan dijawab dipaparkan', /20\/20 dijawab/.test(text()), text().slice(-160));
+check(`${total} soalan dijawab`, answeredA === total, `${answeredA}/${total}`);
+check('Kiraan dijawab dipaparkan', new RegExp(`${total}/${total} dijawab`).test(text()),
+  text().slice(-160));
 
 // 4. Butang semak muncul; buka semak.
 check('Butang semak muncul', doc.querySelector('.exam-review-fab') !== null);
 click(btn('Semak Jawapan'));
 await sleep(500);
-check('Grid lompat soalan dipaparkan', doc.querySelectorAll('.exam-jump').length === 20,
+check('Grid lompat soalan dipaparkan', doc.querySelectorAll('.exam-jump').length === total,
   `${doc.querySelectorAll('.exam-jump').length}`);
+check('Nombor Bahagian B ditanda',
+  doc.querySelectorAll('.exam-jump[data-part="B"]').length === partBExpected,
+  `${doc.querySelectorAll('.exam-jump[data-part="B"]').length} vs ${partBExpected}`);
 
 // 5. Hantar kertas.
 click(btn('Hantar Kertas'));
@@ -290,7 +327,6 @@ await sleep(900);
 // 6. Skrin keputusan.
 check('Skrin keputusan dibuka', /Keputusan Peperiksaan/.test(text()), text().slice(0, 90));
 check('Gred dipaparkan', /Gred/.test(text()));
-check('Pecahan ikut subjek', /Pecahan Markah Ikut Subjek/.test(text()));
 check('Pecahan ikut topik', /Pecahan Markah Ikut Topik/.test(text()));
 check('Perbandingan percubaan', /Banding Percubaan/.test(text()));
 check('Percubaan pertama dikesan', /percubaan pertama/.test(text()));
@@ -298,8 +334,8 @@ check('Percubaan pertama dikesan', /percubaan pertama/.test(text()));
 // 7. Semakan jawapan penuh.
 click(btn('Tunjuk semakan jawapan'));
 await sleep(400);
-check('Semakan jawapan dipaparkan', doc.querySelectorAll('.review-item').length === 20,
-  `${doc.querySelectorAll('.review-item').length}`);
+check('Semakan jawapan dipaparkan', doc.querySelectorAll('.review-item').length === total,
+  `${doc.querySelectorAll('.review-item').length} vs ${total}`);
 
 // 8. Cuba percubaan baharu -> soalan mesti BERTUKAR.
 click(btn('Cuba Percubaan Baharu'));
@@ -311,8 +347,8 @@ const promptsB = [];
 await answerAll(promptsB);
 const setA = new Set(promptsA);
 const same = promptsB.filter((p) => setA.has(p)).length;
-check('Soalan bertukar antara percubaan', same <= 10,
-  `${same}/20 soalan sama (${20 - same} bertukar)`);
+check('Soalan bertukar antara percubaan', same <= Math.ceil(total / 2),
+  `${same}/${total} soalan sama (${total - same} bertukar)`);
 
 // 9. Hantar percubaan kedua dan sahkan perbandingan muncul.
 click(btn('Semak Jawapan'));

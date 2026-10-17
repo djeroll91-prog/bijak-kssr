@@ -1,12 +1,13 @@
 /**
- * Pengesah enjin peperiksaan percubaan.
+ * Pengesah enjin peperiksaan percubaan (kertas dua bahagian).
  *
- * Memastikan kertas peperiksaan berkelakuan betul:
- *   - Setiap tahun menghasilkan kertas dengan bilangan soalan yang betul.
- *   - Tiada dua soalan dengan teks yang sama dalam satu kertas.
- *   - Benih berbeza menghasilkan kertas berbeza (soalan bertukar).
- *   - Soalan merangkumi semua subjek yang ada pada tahun itu.
- *   - Markah, gred dan pecahan subjek dikira dengan betul.
+ * Memastikan setiap subjek dan setiap tahun menghasilkan kertas yang sah:
+ *   - Bilangan soalan tepat mengikut konfigurasi tahun.
+ *   - Bahagian A = pilihan jawapan (4 pilihan), Bahagian B = jawapan taip.
+ *   - Tiada soalan berulang, setiap soalan ada topik, penerangan, petunjuk.
+ *   - Satu kertas = satu subjek; semua soalan daripada subjek yang dipilih.
+ *   - Markah mengikut jawapan rasmi, termasuk jawapan taip.
+ *   - Benih sama boleh diulang, benih berbeza menghasilkan kertas berbeza.
  */
 
 import { build } from 'esbuild';
@@ -28,7 +29,8 @@ async function bundle(entry) {
 }
 
 const exam = await bundle('src/lib/exam.ts');
-const { ALL_TOPICS } = await bundle('src/data/catalog.ts');
+const { ALL_TOPICS, subjectsForYear } = await bundle('src/data/catalog.ts');
+const { typedCorrect } = await bundle('src/lib/generators/written.ts');
 
 const { buildExamPaper, examConfig, scoreExam, examGrade, formatClock, EXAM_TOPIC_ID } = exam;
 
@@ -38,80 +40,134 @@ const ok = (cond, msg) => {
 };
 
 const years = [1, 2, 3, 4, 5, 6];
+const seeds = [1, 42, 999, 123456];
 
-/* 1. Bilangan soalan dan topik/subjek liputan */
+/* 1. Setiap subjek setiap tahun menghasilkan kertas yang lengkap */
 for (const year of years) {
   const cfg = examConfig(year);
-  const paper = buildExamPaper(year, 12345 + year);
-  ok(paper.questions.length === cfg.questions, `T${year}: soalan ${paper.questions.length} != ${cfg.questions}`);
+  for (const subject of subjectsForYear(year)) {
+    for (const seed of seeds) {
+      const paper = buildExamPaper(year, subject, seed);
+      const tag = `T${year}/${subject}/${seed}`;
 
-  // Tiada pertindihan teks dalam satu kertas.
-  const seen = new Map();
-  for (const q of paper.questions) {
-    const key = q.prompt.toLowerCase().replace(/\s+/g, ' ').trim();
-    ok(!seen.has(key), `T${year}: soalan berulang "${q.prompt.slice(0, 40)}"`);
-    seen.set(key, true);
-  }
+      ok(paper.questions.length === cfg.questions,
+        `${tag}: soalan ${paper.questions.length} != ${cfg.questions}`);
 
-  // Semua subjek bagi tahun itu mesti muncul dalam kertas.
-  const subjectsInYear = [...new Set(ALL_TOPICS.filter((t) => t.year === year).map((t) => t.subject))];
-  for (const s of subjectsInYear) {
-    ok(paper.subjects.includes(s), `T${year}: subjek ${s} tiada dalam kertas`);
-  }
+      // Satu kertas = satu subjek.
+      for (const q of paper.questions) {
+        const t = paper.topicOf.get(q.id);
+        ok(Boolean(t), `${tag}: soalan ${q.id} tiada topik`);
+        ok(t?.subject === subject, `${tag}: soalan ${q.id} subjek ${t?.subject}`);
+        ok(t?.year === year, `${tag}: soalan ${q.id} tahun ${t?.year}`);
+      }
 
-  // Setiap soalan mesti mempunyai topik yang diketahui.
-  for (const q of paper.questions) {
-    ok(paper.topicOf.has(q.id), `T${year}: soalan ${q.id} tiada topik`);
+      // Bahagian A/B tepat.
+      const partA = paper.questions.filter((q) => q.part === 'A');
+      const partB = paper.questions.filter((q) => q.part === 'B');
+      ok(partA.length === cfg.partA, `${tag}: Bahagian A ${partA.length} != ${cfg.partA}`);
+      ok(partB.length === cfg.partB, `${tag}: Bahagian B ${partB.length} != ${cfg.partB}`);
+      for (const q of partA) {
+        ok((q.options?.length ?? 0) === 4, `${tag}: ${q.id} Bahagian A perlu 4 pilihan`);
+      }
+      for (const q of partB) {
+        ok(q.kind === 'shorttext', `${tag}: ${q.id} Bahagian B jenis ${q.kind}`);
+        ok(String(q.answer).trim().length > 0, `${tag}: ${q.id} jawapan kosong`);
+      }
+
+      // Tiada pertindihan teks atau id.
+      const prompts = paper.questions.map((q) => q.prompt.toLowerCase().replace(/\s+/g, ' ').trim());
+      ok(new Set(prompts).size === prompts.length, `${tag}: ada soalan berulang`);
+      const ids = paper.questions.map((q) => q.id);
+      ok(new Set(ids).size === ids.length, `${tag}: ada id berulang`);
+
+      // Setiap soalan ada penerangan dan petunjuk.
+      for (const q of paper.questions) {
+        ok(Boolean(q.explanation?.trim()), `${tag}: ${q.id} tiada penerangan`);
+        ok(Boolean(q.hint?.trim()), `${tag}: ${q.id} tiada petunjuk`);
+      }
+
+      // Semua betul -> 100%; kosong -> 0%.
+      const allRight = {};
+      for (const q of paper.questions) allRight[q.id] = { ok: true, given: String(q.answer) };
+      const full = scoreExam(paper, allRight);
+      ok(full.pct === 100, `${tag}: semua betul sepatutnya 100%, dapat ${full.pct}`);
+      ok(full.grade === 'A', `${tag}: 100% sepatutnya gred A, dapat ${full.grade}`);
+      ok(full.passed === true, `${tag}: 100% sepatutnya lulus`);
+      ok(full.correct === cfg.questions, `${tag}: bilangan betul ${full.correct} != ${cfg.questions}`);
+      ok(full.items.reduce((s, it) => s + it.total, 0) === cfg.questions,
+        `${tag}: jumlah pecahan topik salah`);
+      ok(full.bySubject.reduce((s, x) => s + x.total, 0) === cfg.questions,
+        `${tag}: jumlah pecahan subjek salah`);
+
+      const zero = scoreExam(paper, {});
+      ok(zero.pct === 0, `${tag}: kosong sepatutnya 0%, dapat ${zero.pct}`);
+      ok(zero.passed === false, `${tag}: kosong tidak sepatutnya lulus`);
+
+      // Jawapan rasmi soalan taip mesti diterima; jawapan sampah ditolak.
+      for (const q of partB) {
+        ok(typedCorrect(q, String(q.answer)), `${tag}: ${q.id} jawapan rasmi ditolak`);
+        ok(!typedCorrect(q, ''), `${tag}: ${q.id} jawapan kosong diterima`);
+        ok(!typedCorrect(q, 'zzzz-salah'), `${tag}: ${q.id} jawapan sampah diterima`);
+      }
+    }
   }
 }
 
-/* 2. Benih berbeza -> kertas berbeza (soalan bertukar) */
+/* 2. Benih berbeza -> kertas berbeza; benih sama -> sama (boleh diulang) */
 for (const year of years) {
-  const a = buildExamPaper(year, 1000 + year);
-  const b = buildExamPaper(year, 9999 + year);
-  const setA = new Set(a.questions.map((q) => q.prompt));
-  const same = b.questions.filter((q) => setA.has(q.prompt)).length;
-  const overlap = same / Math.max(1, a.questions.length);
-  ok(overlap < 0.5, `T${year}: kertas terlalu serupa antara benih (${Math.round(overlap * 100)}% sama)`);
-}
+  for (const subject of subjectsForYear(year)) {
+    const a = buildExamPaper(year, subject, 1);
+    const b = buildExamPaper(year, subject, 2);
+    const setA = new Set(a.questions.map((q) => q.prompt));
+    const same = b.questions.filter((q) => setA.has(q.prompt)).length;
+    const overlap = same / Math.max(1, a.questions.length);
+    ok(overlap < 0.5, `T${year}/${subject}: kertas terlalu serupa (${Math.round(overlap * 100)}% sama)`);
 
-/* 3. Kertas sama benih -> sama (boleh diulang) */
-for (const year of years) {
-  const a = buildExamPaper(year, 4242);
-  const b = buildExamPaper(year, 4242);
-  const pa = a.questions.map((q) => q.prompt).join('|');
-  const pb = b.questions.map((q) => q.prompt).join('|');
-  ok(pa === pb, `T${year}: benih sama menghasilkan kertas berbeza`);
-}
-
-/* 4. Markah: semua betul -> 100% gred A lulus; semua salah -> 0% gred E */
-for (const year of years) {
-  const paper = buildExamPaper(year, 777);
-  const allRight = {};
-  const allWrong = {};
-  for (const q of paper.questions) {
-    allRight[q.id] = { ok: true };
-    allWrong[q.id] = { ok: false };
+    const c = buildExamPaper(year, subject, 4242);
+    const d = buildExamPaper(year, subject, 4242);
+    ok(
+      c.questions.map((q) => q.prompt).join('|') === d.questions.map((q) => q.prompt).join('|'),
+      `T${year}/${subject}: benih sama menghasilkan kertas berbeza`,
+    );
   }
-  const full = scoreExam(paper, allRight);
-  ok(full.pct === 100, `T${year}: semua betul sepatutnya 100%, dapat ${full.pct}`);
-  ok(full.grade === 'A', `T${year}: 100% sepatutnya gred A, dapat ${full.grade}`);
-  ok(full.passed === true, `T${year}: 100% sepatutnya lulus`);
-  ok(full.correct === paper.questions.length, `T${year}: bilangan betul salah`);
-
-  const zero = scoreExam(paper, allWrong);
-  ok(zero.pct === 0, `T${year}: semua salah sepatutnya 0%, dapat ${zero.pct}`);
-  ok(zero.grade === 'E', `T${year}: 0% sepatutnya gred E, dapat ${zero.grade}`);
-  ok(zero.passed === false, `T${year}: 0% tidak sepatutnya lulus`);
-
-  // Jumlah pecahan topik mesti sama dengan jumlah soalan.
-  const sumItems = full.items.reduce((s, it) => s + it.total, 0);
-  ok(sumItems === paper.questions.length, `T${year}: jumlah pecahan topik ${sumItems} != ${paper.questions.length}`);
-  const sumSubjects = full.bySubject.reduce((s, x) => s + x.total, 0);
-  ok(sumSubjects === paper.questions.length, `T${year}: jumlah pecahan subjek ${sumSubjects} != ${paper.questions.length}`);
 }
 
-/* 5. Gred mengikut ambang */
+/* 2b. Elak soalan percubaan lepas: percubaan baharu mesti berbeza */
+for (const year of years) {
+  for (const subject of subjectsForYear(year)) {
+    const first = buildExamPaper(year, subject, 1);
+    const prev = first.questions.map((q) => q.prompt);
+    const second = buildExamPaper(year, subject, 2, prev);
+    const prevSet = new Set(prev);
+    const repeat = second.questions.filter((q) => prevSet.has(q.prompt)).length;
+    const tag = `T${year}/${subject}`;
+
+    ok(second.questions.length === first.questions.length,
+      `${tag}: kertas kedua tidak lengkap (${second.questions.length})`);
+    // Bank soalan kecil memaksa sedikit pertindihan; selebihnya mesti baharu.
+    ok(repeat <= Math.floor(second.questions.length / 3),
+      `${tag}: terlalu banyak ulangan selepas elak (${repeat}/${second.questions.length})`);
+    ok(new Set(second.questions.map((q) => q.id)).size === second.questions.length,
+      `${tag}: id bertindih pada kertas elak`);
+    for (const q of second.questions) {
+      ok(Boolean(second.topicOf.get(q.id)), `${tag}: soalan elak ${q.id} tiada topik`);
+    }
+  }
+}
+
+/* 3. Subjek Bahasa Inggeris tidak boleh terlepas label Bahasa Melayu */
+for (const year of years) {
+  if (!subjectsForYear(year).includes('english')) continue;
+  const paper = buildExamPaper(year, 'english', 7);
+  for (const q of paper.questions) {
+    const opts = q.options ?? [];
+    ok(!opts.includes('Betul') && !opts.includes('Salah'),
+      `T${year}/english: label BM terlepas pada ${q.id}`);
+    ok(!/Betul|Salah/.test(String(q.answer)), `T${year}/english: jawapan BM pada ${q.id}`);
+  }
+}
+
+/* 4. Gred mengikut ambang */
 const gradeCases = [
   [100, 'A'], [85, 'A'], [80, 'A'],
   [79, 'B'], [60, 'B'],
@@ -123,27 +179,30 @@ for (const [pct, want] of gradeCases) {
   ok(examGrade(pct) === want, `gred ${pct}% sepatutnya ${want}, dapat ${examGrade(pct)}`);
 }
 
-/* 6. Format jam */
+/* 5. Format jam */
 ok(formatClock(0) === '00:00', `formatClock(0) salah: ${formatClock(0)}`);
 ok(formatClock(65) === '01:05', `formatClock(65) salah: ${formatClock(65)}`);
 ok(formatClock(3600) === '60:00', `formatClock(3600) salah: ${formatClock(3600)}`);
 
-/* 7. Konfigurasi tahun */
-ok(examConfig(1).questions === 20 && examConfig(3).questions === 20, 'T1-T3 sepatutnya 20 soalan');
-ok(examConfig(4).questions === 40 && examConfig(6).questions === 40, 'T4-T6 sepatutnya 40 soalan');
-ok(examConfig(1).minutes === 30, 'T1-T3 sepatutnya 30 minit');
+/* 6. Konfigurasi tahun */
+ok(examConfig(1).questions === 18 && examConfig(3).questions === 18, 'T1-T3 sepatutnya 18 soalan');
+ok(examConfig(4).questions === 30 && examConfig(6).questions === 30, 'T4-T6 sepatutnya 30 soalan');
+ok(examConfig(1).minutes === 35, 'T1-T3 sepatutnya 35 minit');
 ok(examConfig(6).minutes === 60, 'T4-T6 sepatutnya 60 minit');
+ok(examConfig(1).partA === 12 && examConfig(1).partB === 6, 'T1-T3 pecahan bahagian salah');
+ok(examConfig(4).partA === 20 && examConfig(4).partB === 10, 'T4-T6 pecahan bahagian salah');
 
-/* 8. ID topik ringkasan tidak bertembung dengan topik sebenar */
-ok(!ALL_TOPICS.some((t) => t.id === EXAM_TOPIC_ID), `EXAM_TOPIC_ID "${EXAM_TOPIC_ID}" bertembung dengan topik sebenar`);
+/* 7. ID topik ringkasan tidak bertembung dengan topik sebenar */
+ok(!ALL_TOPICS.some((t) => t.id === EXAM_TOPIC_ID),
+  `EXAM_TOPIC_ID "${EXAM_TOPIC_ID}" bertembung dengan topik sebenar`);
 
 if (fails.length === 0) {
   console.log('verify-exam: ALL OK');
   console.log(`  Tahun diuji: ${years.join(', ')}`);
-  console.log(`  Kertas: T1-T3 ${examConfig(1).questions} soalan / ${examConfig(1).minutes} minit`);
-  console.log(`          T4-T6 ${examConfig(4).questions} soalan / ${examConfig(4).minutes} minit`);
+  console.log(`  Kertas: T1-T3 ${examConfig(1).questions} soalan (A ${examConfig(1).partA} + B ${examConfig(1).partB}) / ${examConfig(1).minutes} minit`);
+  console.log(`          T4-T6 ${examConfig(4).questions} soalan (A ${examConfig(4).partA} + B ${examConfig(4).partB}) / ${examConfig(4).minutes} minit`);
 } else {
   console.error(`verify-exam: ${fails.length} GAGAL`);
-  for (const f of fails) console.error(`  - ${f}`);
+  for (const f of fails.slice(0, 40)) console.error(`  - ${f}`);
   process.exit(1);
 }

@@ -26,7 +26,11 @@ export type QuestionKind =
   | 'truefalse'
   | 'match'
   | 'order'
-  | 'fillblank';
+  | 'fillblank'
+  | 'shorttext';
+
+/** Bahagian kertas peperiksaan: A = pilihan jawapan, B = taip jawapan. */
+export type PaperPart = 'A' | 'B';
 
 export interface MatchPair {
   left: string;
@@ -53,6 +57,25 @@ export interface Question {
   emoji?: string;
   /** Bilangan lajur paparan pilihan. */
   cols?: 1 | 2;
+  /**
+   * Bahagian kertas bagi soalan peperiksaan: 'A' pilihan jawapan,
+   * 'B' jawapan taip. `undefined` untuk latihan biasa.
+   */
+  part?: PaperPart;
+  /**
+   * Jawapan alternatif yang diterima bagi soalan taip (cth. "6000" dan
+   * "6 000" untuk soalan Matematik). Perbandingan tidak sensitif huruf besar.
+   */
+  accept?: string[];
+  /** Tunjuk ruang kerja pengiraan (draf) di bawah soalan Matematik. */
+  workpad?: boolean;
+  /** Unit yang dipaparkan selepas kotak jawapan, cth. "cm" atau "RM". */
+  unit?: string;
+  /**
+   * Langkah kerja mengira, ditunjuk selepas murid menjawab soalan Matematik
+   * supaya murid belajar CARA menjawab, bukan sekadar jawapan akhir.
+   */
+  steps?: string[];
 }
 
 export interface Topic {
@@ -214,6 +237,11 @@ export interface Profile {
   diagnostic?: DiagnosticResult | null;
   /** Pelan belajar mingguan semasa (jika ada). */
   plan?: StudyPlan | null;
+  /**
+   * Soalan kertas percubaan terakhir bagi setiap subjek.
+   * Digunakan supaya percubaan baharu mengelak soalan yang sama.
+   */
+  lastExamPrompts?: Partial<Record<SubjectId, string[]>>;
 }
 
 export interface Settings {

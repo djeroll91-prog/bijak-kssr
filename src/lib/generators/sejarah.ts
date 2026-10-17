@@ -8,6 +8,7 @@
 import type { Question } from '../../data/types';
 import type { Rng } from '../rng';
 import { fill, fillBlank, match, mcq, order, trueFalse } from './shared';
+import { SJ_EXTRA_FACTS } from './sejarah-extra';
 
 /* ------------------------------------------------------------------ */
 /* Tahun 4 — Sejarah Awal Negara                                       */
@@ -20,6 +21,7 @@ function sj4MariBelajarSejarah(_y: number, rng: Rng, count: number): Question[] 
     ['Apakah contoh sumber sekunder?', 'Buku sejarah dan majalah', ['Artifak asli', 'Batu bersurat', 'Fosil']],
     ['Mengapakah kita perlu belajar sejarah?', 'Untuk mengambil iktibar dan menghargai masa lalu', ['Untuk menambah kerja rumah', 'Kerana ia membosankan', 'Untuk bermain']],
     ['Apakah maksud kronologi?', 'Susunan peristiwa mengikut urutan masa', ['Cerita berselindung', 'Peta negara', 'Senarai nama']],
+    ...(SJ_EXTRA_FACTS['sj4-mari-belajar-sejarah'] ?? []),
   ];
   const skills = [
     { t: 'Mengenal pasti sumber sejarah', d: 'Mengetahui jenis sumber primer dan sekunder' },
@@ -59,6 +61,7 @@ function sj4ZamanAirBatu(_y: number, rng: Rng, count: number): Question[] {
     ['Apakah yang berlaku apabila suhu Bumi meningkat pada akhir Zaman Air Batu?', 'Ais mencair dan membentuk laut serta pulau', ['Ais bertambah tebal', 'Bumi menjadi gelap', 'Tumbuhan hilang terus']],
     ['Apakah kesan pencairan ais pada akhir Zaman Air Batu?', 'Terbentuknya laut dan pemisahan pulau-pulau', ['Terbentuknya gurun sahaja', 'Tiada kesan', 'Semua manusia hilang']],
     ['Apakah bukti Zaman Air Batu di Asia Tenggara?', 'Kesan perubahan aras laut dan bentuk muka bumi', ['Piramid', 'Tembok besar', 'Kota moden']],
+    ...(SJ_EXTRA_FACTS['sj4-zaman-air-batu'] ?? []),
   ];
   return fill(count, (i) => {
     const mode = i % 2;
@@ -140,6 +143,7 @@ function sj4KerajaanMelayuAwal(_y: number, rng: Rng, count: number): Question[] 
     ['Apakah bentuk hubungan diplomatik kerajaan Melayu Awal?', 'Menghantar utusan dan hadiah kepada kerajaan lain', ['Berperang sentiasa', 'Tidak berhubung dengan sesiapa', 'Menutup semua pelabuhan']],
     ['Apakah kegiatan ekonomi utama kerajaan Melayu Awal?', 'Perdagangan di pelabuhan dan pertanian', ['Perlombongan emas sahaja', 'Industri moden', 'Pelancongan']],
     ['Mengapakah hubungan diplomatik penting?', 'Untuk menjamin keamanan dan melancarkan perdagangan', ['Untuk menambah masalah', 'Untuk menghentikan perdagangan', 'Untuk menghalang pelabuhan']],
+    ...(SJ_EXTRA_FACTS['sj4-kerajaan-melayu-awal'] ?? []),
   ];
   const kingdoms = [
     { t: 'Kedah Tua', loc: 'Kedah, Malaysia', d: 'Kerajaan Melayu awal di utara Semenanjung' },
@@ -197,6 +201,7 @@ function sj4KesultananMelayuMelaka(_y: number, rng: Rng, count: number): Questio
     ['Apakah jawatan Tun Perak dalam Kesultanan Melayu Melaka?', 'Bendahara', ['Laksamana', 'Penghulu', 'Temenggung']],
     ['Apakah jawatan Hang Tuah dalam Kesultanan Melayu Melaka?', 'Laksamana', ['Bendahara', 'Sultan', 'Penghulu']],
     ['Mengapakah Melaka menjadi pusat perdagangan yang terkenal?', 'Kedudukannya strategik di Selat Melaka', ['Kerana cuacanya sejuk', 'Kerana tiada penduduk', 'Kerana jauh dari laut']],
+    ...(SJ_EXTRA_FACTS['sj4-kesultanan-melaka'] ?? []),
   ];
   return fill(count, (i) => {
     const mode = i % 3;
@@ -247,6 +252,7 @@ function sj5InstitusiRaja(_y: number, rng: Rng, count: number): Question[] {
     ['Apakah maksud derhaka?', 'Menderhaka kepada raja', ['Taat kepada raja', 'Menolong raja', 'Menghormati raja']],
     ['Apakah kedudukan raja pada masa kini?', 'Ketua negeri dan simbol perpaduan', ['Ketua kerajaan persekutuan', 'Ketua parti politik', 'Ketua tentera']],
     ['Negara manakah di Asia yang masih mengamalkan sistem beraja?', 'Thailand', ['Indonesia', 'Filipina', 'Vietnam']],
+    ...(SJ_EXTRA_FACTS['sj5-institusi-raja'] ?? []),
   ];
   const monarchStates = [
     'Johor', 'Kedah', 'Kelantan', 'Pahang', 'Perak', 'Selangor', 'Terengganu', 'Negeri Sembilan', 'Perlis',
@@ -285,6 +291,7 @@ function sj5AgamaIslam(_y: number, rng: Rng, count: number): Question[] {
     ['Bagaimanakah Islam tersebar di Tanah Melayu?', 'Melalui pedagang dan pendakwah', ['Melalui peperangan sahaja', 'Melalui penjajahan Eropah', 'Melalui filem']],
     ['Apakah bukti arkeologi kedatangan Islam?', 'Batu bersurat Terengganu', ['Candi Borobudur', 'Tembok China', 'Piramid Mesir']],
     ['Apakah peranan agama Islam dalam pembentukan perpaduan?', 'Menggalakkan persaudaraan dan kebaikan', ['Menyebabkan perpecahan', 'Menghalang perdagangan', 'Mengurangkan penduduk']],
+    ...(SJ_EXTRA_FACTS['sj5-agama-islam'] ?? []),
   ];
   return fill(count, (i) => {
     const q = rng.pick(facts);
@@ -315,6 +322,7 @@ function sj5BahasaMelayu(_y: number, rng: Rng, count: number): Question[] {
     ['Apakah kedudukan Bahasa Melayu dalam Perlembagaan Persekutuan?', 'Bahasa kebangsaan dan bahasa rasmi', ['Bahasa asing', 'Bahasa sukuan sahaja', 'Bahasa kedua']],
     ['Mengapakah Bahasa Melayu penting sebagai warisan negara?', 'Ia bahasa perpaduan dan identiti negara', ['Ia bahasa yang sukar', 'Ia bahasa lama sahaja', 'Ia tidak digunakan']],
     ['Apakah peranan Bahasa Melayu dalam perpaduan?', 'Menyatukan rakyat pelbagai kaum', ['Memisahkan kaum', 'Mengurangkan komunikasi', 'Menghalang pendidikan']],
+    ...(SJ_EXTRA_FACTS['sj5-bahasa-melayu'] ?? []),
   ];
   return fill(count, (i) => {
     const q = rng.pick(facts);
@@ -360,6 +368,7 @@ function sj5PenjajahanKemerdekaan(_y: number, rng: Rng, count: number): Question
     ['Siapakah yang mengetuai rombongan menuntut kemerdekaan ke London?', 'Tunku Abdul Rahman Putra Al-Haj', ['Tun Abdul Razak', 'Tun Tan Cheng Lock', 'Tun V.T. Sambanthan']],
     ['Apakah tarikh kemerdekaan Malaysia?', '31 Ogos 1957', ['16 September 1963', '31 Ogos 1963', '16 September 1957']],
     ['Apakah maksud Merdeka?', 'Bebas daripada penjajahan', ['Penjajahan baru', 'Perang', 'Perpaduan sahaja']],
+    ...(SJ_EXTRA_FACTS['sj5-penjajahan-kemerdekaan'] ?? []),
   ];
   return fill(count, (i) => {
     const mode = i % 3;
@@ -404,6 +413,7 @@ function sj5YangDiPertuanAgong(_y: number, rng: Rng, count: number): Question[] 
     ['Apakah nama tempat bersemayam rasmi Yang di-Pertuan Agong?', 'Istana Negara', ['Istana Budaya', 'Istana Melaka', 'Istana Sultan']],
     ['Apakah alat kebesaran Yang di-Pertuan Agong?', 'Keris panjang dan tengkolok', ['Pedang kayu', 'Mahkota emas', 'Tongkat biasa']],
     ['Apakah maksud Raja Berperlembagaan?', 'Raja memerintah mengikut Perlembagaan', ['Raja memerintah tanpa undang-undang', 'Raja memerintah dengan tentera', 'Raja tidak berkuasa langsung']],
+    ...(SJ_EXTRA_FACTS['sj5-yang-di-pertuan-agong'] ?? []),
   ];
   return fill(count, (i) => {
     const q = rng.pick(facts);
@@ -443,6 +453,7 @@ function sj6PembentukanMalaysia(_y: number, rng: Rng, count: number): Question[]
     ['Negeri manakah yang menyertai Malaysia pada tahun 1963?', 'Sabah, Sarawak dan Singapura', ['Johor dan Kedah', 'Perak dan Selangor', 'Pahang dan Kelantan']],
     ['Mengapakah Malaysia dibentuk?', 'Untuk memperkukuh keselamatan dan ekonomi', ['Untuk memisahkan negeri', 'Untuk mengurangkan penduduk', 'Untuk berperang']],
     ['Apakah nama rancangan pembentukan Malaysia?', 'Rancangan Malaysia', ['Rancangan Colombo', 'Rancangan Marshall', 'Rancangan Five Year']],
+    ...(SJ_EXTRA_FACTS['sj6-pembentukan-malaysia'] ?? []),
   ];
   return fill(count, (i) => {
     const mode = i % 3;
@@ -503,6 +514,7 @@ function sj6RukunNegara(_y: number, rng: Rng, count: number): Question[] {
     ['Bilakah Rukun Negara diperkenalkan?', '1970', ['1957', '1963', '1980']],
     ['Mengapakah Rukun Negara diperkenalkan?', 'Untuk memperkukuh perpaduan selepas peristiwa 13 Mei 1969', ['Untuk menambah cukai', 'Untuk mengubah bahasa', 'Untuk menghalang pendidikan']],
     ['Apakah kepentingan Rukun Negara?', 'Membentuk jati diri dan perpaduan rakyat', ['Memisahkan kaum', 'Mengurangkan penduduk', 'Menghalang perdagangan']],
+    ...(SJ_EXTRA_FACTS['sj6-rukun-negara'] ?? []),
   ];
   return fill(count, (i) => {
     const mode = i % 3;
@@ -594,6 +606,7 @@ function sj6PencapaianNegara(_y: number, rng: Rng, count: number): Question[] {
     ['Apakah organisasi serantau yang dianggotai Malaysia?', 'ASEAN', ['NATO', 'EU', 'OPEC']],
     ['Apakah nama program kerjasama ekonomi Malaysia dengan negara lain?', 'Perdagangan antarabangsa', ['Perang ekonomi', 'Penutupan pelabuhan', 'Pembatasan perdagangan']],
     ['Apakah sumbangan Malaysia dalam ASEAN?', 'Menggalakkan keamanan dan kerjasama serantau', ['Menimbulkan konflik', 'Menutup sempadan', 'Menghentikan perdagangan']],
+    ...(SJ_EXTRA_FACTS['sj6-pencapaian-negara'] ?? []),
   ];
   const leaders: [string, string][] = [
     ['Tunku Abdul Rahman Putra Al-Haj', 'Perdana Menteri pertama'],
@@ -649,6 +662,7 @@ function sj6SejarahKita(_y: number, rng: Rng, count: number): Question[] {
     ['Apakah iktibar daripada peristiwa sejarah Malaysia?', 'Menghargai keamanan dan perpaduan', ['Mengulangi kesilapan', 'Mengabaikan sejarah', 'Meningkatkan perpecahan']],
     ['Mengapakah kita perlu menghargai kemerdekaan?', 'Kerana ia hasil perjuangan dan pengorbanan tokoh terdahulu', ['Kerana ia mudah diperoleh', 'Kerana ia tidak penting', 'Kerana ia datang sendiri']],
     ['Apakah peranan generasi muda dalam mengekalkan kemerdekaan?', 'Menjaga perpaduan dan memajukan negara', ['Mengabaikan pelajaran', 'Menimbulkan kekacauan', 'Meruntuhkan perpaduan']],
+    ...(SJ_EXTRA_FACTS['sj6-sejarah-kita'] ?? []),
   ];
   return fill(count, (i) => {
     const mode = i % 3;

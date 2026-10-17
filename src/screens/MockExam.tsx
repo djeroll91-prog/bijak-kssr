@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore, useT } from '../state/store';
 import { subjectById } from '../data/subjects';
+import { subjectsForYear } from '../data/catalog';
 import { subjectName, yearLabel } from '../lib/i18n';
 import { QuestionView, type AnswerState } from '../components/QuestionView';
 import { Btn, Confetti, EmptyState, ProgressRing, Sheet, TopBar } from '../components/ui';
@@ -20,8 +21,9 @@ import {
   scoreExam,
   EXAM_TOPIC_ID,
 } from '../lib/exam';
+import { typedCorrect } from '../lib/generators/written';
 import type { ExamResult } from '../state/store';
-import type { Question } from '../data/types';
+import type { Question, SubjectId } from '../data/types';
 
 type Phase = 'intro' | 'run' | 'review';
 
@@ -36,7 +38,12 @@ export function MockExamScreen() {
   const year = profile?.year ?? 1;
   const [phase, setPhase] = useState<Phase>('intro');
   // Benih dikunci untuk sesi ini; skrin dimuat semula untuk percubaan baharu.
-  const [nonce] = useState(() => nav.examSeed ?? Math.floor(Math.random() * 1e9));
+  const [nonce, setNonce] = useState(() => nav.examSeed ?? Math.floor(Math.random() * 1e9));
+  // Satu kertas = satu subjek. Murid memilih subjek sebelum mula.
+  const available = useMemo(() => subjectsForYear(year), [year]);
+  const [subject, setSubject] = useState<SubjectId>(
+    () => nav.examSubject ?? available[0] ?? 'matematik',
+  );
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerState>>({});
   const [startedAt, setStartedAt] = useState(0);
@@ -46,12 +53,25 @@ export function MockExamScreen() {
   const [timeUp, setTimeUp] = useState(false);
 
   const config = useMemo(() => examConfig(year), [year]);
-  const paper = useMemo(() => buildExamPaper(year, nonce), [year, nonce]);
+  const paper = useMemo(
+    () => buildExamPaper(year, subject, nonce, profile?.lastExamPrompts?.[subject] ?? []),
+    [year, subject, nonce, profile],
+  );
   const questions = paper.questions;
 
   const answeredCount = Object.keys(answers).length;
   const q: Question | undefined = questions[index];
   const current: AnswerState | null = q ? (answers[q.id] ?? null) : null;
+
+  /** Tukar subjek bermakna kertas baharu; buang jawapan percubaan lama. */
+  const pickSubject = (s: SubjectId) => {
+    if (s === subject) return;
+    sound.play('pop');
+    setSubject(s);
+    setNonce(Math.floor(Math.random() * 1e9));
+    setAnswers({});
+    setIndex(0);
+  };
 
   /* ---------------------------------------------------------------- */
   /* Pemasa                                                            */
@@ -145,12 +165,16 @@ export function MockExamScreen() {
       const review = questions.map((qq) => {
         const a = answers[qq.id];
         const topic = paper.topicOf.get(qq.id);
+        // Semak semula soalan taip supaya paparan semakan sepadan dengan markah.
+        const ok = qq.kind === 'shorttext'
+          ? typedCorrect(qq, a?.given ?? '')
+          : Boolean(a?.ok);
         return {
           questionId: qq.id,
           prompt: qq.prompt,
           correct: describeAnswer(qq),
           given: a?.given ?? '—',
-          ok: Boolean(a?.ok),
+          ok,
           explanation: qq.explanation,
           topicTitle: topic?.title ?? '',
         };
@@ -209,6 +233,7 @@ export function MockExamScreen() {
   /* ---------------------------------------------------------------- */
 
   if (phase === 'intro') {
+    const meta = subjectById(subject);
     if (questions.length === 0) {
       return (
         <div className="screen">
@@ -223,14 +248,36 @@ export function MockExamScreen() {
       <div className="screen">
         <TopBar onBack={back} title={t('exam.title')} subtitle={yearLabel(lang, year)} />
         <div className="screen-scroll">
-          <div className="card hero-card animate-pop">
-            <span className="hero-emoji" aria-hidden="true">📝</span>
-            <h3>{t('exam.introTitle')}</h3>
+          <p className="section-title">{t('exam.introTitle')}</p>
+          <p className="section-title">{t('exam.pickSubject')}</p>
+          <div className="subject-picker">
+            {available.map((s) => {
+              const m = subjectById(s);
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  className="subject-chip"
+                  data-active={s === subject ? 'true' : 'false'}
+                  style={{ borderColor: s === subject ? m.color : undefined }}
+                  onClick={() => pickSubject(s)}
+                >
+                  <span aria-hidden="true">{m.emoji}</span>
+                  <span>{subjectName(lang, s, m.name)}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="card hero-card animate-pop" style={{ marginTop: 14 }}>
+            <span className="hero-emoji" aria-hidden="true">{meta.emoji}</span>
+            <h3>{subjectName(lang, subject, meta.name)}</h3>
             <p className="tiny muted">{t('exam.introDesc')}</p>
             <div className="row wrap" style={{ gap: 8, marginTop: 12 }}>
               <span className="chip chip-brand">❓ {t('exam.questionsChip', { n: questions.length })}</span>
+              <span className="chip">🅰️ {t('exam.partAChip', { n: config.partA })}</span>
+              <span className="chip">✍️ {t('exam.partBChip', { n: config.partB })}</span>
               <span className="chip">⏱️ {t('exam.minutesChip', { n: config.minutes })}</span>
-              <span className="chip">📚 {t('exam.subjectsChip', { n: paper.subjects.length })}</span>
               <span className="chip">🗂️ {t('exam.topicsChip', { n: paper.topics.length })}</span>
               <span className="chip chip-success">🎯 {t('exam.passChip', { n: config.passPct })}</span>
             </div>
@@ -238,33 +285,29 @@ export function MockExamScreen() {
 
           <p className="section-title">{t('exam.willAsk')}</p>
           <div className="stack stagger">
-            {paper.subjects.map((s) => {
-              const meta = subjectById(s);
-              const count = paper.topics.filter((x) => x.subject === s).length;
-              return (
-                <div key={s} className="topic-item" data-static="true">
-                  <span
-                    className="badge"
-                    aria-hidden="true"
-                    style={{ background: `${meta.color}1a` }}
-                  >
-                    {meta.emoji}
-                  </span>
-                  <span className="grow">
-                    <b>{subjectName(lang, s, meta.name)}</b>
-                    <small>{t('exam.topicsChip', { n: count })}</small>
-                  </span>
-                </div>
-              );
-            })}
+            {paper.topics.map((x) => (
+              <div key={x.id} className="topic-item" data-static="true">
+                <span
+                  className="badge"
+                  aria-hidden="true"
+                  style={{ background: `${meta.color}1a` }}
+                >
+                  {meta.emoji}
+                </span>
+                <span className="grow">
+                  <b>{x.title}</b>
+                  <small>{x.code}</small>
+                </span>
+              </div>
+            ))}
           </div>
 
           <p className="section-title">{t('exam.rules')}</p>
           <div className="card">
             <ul className="stack" style={{ gap: 10, margin: 0, padding: 0, listStyle: 'none' }}>
-              {(['exam.rule1', 'exam.rule2', 'exam.rule3', 'exam.rule4'] as const).map((k, i) => (
+              {(['exam.rule1', 'exam.rule2', 'exam.rule3', 'exam.rule4', 'exam.rule5'] as const).map((k, i) => (
                 <li key={k} className="row" style={{ gap: 10, alignItems: 'flex-start' }}>
-                  <span aria-hidden="true">{['⏱️', '↩️', '🙈', '🔍'][i]}</span>
+                  <span aria-hidden="true">{['⏱️', '↩️', '🙈', '🔍', '✍️'][i]}</span>
                   <span className="tiny">{t(k)}</span>
                 </li>
               ))}
@@ -332,6 +375,7 @@ export function MockExamScreen() {
                   data-done={done ? 'true' : 'false'}
                   data-ok={done ? (ok ? 'true' : 'false') : undefined}
                   data-current={i === index ? 'true' : undefined}
+                  data-part={qq.part}
                   onClick={() => {
                     jumpTo(i);
                     setPhase('run');
@@ -403,6 +447,11 @@ export function MockExamScreen() {
       <div className="exam-hud">
         <span className="chip" data-tone={critical ? 'danger' : urgent ? 'warn' : 'brand'}>
           ⏱️ {formatClock(secondsLeft)}
+        </span>
+        <span className="chip">
+          {q?.part === 'B'
+            ? `✍️ ${t('exam.partB')}`
+            : `🅰️ ${t('exam.partA')}`}
         </span>
         <span className="chip">
           {t('exam.answered', { a: answeredCount, b: questions.length })}

@@ -83,6 +83,8 @@ export interface NavState {
   exam?: ExamResult;
   /** Benih soalan peperiksaan supaya percubaan baharu berbeza. */
   examSeed?: number;
+  /** Subjek yang dipilih untuk peperiksaan percubaan. */
+  examSubject?: SubjectId;
 }
 
 export interface QuizResult {
@@ -448,12 +450,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         retries: 0,
       };
       const st = streakUpdate(p);
+      const prompts = result.answers.map((a) => a.prompt);
       const updated: Profile = {
         ...p,
         ...st,
         attempts: [...p.attempts, full],
         stars: p.stars + result.stars,
         points: p.points + result.points,
+        lastExamPrompts: {
+          ...(p.lastExamPrompts ?? {}),
+          [full.subject]: prompts,
+        },
       };
       const gained = newBadges(updated);
       if (gained.length > 0) {

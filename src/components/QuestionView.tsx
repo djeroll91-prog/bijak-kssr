@@ -1,8 +1,9 @@
 /** Pemapar soalan mengikut jenis (mcq, numeric, match, order, dsb.). */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Question } from '../data/types';
 import { sound, voice } from '../lib/audio';
+import { typedCorrect } from '../lib/generators/written';
 import { Btn } from './ui';
 
 export interface AnswerState {
@@ -135,6 +136,8 @@ function Body({
   switch (q.kind) {
     case 'numeric':
       return <NumericAnswer q={q} answered={answered} onAnswer={onAnswer} t={t} />;
+    case 'shorttext':
+      return <TypedAnswer q={q} answered={answered} onAnswer={onAnswer} t={t} />;
     case 'match':
       if (q.pairs && q.pairs.length > 0) {
         return <MatchAnswer q={q} answered={answered} onAnswer={onAnswer} t={t} />;
@@ -167,6 +170,9 @@ function McqAnswer({
 }) {
   const opts = q.options ?? [];
   const correct = String(q.answer);
+  // Kertas peperiksaan sentiasa melabel pilihan A, B, C, D seperti kertas
+  // sebenar. Latihan biasa hanya melabel apabila pilihan pendek.
+  const labelled = q.part === 'A' || q.part === 'B' || q.cols !== 2;
   return (
     <div className="options" data-cols={q.cols === 2 ? '2' : '1'} role="group">
       {opts.map((o, i) => {
@@ -189,7 +195,7 @@ function McqAnswer({
               onAnswer({ given: o, ok });
             }}
           >
-            {q.cols !== 2 ? (
+            {labelled ? (
               <span className="key" aria-hidden="true">
                 {KEYS[i] ?? i + 1}
               </span>
@@ -305,6 +311,183 @@ function NumericAnswer({
           {t('quiz.submit')} ✓
         </button>
       </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Jawapan taip (Bahagian B)                                           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Kotak jawapan taip untuk soalan yang murid perlu menulis sendiri.
+ *
+ * Soalan Matematik turut memaparkan ruang kerja coretan dan langkah kerja
+ * selepas dijawab, supaya murid belajar cara mengira, bukan hanya meneka.
+ */
+function TypedAnswer({
+  q,
+  answered,
+  onAnswer,
+  t,
+}: {
+  q: Question;
+  answered: boolean;
+  onAnswer: (a: AnswerState) => void;
+  t: (k: string) => string;
+}) {
+  const [val, setVal] = useState('');
+
+  useEffect(() => {
+    setVal('');
+  }, [q.id]);
+
+  const submit = () => {
+    const given = val.trim();
+    if (!given) return;
+    // Betul atau salah ditentukan enjin peperiksaan; di sini kita hantar sahaja
+    // supaya markah dan jawapan rasmi sentiasa sepadan.
+    const ok = typedCorrect(q, given);
+    sound.play(ok ? 'correct' : 'wrong');
+    onAnswer({ given, ok });
+  };
+
+  return (
+    <div className="typed-answer">
+      {q.workpad ? <Workpad disabled={answered} t={t} /> : null}
+      <div className="row" style={{ gap: 8, alignItems: 'stretch' }}>
+        <input
+          className="text-input grow"
+          type="text"
+          inputMode={q.workpad ? 'text' : 'text'}
+          value={val}
+          disabled={answered}
+          placeholder={t('quiz.typeHere')}
+          aria-label={t('quiz.typeAnswer')}
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          onChange={(e) => setVal(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !answered) submit();
+          }}
+        />
+        {q.unit ? <span className="typed-unit">{q.unit}</span> : null}
+      </div>
+      {!answered ? (
+        <Btn block variant="accent" onClick={submit}>
+          {t('quiz.submit')} ✓
+        </Btn>
+      ) : null}
+      {answered && q.steps && q.steps.length > 0 ? (
+        <div className="steps-card">
+          <p className="steps-title">🧮 {t('quiz.steps')}</p>
+          <ol className="steps-list">
+            {q.steps.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Ruang kerja pengiraan (draf)                                        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Kanvas coretan ringkas untuk murid mengira di atas skrin.
+ *
+ * Ia sengaja TIDAK dinilai — tujuannya meniru kertas conteng supaya murid
+ * boleh menyusun nombor menegak sebelum menaip jawapan akhir. Semua coretan
+ * kekal pada peranti dan tidak dihantar ke mana-mana.
+ */
+function Workpad({ disabled, t }: { disabled: boolean; t: (k: string) => string }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const drawing = useRef(false);
+  const last = useRef<{ x: number; y: number } | null>(null);
+  const [hasInk, setHasInk] = useState(false);
+
+  // Saiz kanvas diambil daripada saiz paparan sebenar supaya garisan tidak kabur.
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (!c) return;
+    const resize = () => {
+      const r = c.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      c.width = Math.max(1, Math.round(r.width * dpr));
+      c.height = Math.max(1, Math.round(r.height * dpr));
+      const ctx = c.getContext('2d');
+      if (ctx) {
+        ctx.scale(dpr, dpr);
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#2b3a67';
+      }
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
+
+  const pos = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+
+  const down = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (disabled) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    drawing.current = true;
+    last.current = pos(e);
+    setHasInk(true);
+  };
+
+  const move = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!drawing.current || disabled) return;
+    const ctx = e.currentTarget.getContext('2d');
+    const p = pos(e);
+    if (ctx && last.current) {
+      ctx.beginPath();
+      ctx.moveTo(last.current.x, last.current.y);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
+    last.current = p;
+  };
+
+  const up = () => {
+    drawing.current = false;
+    last.current = null;
+  };
+
+  const clear = () => {
+    const c = canvasRef.current;
+    const ctx = c?.getContext('2d');
+    if (c && ctx) ctx.clearRect(0, 0, c.width, c.height);
+    setHasInk(false);
+    sound.play('tap');
+  };
+
+  return (
+    <div className="workpad">
+      <div className="row-between" style={{ marginBottom: 6 }}>
+        <span className="tiny muted">✏️ {t('quiz.workpad')}</span>
+        <button type="button" className="chip" onClick={clear} disabled={!hasInk}>
+          🧽 {t('quiz.clearWork')}
+        </button>
+      </div>
+      <canvas
+        ref={canvasRef}
+        className="workpad-canvas"
+        aria-label={t('quiz.workpad')}
+        onPointerDown={down}
+        onPointerMove={move}
+        onPointerUp={up}
+        onPointerLeave={up}
+      />
     </div>
   );
 }

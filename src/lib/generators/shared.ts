@@ -100,7 +100,7 @@ export function numeric(
   };
 }
 
-/** Bina soalan betul/salah. */
+/** Bina soalan betul/salah. `lang` menentukan label pilihan. */
 export function trueFalse(a: {
   prefix: string;
   prompt: string;
@@ -109,15 +109,18 @@ export function trueFalse(a: {
   promptSub?: string;
   emoji?: string;
   speak?: string;
+  lang?: 'ms' | 'en';
 }): Question {
+  const lang = a.lang ?? 'ms';
+  const [yes, no] = lang === 'en' ? ['True', 'False'] : ['Betul', 'Salah'];
   return {
     id: nextId(a.prefix),
     kind: 'truefalse',
     prompt: a.prompt,
     promptSub: a.promptSub,
     speak: a.speak ?? a.prompt,
-    options: ['Betul', 'Salah'],
-    answer: a.isTrue ? 'Betul' : 'Salah',
+    options: [yes, no],
+    answer: a.isTrue ? yes : no,
     explanation: a.explanation,
     emoji: a.emoji,
     cols: 2,
@@ -199,6 +202,80 @@ export function fillBlank(
     kind: 'fillblank',
     n: Math.min(4, a.options.length + 1),
   });
+}
+
+/**
+ * Bina soalan jawapan taip (Bahagian B kertas peperiksaan).
+ *
+ * `accept` menyenaraikan ejaan alternatif yang dikira betul, cth. "6 000"
+ * dan "6000". Perbandingan mengabaikan huruf besar, ruang berlebihan dan
+ * tanda baca hujung ayat supaya murid tidak dihukum kerana perkara remeh.
+ */
+export function shortText(a: {
+  prefix: string;
+  prompt: string;
+  answer: string;
+  explanation: string;
+  accept?: readonly string[];
+  promptSub?: string;
+  hint?: string;
+  emoji?: string;
+  speak?: string;
+  unit?: string;
+  workpad?: boolean;
+  steps?: readonly string[];
+}): Question {
+  return {
+    id: nextId(a.prefix),
+    kind: 'shorttext',
+    prompt: a.prompt,
+    promptSub: a.promptSub,
+    speak: a.speak ?? a.prompt,
+    answer: a.answer,
+    accept: a.accept ? [...a.accept] : undefined,
+    explanation: a.explanation,
+    hint: a.hint,
+    emoji: a.emoji,
+    unit: a.unit,
+    workpad: a.workpad,
+    steps: a.steps ? [...a.steps] : undefined,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Petunjuk (hint)                                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Petunjuk lalai apabila penjana tidak memberi hint khusus.
+ *
+ * Tujuannya membantu murid yang tersekat SEBELUM menjawab, jadi ia memberi
+ * strategi berfikir dan bukan jawapan. Contohnya soalan berangka diarahkan
+ * tulis apa yang diketahui dahulu, manakala soalan pilihan diarahkan
+ * menyingkirkan pilihan yang jelas salah.
+ */
+export function defaultHint(q: Question): string | undefined {
+  if (q.hint) return q.hint;
+  switch (q.kind) {
+    case 'numeric':
+      return 'Tulis dulu apa yang soalan beri, kemudian pilih operasi: tambah, tolak, darab atau bahagi.';
+    case 'shorttext':
+      return 'Baca soalan dua kali. Tulis jawapan yang paling tepat dan ringkas.';
+    case 'mcq':
+    case 'fillblank':
+      if ((q.options?.length ?? 0) >= 3) {
+        return 'Buang dulu pilihan yang jelas salah, kemudian bandingkan baki pilihan.';
+      }
+      return 'Baca semua pilihan, kemudian pilih yang paling tepat.';
+    case 'truefalse':
+      return 'Cari satu bukti dalam soalan yang menyokong atau menolak pernyataan ini.';
+    case 'match':
+      return 'Mulakan dengan pasangan yang kamu paling pasti, kemudian tinggal yang mudah.';
+    case 'order':
+      return 'Cari item pertama dahulu, kemudian susun yang seterusnya satu demi satu.';
+    default:
+      return 'Baca soalan dengan teliti dan fikirkan apa yang sebenarnya ditanya.';
+  }
 }
 
 /** Bentuk angka dengan pemisah ribuan. */
