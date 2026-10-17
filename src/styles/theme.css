@@ -1605,6 +1605,58 @@ ul {
   line-height: 1.1;
 }
 
+/* Gerbang ibu bapa: titik PIN dan pad nombor.
+   Butang besar dan tinggi supaya mudah ditekan pada telefon murid. */
+.pin-dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-3);
+  margin: var(--sp-2) 0;
+}
+
+.pin-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 2px var(--bg-deep);
+  transition: transform var(--dur-fast) var(--ease-pop), background var(--dur-fast);
+}
+
+.pin-dot[data-filled='true'] {
+  background: var(--brand);
+  box-shadow: none;
+  transform: scale(1.15);
+}
+
+.pin-error {
+  color: var(--danger);
+  font-weight: 800;
+}
+
+.pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.pin-key {
+  min-height: 56px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--sh-1);
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--ink);
+  transition: transform var(--dur-fast) var(--ease-pop), background var(--dur-fast);
+}
+
+.pin-key:active {
+  transform: scale(0.94);
+  background: var(--brand-soft);
+}
+
 /* ==========================================================================
    Utiliti & animasi
    ========================================================================== */

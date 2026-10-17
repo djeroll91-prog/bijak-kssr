@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore, useT } from '../state/store';
 import { Btn, Chip, Sheet, ToggleRow, TopBar } from '../components/ui';
+import { ParentLockSheet, useParentGate } from '../components/ParentLock';
 import { YEAR_THEME } from '../data/subjects';
 import { dayCount, yearLabel, yearTheme } from '../lib/i18n';
 import { catalogStats } from '../data/catalog';
@@ -12,7 +13,7 @@ import { copyText, shareUrl } from '../lib/share';
 import type { YearNum } from '../data/types';
 
 const AVATARS = ['🦊', '🐼', '🐯', '🐨', '🐸', '🦉', '🐙', '🦄', '🐲', '🐰', '🐵', '🐧'];
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 
 export function ProfileScreen() {
   const {
@@ -36,6 +37,10 @@ export function ProfileScreen() {
   const t = useT();
 
   const [sheet, setSheet] = useState<null | 'name' | 'year' | 'avatar' | 'switch' | 'add' | 'reset'>(null);
+  const [lockSheet, setLockSheet] = useState<null | 'set'>(null);
+  /** Benar apabila PIN disemak khusus untuk membenarkan tukar PIN. */
+  const [verifyForChange, setVerifyForChange] = useState(false);
+  const gate = useParentGate();
   const [nameDraft, setNameDraft] = useState(profile?.name ?? '');
   const [installEvt, setInstallEvt] = useState<{ prompt: () => void } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -379,8 +384,10 @@ export function ProfileScreen() {
               className="settings-row"
               onClick={() => {
                 sound.play('tap');
-                removeProfile(profile.id);
-                showToast(t('toast.childRemoved'));
+                gate.run(() => {
+                  removeProfile(profile.id);
+                  showToast(t('toast.childRemoved'));
+                });
               }}
             >
               <span className="lead" aria-hidden="true">
@@ -392,6 +399,28 @@ export function ProfileScreen() {
               </span>
             </button>
           ) : null}
+          <button
+            type="button"
+            className="settings-row"
+            onClick={() => {
+              sound.play('tap');
+              if (settings.parentPinHash) {
+                // Tukar PIN mesti melalui pengesahan PIN lama.
+                setVerifyForChange(true);
+              } else {
+                setLockSheet('set');
+              }
+            }}
+          >
+            <span className="lead" aria-hidden="true">
+              🔒
+            </span>
+            <span className="grow">
+              <b>{t('lock.title')}</b>
+              <small>{settings.parentPinHash ? t('lock.enabledDesc') : t('lock.disabledDesc')}</small>
+            </span>
+            <span className="tiny muted">{settings.parentPinHash ? t('lock.enabled') : t('lock.disabled')}</span>
+          </button>
           <button type="button" className="settings-row" onClick={() => { sound.play('wrong'); setSheet('reset'); }}>
             <span className="lead" aria-hidden="true">
               ⚠️
@@ -518,15 +547,43 @@ export function ProfileScreen() {
             block
             variant="danger"
             onClick={() => {
-              resetAll();
+              // Tutup dialog dahulu supaya dialog PIN tidak bertindih.
               setSheet(null);
-              showToast(t('toast.dataCleared'));
+              gate.run(() => {
+                resetAll();
+                showToast(t('toast.dataCleared'));
+              });
             }}
           >
             {t('profile.reset')}
           </Btn>
         </div>
       </Sheet>
+
+      {/* Dialog tetapan/tukar PIN ibu bapa. */}
+      <ParentLockSheet
+        open={lockSheet === 'set'}
+        mode="set"
+        onClose={() => setLockSheet(null)}
+      />
+
+      {/* Gerbang PIN sebelum tindakan merosakkan data. */}
+      <ParentLockSheet
+        open={gate.pending !== null || verifyForChange}
+        mode="verify"
+        onClose={() => {
+          setVerifyForChange(false);
+          gate.cancel();
+        }}
+        onVerified={() => {
+          if (verifyForChange) {
+            setVerifyForChange(false);
+            setLockSheet('set');
+          } else {
+            gate.resolve();
+          }
+        }}
+      />
     </div>
   );
 }

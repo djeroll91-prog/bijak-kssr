@@ -64,7 +64,12 @@ bash scripts/build-apk.sh                      # bina dist/bijak-kssr.apk
 - **Pakej web zip:** https://github.com/djeroll91-prog/bijak-kssr/releases/latest/download/bijak-kssr-app.zip
 
 Deploy web: bina (`npm run build`) lalu salin `dist/` ke `docs/` dan push ke
-`main`. GitHub Pages dicetak dari `main /docs`. Cetuskan bina semula melalui
+`main`. GitHub Pages dicetak dari `main /docs`.
+
+> **Perangkap deploy:** `docs/.nojekyll` tidak dihasilkan oleh `npm run build`.
+> Selepas `rm -rf docs && cp -r dist docs`, pulihkan dengan
+> `git checkout docs/.nojekyll`. Tanpanya GitHub Pages (Jekyll) mengabaikan
+> folder `assets/` dan aplikasi gagal dimuat. Cetuskan bina semula melalui
 `POST /repos/:owner/:repo/pages/builds` jika perlu.
 
 ## Struktur
@@ -98,6 +103,27 @@ Deploy web: bina (`npm run build`) lalu salin `dist/` ke `docs/` dan push ke
 - `verify-migrate.mjs` ŌĆö semakan migrasi data (rekod lama kekal, kad dibina)
 - `test-review-ui.mjs` / `test-review-flow.mjs` ŌĆö ujian jsdom pada `dist/`:
   kad ulangan muncul, sesi berselang merentas topik, kad dikemas kini
+
+### Gerbang ibu bapa, trend & ujian skrin (v1.5.0)
+
+- `src/lib/parentLock.ts` — cincangan SHA-256 (garam `bijak-kssr/parent-lock/v1`)
+  untuk PIN ibu bapa. Dilaksana sendiri kerana `crypto.subtle` tiada dalam jsdom.
+  `src/components/ParentLock.tsx` menyediakan `ParentLockSheet` (pad nombor
+  tersuai, bukan papan kekunci telefon) dan `useParentGate()`. Gerbang hanya pada
+  tindakan merosakkan (set semula data, padam profil), bukan setiap tetapan.
+  Tukar PIN mesti melalui PIN lama. Ujian: `node test-parent-lock.mjs`.
+- `src/lib/trend.ts` — trend markah mengikut skop (subjek dan/atau topik).
+  `trendPoints` menapis percubaan; `trendDelta` membandingkan separuh kedua lawan
+  separuh pertama dan memulangkan 0 jika kurang 4 titik supaya tidak meneka arah
+  daripada dua titik. Skrin Kemajuan guna ini untuk graf boleh tapis.
+  Ujian: `node verify-trend.mjs`, `node test-trend-ui.mjs`.
+- `test-screens.mjs` — ujian jsdom melawat setiap skrin utama melalui navigasi
+  sebenar dan gagal jika ada ralat JS. Skrin Laporan hanya muncul apabila `plan`
+  wujud, jadi data ujian mesti ada `plan` dan `diagnostic`.
+- Perangkap harness jsdom: `window.matchMedia` tidak wujud, dan `ProgressRing`
+  turut menggunakan kelas `chart` — carta trend kini `chart chart-trend` supaya
+  ujian boleh memilih bulatan dengan tepat.
+- `test-apk-load.mjs` memerlukan `PAYLOAD_DIR` (guna `dist` atau `docs`).
 
 ## Ciri ulangan berjarak (v1.4.0)
 

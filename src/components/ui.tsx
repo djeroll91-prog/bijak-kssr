@@ -246,7 +246,7 @@ export function TrendChart({
   const area = `${pad.left},${pad.top + innerH} ${line} ${pad.left + innerW},${pad.top + innerH}`;
 
   return (
-    <svg viewBox={`0 0 ${w} ${height}`} className="chart" role="img" aria-label="Carta trend markah">
+    <svg viewBox={`0 0 ${w} ${height}`} className="chart chart-trend" role="img" aria-label="Carta trend markah">
       <defs>
         <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.28" />

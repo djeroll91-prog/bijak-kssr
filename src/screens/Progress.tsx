@@ -8,12 +8,13 @@ import { useStore, useT } from '../state/store';
 import { BarList, Chip, EmptyState, ProgressRing, TrendChart, TopBar } from '../components/ui';
 import { SUBJECTS, subjectById } from '../data/subjects';
 import { subjectName, yearLabel } from '../lib/i18n';
-import { ALL_TOPICS, topicsFor } from '../data/catalog';
+import { ALL_TOPICS, topicById, topicsFor } from '../data/catalog';
 import { BADGES, badgeName } from '../data/badges';
 import { profileStats } from '../lib/storage';
 import { sound } from '../lib/audio';
 import { DIAGNOSTIC_TOPIC_ID, diagnosticRows, planProgress, practisedTopicCount } from '../lib/plan';
 import { cardsOf, reviewSummary, mistakeCount } from '../lib/review';
+import { subjectsWithData, topicsWithData, trendDelta, trendPoints } from '../lib/trend';
 import type { SubjectId } from '../data/types';
 
 type Range = 7 | 15 | 30;
@@ -39,16 +40,24 @@ export function ProgressScreen() {
   const shaky = useMemo(() => mistakeCount(cardsOf(profile)), [profile]);
   const planProgressValue = useMemo(() => planProgress(profile?.plan), [profile?.plan]);
 
-  const sessions = useMemo(() => practice.slice(-range), [practice, range]);
 
-  const trend = useMemo(
-    () =>
-      sessions.map((a, i) => ({
-        label: `${i + 1}`,
-        value: a.total > 0 ? Math.round((a.correct / a.total) * 100) : 0,
-      })),
-    [sessions],
+  /** Skop trend: subjek dan/atau topik yang dipilih ibu bapa. */
+  const [trendSubject, setTrendSubject] = useState<string>('');
+  const [trendTopic, setTrendTopic] = useState<string>('');
+
+  const trendSubjects = useMemo(() => subjectsWithData(practice), [practice]);
+  const trendTopics = useMemo(
+    () => topicsWithData(practice, trendSubject || undefined),
+    [practice, trendSubject],
   );
+
+  const scope = useMemo(
+    () => ({ subject: trendSubject || undefined, topicId: trendTopic || undefined }),
+    [trendSubject, trendTopic],
+  );
+
+  const scopedTrend = useMemo(() => trendPoints(practice, scope, range), [practice, scope, range]);
+  const scopedDelta = useMemo(() => trendDelta(scopedTrend), [scopedTrend]);
 
   /** Prestasi ikut subjek berdasarkan purata markah semua percubaan. */
   const bySubject = useMemo(() => {
@@ -109,11 +118,6 @@ export function ProgressScreen() {
   const overallPct = yearTopicCount > 0 ? (practisedTopicCount(profile) / yearTopicCount) * 100 : 0;
   const bestSubject = bySubject.length > 0 ? bySubject.reduce((a, b) => (a.avg >= b.avg ? a : b)) : null;
   const weakSubject = bySubject.length > 0 ? bySubject.reduce((a, b) => (a.avg <= b.avg ? a : b)) : null;
-
-  const trendStatus =
-    trend.length >= 2
-      ? trend[trend.length - 1].value - trend[0].value
-      : 0;
 
   if (practice.length === 0 && !profile.diagnostic) {
     return (
@@ -267,20 +271,118 @@ export function ProgressScreen() {
           </>
         )}
 
-        {/* Trend markah */}
+        {/* Trend markah — boleh tapis ikut subjek atau topik */}
         <p className="section-title">{t('progress.trend')}</p>
         <div className="card">
           <div className="row-between" style={{ marginBottom: 8 }}>
-            <span className="tiny muted">{t('progress.last7')}</span>
-            <Chip tone={trendStatus > 3 ? 'success' : trendStatus < -3 ? 'danger' : 'warn'}>
-              {trendStatus > 3
-                ? `📈 ${t('progress.improving')}`
-                : trendStatus < -3
-                  ? `📉 ${t('progress.needsWork')}`
-                  : `➡️ ${t('progress.steady')}`}
-            </Chip>
+            <span className="tiny muted">
+              {scopedTrend.length > 0
+                ? `${scopedTrend.length} ${t('progress.attempts').toLowerCase()}`
+                : t('trend.noScope')}
+            </span>
+            {scopedTrend.length >= 4 ? (
+              <Chip tone={scopedDelta > 3 ? 'success' : scopedDelta < -3 ? 'danger' : 'warn'}>
+                {scopedDelta > 3
+                  ? `📈 ${t('trend.up')} ${scopedDelta} ${t('trend.pts')}`
+                  : scopedDelta < -3
+                    ? `📉 ${t('trend.down')} ${Math.abs(scopedDelta)} ${t('trend.pts')}`
+                    : `➡️ ${t('trend.flat')}`}
+              </Chip>
+            ) : null}
           </div>
-          <TrendChart points={trend} />
+
+          {/* Penapis subjek */}
+          <p className="field-label">{t('trend.pickSubject')}</p>
+          <div className="row wrap" style={{ gap: 6 }}>
+            <button
+              type="button"
+              className="chip"
+              style={!trendSubject ? { background: 'var(--brand)', color: '#fff' } : undefined}
+              onClick={() => {
+                sound.play('tap');
+                setTrendSubject('');
+                setTrendTopic('');
+              }}
+            >
+              {t('trend.all')}
+            </button>
+            {trendSubjects.map((sid) => {
+              const meta = subjectById(sid as SubjectId);
+              const on = trendSubject === sid;
+              return (
+                <button
+                  key={sid}
+                  type="button"
+                  className="chip"
+                  style={on ? { background: meta.color, color: '#fff' } : undefined}
+                  onClick={() => {
+                    sound.play('tap');
+                    setTrendSubject(sid);
+                    setTrendTopic('');
+                  }}
+                >
+                  {meta.emoji} {subjectName(lang, sid, meta.name)}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Penapis topik — hanya apabila subjek dipilih */}
+          {trendSubject && trendTopics.length > 0 ? (
+            <>
+              <p className="field-label" style={{ marginTop: 12 }}>
+                {t('trend.pickTopic')}
+              </p>
+              <div className="row wrap" style={{ gap: 6 }}>
+                <button
+                  type="button"
+                  className="chip"
+                  style={!trendTopic ? { background: 'var(--brand)', color: '#fff' } : undefined}
+                  onClick={() => {
+                    sound.play('tap');
+                    setTrendTopic('');
+                  }}
+                >
+                  {t('trend.all')}
+                </button>
+                {trendTopics.map((tid) => {
+                  const tp = topicById(tid);
+                  const on = trendTopic === tid;
+                  return (
+                    <button
+                      key={tid}
+                      type="button"
+                      className="chip"
+                      style={on ? { background: 'var(--brand)', color: '#fff' } : undefined}
+                      onClick={() => {
+                        sound.play('tap');
+                        setTrendTopic(tid);
+                      }}
+                    >
+                      {tp ? tp.title : tid}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : null}
+
+          {/* Graf */}
+          <div style={{ marginTop: 12 }}>
+            {scopedTrend.length === 0 ? (
+              <p className="tiny muted center">{t('trend.noScope')}</p>
+            ) : (
+              <>
+                <TrendChart points={scopedTrend} />
+                {scopedTrend.length < 4 ? (
+                  <p className="tiny muted center" style={{ marginTop: 6 }}>
+                    {t('trend.fewPoints')}
+                  </p>
+                ) : null}
+              </>
+            )}
+          </div>
+
           <div className="row wrap" style={{ gap: 6, marginTop: 10 }}>
             {([7, 15, 30] as Range[]).map((n) => (
               <button

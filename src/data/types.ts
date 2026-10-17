@@ -225,6 +225,8 @@ export interface Settings {
   /** Mod gelap: latar gelap dengan kotak bercahaya. */
   dark: boolean;
   fontScale: number;
+  /** Cincangan SHA-256 PIN gerbang ibu bapa, jika ditetapkan. */
+  parentPinHash?: string;
 }
 
 export interface AppData {

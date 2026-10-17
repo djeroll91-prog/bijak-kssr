@@ -214,7 +214,7 @@ function repairProfile(raw: unknown): Profile | null {
 
 function repairSettings(raw: unknown): Settings {
   if (!isObj(raw)) return { ...DEFAULT_SETTINGS };
-  return {
+  const out: Settings = {
     sound: raw.sound !== false,
     voice: raw.voice === true,
     motion: raw.motion !== false,
@@ -223,6 +223,11 @@ function repairSettings(raw: unknown): Settings {
     dark: raw.dark === true,
     fontScale: clampFont(Number(raw.fontScale)),
   };
+  // Gerbang ibu bapa: hanya terima cincangan berbentuk betul.
+  if (typeof raw.parentPinHash === 'string' && /^[0-9a-f]{64}$/.test(raw.parentPinHash)) {
+    out.parentPinHash = raw.parentPinHash;
+  }
+  return out;
 }
 
 function clampFont(n: number): number {
