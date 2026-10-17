@@ -6,6 +6,7 @@ import { Btn, Chip, NoteCard, TopBar } from '../components/ui';
 import { subjectById, gamesForSubject } from '../data/subjects';
 import { gameBlurb, gameName, subjectName, yearLabel } from '../lib/i18n';
 import { topicById } from '../data/catalog';
+import { contributorFor } from '../data/contributors';
 import { sound, voice } from '../lib/audio';
 
 export function NotesScreen() {
@@ -29,6 +30,7 @@ export function NotesScreen() {
   }
 
   const meta = subjectById(topic.subject);
+  const contributor = contributorFor(topic.id);
   const games = gamesForSubject(topic.subject, topic.year).filter((g) =>
     topic.games ? topic.games.includes(g.id) : true,
   );
@@ -64,6 +66,9 @@ export function NotesScreen() {
               </button>
             ) : null}
           </div>
+          <p className="tiny muted" style={{ marginTop: 8 }}>
+            {contributor.emoji} {t('topics.byTeacher')} <b>{contributor.name}</b>
+          </p>
         </div>
 
         <p className="section-title">{t('topics.notes')}</p>

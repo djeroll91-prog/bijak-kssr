@@ -5,6 +5,7 @@ import { useStore, useT } from '../state/store';
 import { Btn, Chip, Confetti, useAnimatedNumber } from '../components/ui';
 import { subjectById } from '../data/subjects';
 import { badgeHow, badgeName } from '../data/badges';
+import { contributorFor } from '../data/contributors';
 import { dayCount, subjectName, yearLabel } from '../lib/i18n';
 import { sound, voice } from '../lib/audio';
 
@@ -50,6 +51,7 @@ export function ResultScreen() {
   }
 
   const meta = subjectById(r.subject);
+  const contributor = contributorFor(r.topicId);
   const tier = score >= 100 ? 'gold' : score >= 80 ? 'silver' : score >= 60 ? 'bronze' : 'plain';
   const title = r.perfect ? t('result.perfect') : score >= 80 ? t('result.great') : score >= 60 ? t('result.good') : t('result.tryAgain');
 
@@ -101,6 +103,10 @@ export function ResultScreen() {
             </Chip>
             {r.perfect ? <Chip tone="warn">💯 {t('result.perfectBonus')}</Chip> : null}
           </div>
+
+          <p className="tiny muted" style={{ marginTop: 10 }}>
+            {contributor.emoji} {t('topics.byTeacher')} <b>{contributor.name}</b>
+          </p>
 
           {profile ? (
             <p className="tiny muted" style={{ marginTop: 10 }}>

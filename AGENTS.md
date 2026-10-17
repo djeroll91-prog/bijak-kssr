@@ -76,10 +76,16 @@ Deploy web: bina (`npm run build`) lalu salin `dist/` ke `docs/` dan push ke
   digabungkan dalam `src/data/catalog.ts` semasa muat. Untuk tambah nota,
   letak kunci mengikut `id` topik dalam `EXTRA_NOTES`. Nota baharu perlu
   sepadan dengan `id` dalam `src/data/topics/*.ts` (semakan: tiada orphan).
+- `src/data/contributors.ts` ŌĆö kredit guru penyumbang latihan. Setiap topik
+  dipetakan secara deterministik (hash `id`) kepada seorang guru supaya kredit
+  kekal. Semakan: `node verify-contributors.mjs`.
 - `android-app/` ŌĆö projek Android (manifest, `MainActivity.java`, res, assets/www)
 - `scripts/build-apk.sh` ŌĆö saluran bina APK
 - `scripts/make-icons.py` / `make-android-icons.py` ŌĆö penjana ikon
 - `audit-i18n.mjs` ŌĆö semak kunci i18n yang hilang
+- `verify-generators.mjs`, `verify-random.mjs`, `verify-plan.mjs`,
+  `verify-contributors.mjs` — semakan enjin soalan, kerawakan, pelan
+  harian dan kredit guru
 
 ## Bahasa antara muka
 

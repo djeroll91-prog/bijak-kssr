@@ -57,6 +57,7 @@ const MS: Dict = {
   'topics.game': 'Mini Permainan',
   'topics.tryFirst': 'Baca notanya dahulu, kemudian cuba latihan!',
   'topics.questions': 'soalan',
+  'topics.byTeacher': 'Disediakan oleh',
 
   // Notes
   'notes.tip': 'Tip',
@@ -385,6 +386,7 @@ const EN: Dict = {
   'topics.game': 'Mini Game',
   'topics.tryFirst': 'Read the notes first, then try the exercises!',
   'topics.questions': 'questions',
+  'topics.byTeacher': 'Prepared by',
 
   'notes.tip': 'Tip',
   'notes.example': 'Example',
