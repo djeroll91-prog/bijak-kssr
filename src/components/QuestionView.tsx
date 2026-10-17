@@ -326,7 +326,9 @@ function MatchAnswer({
 }) {
   const pairs = q.pairs ?? [];
   const [selLeft, setSelLeft] = useState<string | null>(null);
-  const [done, setDone] = useState<Record<string, string>>({});
+  // Setiap kiri dipadankan dengan indeks kanan, bukan teks kanan, supaya label
+  // kanan yang berulang (contohnya "bulatan") masih boleh dipadankan.
+  const [done, setDone] = useState<Record<string, number>>({});
   const [wrongFlash, setWrongFlash] = useState<string | null>(null);
 
   useEffect(() => {
@@ -335,7 +337,7 @@ function MatchAnswer({
   }, [q.id]);
 
   const rights = useMemo(
-    () => shuffleStable(pairs.map((p) => p.right), q.id),
+    () => shuffleStable(pairs.map((p, i) => ({ right: p.right, i })), q.id),
     [pairs, q.id],
   );
 
@@ -344,20 +346,24 @@ function MatchAnswer({
     setSelLeft(left === selLeft ? null : left);
   };
 
-  const handleRight = (right: string) => {
+  const handleRight = (idx: number, right: string) => {
     if (selLeft === null) return;
-    const pair = pairs.find((p) => p.left === selLeft);
+    const pairIndex = pairs.findIndex((p) => p.left === selLeft);
+    const pair = pairs[pairIndex];
     if (pair && pair.right === right) {
       sound.play('correct');
-      const next = { ...done, [selLeft]: right };
+      const next = { ...done, [selLeft]: idx };
       setDone(next);
       setSelLeft(null);
       if (Object.keys(next).length === pairs.length) {
-        onAnswer({ given: Object.values(next).join(', '), ok: true });
+        onAnswer({
+          given: pairs.map((p) => next[p.left]).map((i) => pairs[i]?.right ?? '').join(', '),
+          ok: true,
+        });
       }
     } else {
       sound.play('wrong');
-      setWrongFlash(`${selLeft}|${right}`);
+      setWrongFlash(`${selLeft}|${idx}`);
       window.setTimeout(() => setWrongFlash(null), 420);
       setSelLeft(null);
     }
@@ -370,7 +376,7 @@ function MatchAnswer({
       </p>
       <div className="match-grid">
         {pairs.map((p) => {
-          const isDone = Boolean(done[p.left]);
+          const isDone = done[p.left] !== undefined;
           return (
             <button
               key={`L-${p.left}`}
@@ -385,20 +391,20 @@ function MatchAnswer({
             </button>
           );
         })}
-        {rights.map((r) => {
-          const used = Object.values(done).includes(r);
-          const flashing = wrongFlash?.endsWith(`|${r}`);
+        {rights.map(({ right, i }) => {
+          const used = Object.values(done).includes(i);
+          const flashing = wrongFlash?.endsWith(`|${i}`);
           return (
             <button
-              key={`R-${r}`}
+              key={`R-${i}-${right}`}
               type="button"
               className="match-cell"
               data-done={used ? 'true' : 'false'}
               style={flashing ? { boxShadow: 'inset 0 0 0 3px var(--danger)' } : undefined}
               disabled={answered || used}
-              onClick={() => handleRight(r)}
+              onClick={() => handleRight(i, right)}
             >
-              {r}
+              {right}
             </button>
           );
         })}

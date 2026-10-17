@@ -32,6 +32,15 @@ export const DIAGNOSTIC_PER_TOPIC = 2;
 /** Topik ringkasan yang dicatat sebagai satu `Attempt` selepas diagnosis. */
 export const DIAGNOSTIC_TOPIC_ID = 'diagnostic';
 
+/**
+ * Topik ringkasan peperiksaan percubaan. Markahnya merangkumi keseluruhan
+ * tahun, jadi ia tidak boleh dianggap sebagai penguasaan satu topik.
+ */
+export const EXAM_TOPIC_ID = 'exam';
+
+/** Topik ringkasan yang bukan topik sebenar (dikecualikan daripada skor). */
+export const SUMMARY_TOPIC_IDS = new Set([DIAGNOSTIC_TOPIC_ID, EXAM_TOPIC_ID]);
+
 export interface TopicScore {
   topicId: string;
   avg: number;
@@ -44,7 +53,7 @@ export interface TopicScore {
 export function topicScores(profile: Profile): Map<string, TopicScore> {
   const map = new Map<string, TopicScore>();
   for (const a of profile.attempts) {
-    if (a.topicId === DIAGNOSTIC_TOPIC_ID || a.total <= 0) continue;
+    if (SUMMARY_TOPIC_IDS.has(a.topicId) || a.total <= 0) continue;
     const cur = map.get(a.topicId) ?? { topicId: a.topicId, avg: 0, attempts: 0 };
     // Purata bergerak supaya latihan terkini lebih berpengaruh.
     const pct = (a.correct / a.total) * 100;
@@ -283,7 +292,7 @@ export function diagnosticRows(diag: DiagnosticResult | null | undefined) {
 
 /** Percubaan latihan sebenar sahaja (tanpa ringkasan ujian diagnosis). */
 export function practiceAttempts(profile: Profile): Attempt[] {
-  return profile.attempts.filter((a) => a.topicId !== DIAGNOSTIC_TOPIC_ID);
+  return profile.attempts.filter((a) => !SUMMARY_TOPIC_IDS.has(a.topicId));
 }
 
 /** Bilangan topik berbeza yang telah dilatih murid. */

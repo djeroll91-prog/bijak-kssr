@@ -1965,7 +1965,8 @@ ul {
 /* Skrin latihan masuk dari sisi supaya terasa "masuk mod fokus". */
 .screen-stage[data-screen='quiz'],
 .screen-stage[data-screen='diagnostic'],
-.screen-stage[data-screen='game'] {
+.screen-stage[data-screen='game'],
+.screen-stage[data-screen='mockExam'] {
   animation: focusIn var(--dur-slow) var(--ease-out) backwards;
 }
 
@@ -1981,7 +1982,8 @@ ul {
 }
 
 /* Skrin keputusan membesar masuk seperti hadiah dibuka. */
-.screen-stage[data-screen='result'] {
+.screen-stage[data-screen='result'],
+.screen-stage[data-screen='examResult'] {
   animation: rewardIn 520ms var(--ease-pop) backwards;
 }
 
@@ -2398,4 +2400,156 @@ ul {
     max-width: none;
     box-shadow: none;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Peperiksaan percubaan (mock exam)                                   */
+/* ------------------------------------------------------------------ */
+
+/* HUD pemasa: terapung di bahagian atas, di bawah bar kemajuan kuiz. */
+.exam-hud {
+  position: fixed;
+  top: 54px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 66;
+  pointer-events: none;
+}
+
+.exam-hud .chip {
+  pointer-events: auto;
+  box-shadow: var(--sh-1);
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+}
+
+.exam-hud .chip[data-tone='warn'] {
+  background: var(--warn-soft, #fff4d6);
+  color: #8a5a00;
+}
+
+.exam-hud .chip[data-tone='danger'] {
+  background: var(--danger-soft, #ffe2e2);
+  color: var(--danger);
+  animation: pulseSoft 900ms ease-in-out infinite;
+}
+
+@keyframes pulseSoft {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+/* Grid lompat-soalan pada skrin semak. */
+.exam-jump-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 8px;
+}
+
+.exam-jump {
+  aspect-ratio: 1;
+  border: 2px solid var(--line, #e3e6ef);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-weight: 900;
+  font-size: 0.9rem;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 140ms var(--ease-pop), background 140ms ease;
+}
+
+.exam-jump:active {
+  transform: scale(0.92);
+}
+
+.exam-jump[data-done='true'][data-ok='true'] {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+
+.exam-jump[data-done='true'][data-ok='false'] {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.exam-jump[data-done='false'] {
+  background: var(--brand-soft, #eef0ff);
+  border-style: dashed;
+}
+
+.exam-jump[data-current='true'] {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Butang semak yang muncul apabila semua soalan dijawab. */
+.exam-review-fab {
+  position: fixed;
+  right: 16px;
+  bottom: 24px;
+  z-index: 68;
+}
+
+/* ------------------------------------------------------------------ */
+/* Tips menjawab                                                       */
+/* ------------------------------------------------------------------ */
+
+.tips-group + .tips-group {
+  margin-top: 12px;
+}
+
+.tips-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface);
+  border: none;
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-1);
+  cursor: pointer;
+  text-align: left;
+  color: var(--ink);
+  transition: transform 140ms var(--ease-pop);
+}
+
+.tips-head:active {
+  transform: scale(0.98);
+}
+
+.tips-head b {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.tips-head small {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.tips-chevron {
+  transition: transform 200ms var(--ease-out);
+  font-size: 1.1rem;
+  color: var(--muted);
+}
+
+.tips-chevron[data-open='true'] {
+  transform: rotate(180deg);
+}
+
+:root[data-motion='off'] .exam-hud .chip[data-tone='danger'] {
+  animation: none;
 }

@@ -286,6 +286,18 @@ export function HomeScreen() {
         </div>
 
         <div style={{ marginTop: 10 }}>
+          <Btn block variant="accent" onClick={() => go({ screen: 'mockExam' })}>
+            📝 {t('exam.title')}
+          </Btn>
+        </div>
+
+        <div style={{ marginTop: 10 }}>
+          <Btn block variant="ghost" onClick={() => go({ screen: 'examTips' })}>
+            💡 {t('tips.title')}
+          </Btn>
+        </div>
+
+        <div style={{ marginTop: 10 }}>
           <Btn block variant="ghost" onClick={() => go({ screen: 'report' })}>
             📄 {t('report.title')}
           </Btn>

@@ -157,7 +157,7 @@ export function cardsOf(profile: Profile | null | undefined): ReviewCard[] {
  */
 export function backfillReviews(profile: Profile, today = todayKey()): ReviewCard[] {
   const ordered = [...profile.attempts]
-    .filter((a) => a.topicId !== 'diagnostic' && a.total > 0)
+    .filter((a) => a.topicId !== 'diagnostic' && a.topicId !== 'exam' && a.total > 0)
     .sort((a, b) => a.ts - b.ts);
   let cards: ReviewCard[] = [];
   for (const a of ordered) {

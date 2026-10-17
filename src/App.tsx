@@ -16,6 +16,9 @@ import { GamesScreen, GameScreen } from './screens/Games';
 import { PlanScreen } from './screens/Plan';
 import { DiagnosticScreen } from './screens/Diagnostic';
 import { ReportScreen } from './screens/Report';
+import { MockExamScreen } from './screens/MockExam';
+import { ExamResultScreen } from './screens/ExamResult';
+import { ExamTipsScreen } from './screens/ExamTips';
 import { sound } from './lib/audio';
 import type { ScreenId } from './state/store';
 
@@ -32,7 +35,7 @@ const NAV_ITEMS: { id: ScreenId; icon: string; labelKey: string }[] = [
 const SUBJECT_TABS: ScreenId[] = ['topics', 'notes'];
 
 /** Skrin yang berkongsi tab "Pelan" pada navigasi bawah. */
-const PLAN_TABS: ScreenId[] = ['diagnostic', 'report'];
+const PLAN_TABS: ScreenId[] = ['diagnostic', 'report', 'examTips', 'examResult'];
 
 function BottomNav() {
   const { nav, go } = useStore();
@@ -40,7 +43,7 @@ function BottomNav() {
 
   // Skrin result/quiz/notes/game ialah skrin "dalaman" — sorokkan nav bawah
   // supaya murid fokus, kecuali result yang membenarkan pulang segera.
-  const hidden: ScreenId[] = ['quiz', 'game'];
+  const hidden: ScreenId[] = ['quiz', 'game', 'mockExam'];
   if (hidden.includes(nav.screen)) return null;
 
   return (
@@ -114,6 +117,9 @@ function Router() {
         {nav.screen === 'plan' ? <PlanScreen /> : null}
         {nav.screen === 'diagnostic' ? <DiagnosticScreen /> : null}
         {nav.screen === 'report' ? <ReportScreen /> : null}
+        {nav.screen === 'mockExam' ? <MockExamScreen /> : null}
+        {nav.screen === 'examResult' ? <ExamResultScreen /> : null}
+        {nav.screen === 'examTips' ? <ExamTipsScreen /> : null}
       </ScreenStage>
 
       <BottomNav />

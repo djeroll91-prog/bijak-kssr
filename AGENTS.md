@@ -156,10 +156,57 @@ standard BM 1.0-5.0, penomboran Sains dan Sejarah, serta label kod yang betul.
   harian dan kredit guru
 - `verify-review.mjs` — semakan enjin SRS (kotak, jarak, lapses)
 - `verify-migrate.mjs` — semakan migrasi data (rekod lama kekal, kad dibina)
+- `verify-exam.mjs` — semakan enjin peperiksaan percubaan: bilangan soalan
+  ikut tahun, tiada soalan berulang dalam satu kertas, benih berbeza
+  menghasilkan kertas berbeza, markah/gred/pecahan dikira betul
+- `verify-match.mjs` — semakan soalan padan pasangan: kiri dan kanan sama
+  bilangan, dan melaporkan label kanan berulang yang perlu dikendalikan widget
 - `verify-dskp.mjs` — semakan pematuhan DSKP: tiada kod bertindih, liputan
   standard Bahasa Melayu 1.0-5.0, penomboran Sains dan Sejarah, label kod
 - `test-review-ui.mjs` / `test-review-flow.mjs` — ujian jsdom pada `dist/`:
   kad ulangan muncul, sesi berselang merentas topik, kad dikemas kini
+
+### Peperiksaan percubaan & tips menjawab (v1.9.0)
+
+- `src/lib/exam.ts` — enjin peperiksaan percubaan. `examConfig(year)` menetapkan
+  T1-T3 = 20 soalan / 30 minit, T4-T6 = 40 soalan / 60 minit. `buildExamPaper(year, seed)`
+  mengagihkan soalan ke atas topik tahun itu, menyelang-selikan antara topik dan
+  membuang soalan bertindih teks supaya **tiada soalan berulang dalam satu kertas**.
+  Benih berbeza (dijana setiap percubaan baharu) menghasilkan kertas berbeza:
+  diukur ~0-15% tumpang tindih antara dua percubaan, jadi soalan memang bertukar.
+  `scoreExam` memulangkan markah, gred (A>=80, B>=60, C>=40, D>=20, E<20),
+  pecahan ikut subjek dan topik, serta lulus pada 60%.
+- `EXAM_TOPIC_ID = 'exam'` ialah id topik ringkasan untuk percubaan peperiksaan.
+  Ia dikecualikan daripada penguasaan topik dan bank kesilapan melalui
+  `SUMMARY_TOPIC_IDS` dalam `src/lib/plan.ts` dan penapis dalam `src/lib/review.ts`.
+  Sebabnya: percubaan peperiksaan menjangkau banyak topik sekaligus dan tidak
+  sepatutnya menaikkan atau menjatuhkan penguasaan satu topik.
+- `src/data/tips.ts` — kandungan tip menjawab soalan: `generalTips(year)` untuk
+  semua tahun dan `SUBJECT_TIPS` untuk setiap subjek. `tipsForYear(year, subjects)`
+  menggabungkan kedua-duanya mengikut subjek yang ada pada tahun itu.
+- `src/screens/MockExam.tsx` — aliran intro -> mula -> jawab -> semak -> hantar.
+  HUD pemasa dan kiraan dijawab (`exam-hud`), grid lompat soalan (`exam-jump`),
+  dan bar kemajuan kuiz yang dikongsi. Semua jenis soalan disokong (pilihan
+  berganda, nombor, padan, susun) kerana ia menggunakan `QuestionView` yang sama.
+- `src/screens/ExamResult.tsx` — markah, gred, pecahan ikut subjek dan topik,
+  banding percubaan lepas, semakan jawapan penuh dan butang percubaan baharu.
+- `src/screens/ExamTips.tsx` — kumpulan tip boleh kembang mengikut subjek,
+  bacaan suara setiap tip, dan butang terus ke peperiksaan.
+- Percubaan peperiksaan disimpan sebagai satu `Attempt` ringkasan (`saveExam`)
+  supaya bintang, mata dan lencana sedia ada terus berfungsi.
+- Ujian: `node verify-exam.mjs`, `node verify-match.mjs`, `node test-exam-ui.mjs`.
+  `test-exam-ui.mjs` menguji aliran penuh dan mengesahkan soalan bertukar antara
+  percubaan.
+
+#### Pepijat soalan padan yang dibetulkan (v1.9.0)
+
+Widget padan pasangan dulu memadankan mengikut **teks** label kanan dan
+melumpuhkan semua butang kanan yang berkongsi teks. Untuk data seperti bentuk
+3D (silinder, kon dan sfera semuanya bermuka "bulatan") ini menyebabkan soalan
+mustahil diselesaikan. `MatchAnswer` dalam `src/components/QuestionView.tsx`
+kini memadankan mengikut **indeks** kanan, jadi label kanan berulang pun boleh
+dipadankan. `verify-match.mjs` melaporkan kes berulang supaya ia tidak
+berulang tanpa disedari.
 
 ### Gerbang ibu bapa, trend & ujian skrin (v1.5.0)
 

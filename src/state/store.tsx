@@ -39,6 +39,8 @@ import {
 } from '../lib/storage';
 import { newBadges } from '../data/badges';
 import { buildPlan, DIAGNOSTIC_TOPIC_ID } from '../lib/plan';
+import type { ExamScore } from '../lib/exam';
+import { EXAM_TOPIC_ID } from '../lib/exam';
 import { applyOutcomes } from '../lib/review';
 import { sound, voice } from '../lib/audio';
 import { translate, type Lang } from '../lib/i18n';
@@ -57,7 +59,10 @@ export type ScreenId =
   | 'profile'
   | 'plan'
   | 'diagnostic'
-  | 'report';
+  | 'report'
+  | 'mockExam'
+  | 'examResult'
+  | 'examTips';
 
 export interface NavState {
   screen: ScreenId;
@@ -74,6 +79,10 @@ export interface NavState {
   planTaskId?: string;
   /** Kembali ke skrin mana selepas result. */
   from?: ScreenId;
+  /** Keputusan peperiksaan percubaan untuk skrin examResult. */
+  exam?: ExamResult;
+  /** Benih soalan peperiksaan supaya percubaan baharu berbeza. */
+  examSeed?: number;
 }
 
 export interface QuizResult {
@@ -98,6 +107,32 @@ export interface QuizResult {
   perfect: boolean;
   /** Topik yang disentuh dalam sesi ulangan berselang (jika ada). */
   reviewTopicIds?: string[];
+}
+
+/** Ringkasan keputusan satu percubaan peperiksaan percubaan. */
+export interface ExamResult {
+  year: YearNum;
+  seed: number;
+  ts: number;
+  seconds: number;
+  config: { questions: number; minutes: number; passPct: number };
+  score: ExamScore;
+  stars: number;
+  points: number;
+  badges: Badge[];
+  answers: {
+    questionId: string;
+    prompt: string;
+    correct: string;
+    given: string;
+    ok: boolean;
+    explanation: string;
+    topicTitle: string;
+  }[];
+  /** Percubaan lepas bagi tahun yang sama, untuk perbandingan. */
+  compare: { prevPct: number; delta: number; count: number } | null;
+  /** Bilangan percubaan termasuk yang ini. */
+  attemptNo: number;
 }
 
 interface Store {
@@ -134,6 +169,9 @@ interface Store {
   markTopicSeen: (topicId: string) => void;
   consumePendingBadges: () => void;
   celebrateBadge: (id: string) => void;
+
+  /** Peperiksaan percubaan */
+  saveExam: (result: ExamResult) => void;
 
   /** Program belajar */
   saveDiagnostic: (items: DiagnosticItem[], seconds: number) => void;
@@ -382,6 +420,46 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /**
+   * Simpan keputusan peperiksaan percubaan. Satu percubaan ringkasan
+   * direkodkan (topicId `exam`) supaya bintang, mata dan lencana terus
+   * berfungsi, tetapi ia dikecualikan daripada penguasaan topik.
+   */
+  const saveExam = useCallback((result: ExamResult) => {
+    setData((d) => {
+      const idx = d.profiles.findIndex((p) => p.id === d.activeProfileId);
+      if (idx === -1) return d;
+      const p = d.profiles[idx];
+      const full: Attempt = {
+        id: `a-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+        ts: result.ts,
+        year: result.year,
+        subject: result.score.bySubject[0]?.subject ?? 'matematik',
+        topicId: EXAM_TOPIC_ID,
+        topicTitle: 'Peperiksaan Percubaan',
+        correct: result.score.correct,
+        total: result.score.total,
+        seconds: result.seconds,
+        retries: 0,
+      };
+      const st = streakUpdate(p);
+      const updated: Profile = {
+        ...p,
+        ...st,
+        attempts: [...p.attempts, full],
+        stars: p.stars + result.stars,
+        points: p.points + result.points,
+      };
+      const gained = newBadges(updated);
+      if (gained.length > 0) {
+        updated.badges = [...updated.badges, ...gained.map((b) => b.id)];
+      }
+      const profiles = d.profiles.slice();
+      profiles[idx] = updated;
+      return { ...d, profiles };
+    });
+  }, []);
+
+  /**
    * Simpan keputusan ujian diagnosis. Satu percubaan ringkasan juga
    * direkodkan supaya bintang, mata dan lencana terus berfungsi.
    */
@@ -506,6 +584,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     markTopicSeen,
     consumePendingBadges,
     celebrateBadge,
+    saveExam,
     saveDiagnostic,
     generatePlan,
     completePlanTask,

@@ -12,7 +12,13 @@ import { ALL_TOPICS, topicById, topicsFor } from '../data/catalog';
 import { BADGES, badgeName } from '../data/badges';
 import { profileStats } from '../lib/storage';
 import { sound } from '../lib/audio';
-import { DIAGNOSTIC_TOPIC_ID, diagnosticRows, planProgress, practisedTopicCount } from '../lib/plan';
+import {
+  SUMMARY_TOPIC_IDS,
+  diagnosticRows,
+  planProgress,
+  practisedTopicCount,
+} from '../lib/plan';
+import { EXAM_TOPIC_ID, formatClock, examGrade, GRADE_KEY } from '../lib/exam';
 import { cardsOf, reviewSummary, mistakeCount } from '../lib/review';
 import { subjectsWithData, topicsWithData, trendDelta, trendPoints } from '../lib/trend';
 import type { SubjectId } from '../data/types';
@@ -24,9 +30,20 @@ export function ProgressScreen() {
   const t = useT();
   const [range, setRange] = useState<Range>(15);
 
-  // Percubaan latihan sebenar sahaja; ringkasan diagnosis dipaparkan berasingan.
+  // Percubaan latihan sebenar sahaja; ringkasan diagnosis/peperiksaan berasingan.
   const practice = useMemo(
-    () => (profile ? profile.attempts.filter((a) => a.topicId !== DIAGNOSTIC_TOPIC_ID) : []),
+    () => (profile ? profile.attempts.filter((a) => !SUMMARY_TOPIC_IDS.has(a.topicId)) : []),
+    [profile],
+  );
+
+  // Percubaan peperiksaan percubaan, terbaru dahulu.
+  const exams = useMemo(
+    () =>
+      profile
+        ? profile.attempts
+            .filter((a) => a.topicId === EXAM_TOPIC_ID)
+            .sort((a, b) => b.ts - a.ts)
+        : [],
     [profile],
   );
 
@@ -218,6 +235,55 @@ export function ProgressScreen() {
               }}
             >
               📄 {t('report.title')}
+            </button>
+          </div>
+        </div>
+
+        <p className="section-title">📝 {t('exam.title')}</p>
+        <div className="card">
+          {exams.length === 0 ? (
+            <p className="tiny muted">{t('exam.firstAttempt')}</p>
+          ) : (
+            <div className="stack" style={{ gap: 10 }}>
+              {exams.slice(0, 5).map((a) => {
+                const pct = a.total > 0 ? Math.round((a.correct / a.total) * 100) : 0;
+                return (
+                  <div key={a.id} className="row-between" style={{ gap: 10 }}>
+                    <div className="grow">
+                      <b style={{ fontSize: '0.88rem', fontWeight: 900 }}>
+                        {pct}% • {a.correct}/{a.total}
+                      </b>
+                      <p className="tiny muted">
+                        {yearLabel(lang, a.year)} • ⏱️ {formatClock(a.seconds)} •{' '}
+                        {t(GRADE_KEY[examGrade(pct)])}
+                      </p>
+                    </div>
+                    <ProgressRing value={pct} size={38} stroke={4} />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <div className="row wrap" style={{ gap: 8, marginTop: 12 }}>
+            <button
+              type="button"
+              className="chip chip-brand"
+              onClick={() => {
+                sound.play('pop');
+                go({ screen: 'mockExam' });
+              }}
+            >
+              📝 {t('exam.title')}
+            </button>
+            <button
+              type="button"
+              className="chip"
+              onClick={() => {
+                sound.play('pop');
+                go({ screen: 'examTips' });
+              }}
+            >
+              💡 {t('tips.title')}
             </button>
           </div>
         </div>

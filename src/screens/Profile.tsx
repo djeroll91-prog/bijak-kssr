@@ -13,7 +13,7 @@ import { copyText, shareUrl } from '../lib/share';
 import type { YearNum } from '../data/types';
 
 const AVATARS = ['🦊', '🐼', '🐯', '🐨', '🐸', '🦉', '🐙', '🦄', '🐲', '🐰', '🐵', '🐧'];
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.9.0';
 
 export function ProfileScreen() {
   const {
