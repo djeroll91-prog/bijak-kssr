@@ -868,6 +868,192 @@ function bm5PemahamanPetikan(_y: number, rng: Rng, count: number): Question[] {
   });
 }
 
+function bm5SeniBahasa(_y: number, rng: Rng, count: number): Question[] {
+  const poems = [
+    {
+      jenis: 'Pantun',
+      baris: [
+        'Buah cempedak di luar pagar,',
+        'Ambil galah tolong jolokkan;',
+        'Saya budak baru belajar,',
+        'Kalau salah tolong tunjukkan.',
+      ],
+      why: 'Rima akhir a-b-a-b dan dua baris pertama ialah pembayang.',
+      maksud: 'Meminta tunjuk ajar kerana masih baru belajar.',
+    },
+    {
+      jenis: 'Pantun',
+      baris: [
+        'Pisang emas dibawa belayar,',
+        'Masak sebiji di atas peti;',
+        'Hutang emas boleh dibayar,',
+        'Hutang budi dibawa mati.',
+      ],
+      why: 'Rima akhir a-b-a-b dengan pembayang pada dua baris pertama.',
+      maksud: 'Budi yang baik tidak dapat dibalas dengan wang.',
+    },
+    {
+      jenis: 'Syair',
+      baris: [
+        'Wahai anak-anak sekalian,',
+        'Rajinlah belajar setiap masa;',
+        'Ilmu itu cahaya iman,',
+        'Bekalan hidup di dunia.',
+      ],
+      why: 'Rima akhir a-a-a-a dan setiap baris membawa maksud.',
+      maksud: 'Menyeru murid supaya rajin menuntut ilmu.',
+    },
+    {
+      jenis: 'Syair',
+      baris: [
+        'Burung terbang di angkasa,',
+        'Mencari makan di waktu pagi;',
+        'Marilah kita menjaga bahasa,',
+        'Bahasa Melayu lambang jati diri.',
+      ],
+      why: 'Rima akhir a-a-a-a tanpa pembayang.',
+      maksud: 'Mengajak kita memartabatkan bahasa Melayu.',
+    },
+  ];
+  const sajak = [
+    { tajuk: 'Bahasa Ku', baris: ['Bahasa ku bukan sekadar bunyi,', 'ia nafas bangsa yang hidup,', 'terus bernyanyi dalam jiwaku.'], why: 'Sajak ialah puisi bebas; barisnya tidak terikat rima tetap.' },
+    { tajuk: 'Hujan', baris: ['Hujan mengetuk bumbung,', 'seperti jari kecil mengetuk pintu,', 'meminta izin masuk.'], why: 'Sajak menggunakan bahasa indah dan tidak terikat aturan rima.' },
+  ];
+  return fill(count, (i) => {
+    if (i % 4 === 3) {
+      const s = rng.pick(sajak);
+      return mcq(rng, {
+        prefix: 'bm5-seni',
+        prompt: `Apakah bentuk puisi bagi petikan ini?\n\n"${s.baris.join('\n')}"`,
+        answer: 'Sajak',
+        distractors: ['Pantun', 'Syair', 'Peribahasa'],
+        explanation: s.why,
+        emoji: '✨',
+        cols: 2,
+        speak: 'Apakah bentuk puisi bagi petikan ini?',
+      });
+    }
+    const p = rng.pick(poems);
+    if (i % 4 === 0) {
+      return mcq(rng, {
+        prefix: 'bm5-seni',
+        prompt: `Apakah bentuk puisi ini?\n\n"${p.baris.join('\n')}"`,
+        answer: p.jenis,
+        distractors: ['Pantun', 'Syair', 'Sajak'],
+        explanation: p.why,
+        emoji: '🎭',
+        cols: 2,
+        speak: 'Apakah bentuk puisi ini?',
+      });
+    }
+    if (i % 4 === 1) {
+      return mcq(rng, {
+        prefix: 'bm5-seni',
+        prompt: `Baca ${p.jenis.toLowerCase()} ini:\n\n"${p.baris.join('\n')}"\n\nApakah maksudnya?`,
+        answer: p.maksud,
+        distractors: [
+          'Menyatakan cara memasak makanan',
+          'Menceritakan tempat percutian',
+          'Menerangkan cara bermain bola',
+          'Menghitung bilangan barang',
+        ],
+        explanation: `Maksud ${p.jenis.toLowerCase()} itu: ${p.maksud}`,
+        emoji: '💡',
+        cols: 1,
+      });
+    }
+    return trueFalse({
+      prefix: 'bm5-seni',
+      prompt: p.jenis === 'Pantun'
+        ? `Pantun ini mempunyai pembayang pada dua baris pertama.`
+        : `${p.jenis} ini menggunakan rima akhir a-a-a-a.`,
+      isTrue: true,
+      explanation: p.why,
+      emoji: '✅',
+    });
+  });
+}
+
+function bm5MembacaMenulisFungsional(_y: number, rng: Rng, count: number): Question[] {
+  const items = [
+    {
+      jenis: 'Iklan',
+      teks: 'JUALAN BUKU MURAH!\nSemua buku cerita diskaun 30%.\nTarikh: 1 hingga 7 Mac.\nTempat: Kedai Buku Ilmu, Jalan Merbau.',
+      soalan: 'Berapakah diskaun yang ditawarkan?',
+      jawapan: '30%',
+      salah: ['10%', '50%', '70%'],
+      why: 'Iklan menyatakan diskaun 30%.',
+    },
+    {
+      jenis: 'Iklan',
+      teks: 'KELAS TUISYEN MATEMATIK\nSetiap Sabtu, 9 pagi hingga 11 pagi.\nHubungi Cikgu Ros: 012-3456789.',
+      soalan: 'Pada hari apakah kelas tuisyen diadakan?',
+      jawapan: 'Sabtu',
+      salah: ['Ahad', 'Isnin', 'Jumaat'],
+      why: 'Iklan menyatakan kelas pada setiap Sabtu.',
+    },
+    {
+      jenis: 'Borang',
+      teks: 'BORANG PENYERTAAN PERTANDINGAN MELUKIS\nNama: ________________\nTahun: ________________\nNama Sekolah: ________________\nTandatangan: ________________',
+      soalan: 'Apakah maklumat yang perlu diisi dalam borang ini?',
+      jawapan: 'Nama, tahun, nama sekolah dan tandatangan',
+      salah: ['Warna kegemaran dan makanan', 'Nombor telefon dan gaji', 'Hobi dan cita-cita'],
+      why: 'Borang meminta nama, tahun, nama sekolah dan tandatangan.',
+    },
+    {
+      jenis: 'Notis',
+      teks: 'NOTIS\nPerpustakaan sekolah akan ditutup pada 15 April kerana kerja penyelenggaraan. Murid diminta memulangkan buku sebelum tarikh itu.',
+      soalan: 'Mengapakah perpustakaan ditutup?',
+      jawapan: 'Kerana kerja penyelenggaraan',
+      salah: ['Kerana cuti sekolah', 'Kerana tiada murid', 'Kerana buku habis'],
+      why: 'Notis menyatakan penutupan kerana kerja penyelenggaraan.',
+    },
+    {
+      jenis: 'Surat',
+      teks: 'Surat kepada guru:\n\nTuan,\nSaya tidak dapat hadir ke sekolah pada 10 Mei kerana demam. Saya berharap tuan dapat memahami keadaan saya.\n\nYang benar,\nAminah',
+      soalan: 'Mengapakah Aminah tidak dapat hadir ke sekolah?',
+      jawapan: 'Kerana demam',
+      salah: ['Kerana bercuti', 'Kerana terlambat', 'Kerana hujan'],
+      why: 'Surat menyatakan Aminah demam.',
+    },
+  ];
+  return fill(count, (i) => {
+    const it = rng.pick(items);
+    if (i % 3 === 0) {
+      return mcq(rng, {
+        prefix: 'bm5-fungsi',
+        prompt: `Baca bahan ini:\n\n"${it.teks}"\n\n${it.soalan}`,
+        answer: it.jawapan,
+        distractors: it.salah,
+        explanation: it.why,
+        emoji: '📋',
+        cols: 1,
+        speak: `${it.soalan}`,
+      });
+    }
+    if (i % 3 === 1) {
+      return mcq(rng, {
+        prefix: 'bm5-fungsi',
+        prompt: `Bahan berikut ialah jenis apa?\n\n"${it.teks}"`,
+        answer: it.jenis,
+        distractors: ['Iklan', 'Borang', 'Notis', 'Surat'],
+        explanation: `Bahan itu ialah ${it.jenis.toLowerCase()}.`,
+        emoji: '🗂️',
+        cols: 2,
+      });
+    }
+    return trueFalse({
+      prefix: 'bm5-fungsi',
+      prompt: it.jenis === 'Borang'
+        ? 'Borang perlu diisi dengan maklumat yang tepat dan ditandatangani.'
+        : `Bahan "${it.jenis}" ini digunakan untuk urusan harian.`,
+      isTrue: true,
+      explanation: it.why,
+      emoji: '✅',
+    });
+  });
+}
+
 function bm6KaranganLanjut(_y: number, rng: Rng, count: number): Question[] {
   const items = [
     { t: 'Isu Pencemaran Alam', p: 'punca pencemaran dan langkah mengatasinya' },
@@ -1017,6 +1203,8 @@ export const BAHASA_MELAYU_GENERATORS: Record<string, (y: number, r: Rng, c: num
   'bm4-karangan': bm4Karangan,
   'bm5-tatabahasa-lanjut': bm5TatabahasaLanjut,
   'bm5-pemahaman-petikan': bm5PemahamanPetikan,
+  'bm5-seni-bahasa': bm5SeniBahasa,
+  'bm5-membaca-menulis-fungsional': bm5MembacaMenulisFungsional,
   'bm6-karangan-lanjut': bm6KaranganLanjut,
   'bm6-sistem-bahasa': bm6SistemBahasa,
   'bm6-komsas': bm6Komsas,

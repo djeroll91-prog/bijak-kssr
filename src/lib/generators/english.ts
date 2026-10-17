@@ -898,12 +898,247 @@ function en6ListeningLanguageArts(_y: number, rng: Rng, count: number): Question
   });
 }
 
+function en2LanguageArts(_y: number, rng: Rng, count: number): Question[] {
+  const rhymes = [
+    { line: 'Rain, rain, go away', next: 'Come again another day', why: 'The lines rhyme: "away" and "day".' },
+    { line: 'Twinkle, twinkle, little star', next: 'How I wonder what you are', why: 'The lines rhyme: "star" and "are".' },
+    { line: 'Humpty Dumpty sat on a wall', next: 'Humpty Dumpty had a great fall', why: 'The lines rhyme: "wall" and "fall".' },
+    { line: 'One, two, buckle my shoe', next: 'Three, four, knock at the door', why: 'The lines rhyme: "two/shoe" and "four/door".' },
+    { line: 'Jack and Jill went up the hill', next: 'To fetch a pail of water', why: '"Jill" and "hill" rhyme at the end of the line.' },
+  ];
+  const families = [
+    { base: 'cat', words: ['hat', 'bat', 'mat'], ms: 'kucing' },
+    { base: 'star', words: ['car', 'jar', 'far'], ms: 'bintang' },
+    { base: 'blue', words: ['shoe', 'two', 'zoo'], ms: 'biru' },
+    { base: 'sun', words: ['run', 'fun', 'bun'], ms: 'matahari' },
+    { base: 'bee', words: ['tree', 'see', 'knee'], ms: 'lebah' },
+  ];
+  return fill(count, (i) => {
+    if (i % 3 === 0) {
+      const r = rng.pick(rhymes);
+      return mcq(rng, {
+        prefix: 'en2-arts',
+        prompt: `Which line comes next in this rhyme?\n\n"${r.line}"`,
+        answer: r.next,
+        distractors: ['The sun is very hot today', 'I like to eat my rice', 'My school is near the shop', 'Please open the window'],
+        explanation: r.why,
+        emoji: '🎵',
+        cols: 1,
+        speak: r.line,
+      });
+    }
+    if (i % 3 === 1) {
+      const f = rng.pick(families);
+      const w = rng.pick(f.words);
+      return mcq(rng, {
+        prefix: 'en2-arts',
+        prompt: `Which word rhymes with "${f.base}" (${f.ms})?`,
+        answer: w,
+        distractors: ['book', 'chair', 'pencil', 'table'],
+        explanation: `"${w}" rhymes with "${f.base}" because they end with the same sound.`,
+        emoji: '🔊',
+        cols: 2,
+        speak: `Which word rhymes with ${f.base}?`,
+      });
+    }
+    const f = rng.pick(families);
+    return match({
+      prefix: 'en2-arts',
+      prompt: 'Match each word with a word that rhymes with it.',
+      pairs: [
+        { left: f.base, right: f.words[0] },
+        { left: f.words[1], right: f.words[2] },
+      ],
+      explanation: `Words in a rhyme family end with the same sound.`,
+      emoji: '🎶',
+    });
+  });
+}
+
+function en2Punctuation(_y: number, rng: Rng, count: number): Question[] {
+  const fix = [
+    { bad: 'my name is ali', good: 'My name is Ali.', why: 'A sentence starts with a capital letter, and names need capital letters. It ends with a full stop.' },
+    { bad: 'i live in kuala lumpur', good: 'I live in Kuala Lumpur.', why: '"I" is always a capital letter, and place names need capital letters.' },
+    { bad: 'where is my bag', good: 'Where is my bag?', why: 'A question ends with a question mark.' },
+    { bad: 'what a big fish', good: 'What a big fish!', why: 'A strong feeling ends with an exclamation mark.' },
+    { bad: 'we go to school every day', good: 'We go to school every day.', why: 'A statement starts with a capital letter and ends with a full stop.' },
+    { bad: 'do you like apples', good: 'Do you like apples?', why: 'A question starts with a capital letter and ends with a question mark.' },
+  ];
+  const marks = [
+    { s: 'I like to read books', mark: 'full stop (.)', why: 'It is a statement, so it ends with a full stop.' },
+    { s: 'Is your sister at home', mark: 'question mark (?)', why: 'It is a question, so it ends with a question mark.' },
+    { s: 'What a beautiful rainbow', mark: 'exclamation mark (!)', why: 'It shows strong feeling, so it ends with an exclamation mark.' },
+    { s: 'The cat is sleeping', mark: 'full stop (.)', why: 'It is a statement, so it ends with a full stop.' },
+    { s: 'Can you help me', mark: 'question mark (?)', why: 'It is a question, so it ends with a question mark.' },
+  ];
+  return fill(count, (i) => {
+    if (i % 3 === 0) {
+      const it = rng.pick(fix);
+      return mcq(rng, {
+        prefix: 'en2-punct',
+        prompt: `Which sentence is written correctly?\n\nWrong: "${it.bad}"`,
+        answer: it.good,
+        distractors: [it.bad, it.bad + '?', it.bad.charAt(0).toUpperCase() + it.bad.slice(1) + '!'],
+        explanation: it.why,
+        emoji: '❗',
+        cols: 1,
+        speak: 'Which sentence is written correctly?',
+      });
+    }
+    if (i % 3 === 1) {
+      const m = rng.pick(marks);
+      return mcq(rng, {
+        prefix: 'en2-punct',
+        prompt: `Which end mark should this sentence have?\n\n"${m.s}"`,
+        answer: m.mark,
+        distractors: ['full stop (.)', 'question mark (?)', 'exclamation mark (!)'],
+        explanation: m.why,
+        emoji: '🔠',
+        cols: 2,
+      });
+    }
+    const it = rng.pick(fix);
+    return trueFalse({
+      prefix: 'en2-punct',
+      prompt: `This sentence is correct: "${it.good}"`,
+      isTrue: true,
+      explanation: it.why,
+      emoji: '✅',
+    });
+  });
+}
+
+function en5WritingPurposes(_y: number, rng: Rng, count: number): Question[] {
+  const situations = [
+    {
+      task: 'Write an email to your friend about your school holiday.',
+      best: 'Hi Aina, how are you? I went to the beach last week. It was fun! Best wishes, Danial',
+      why: 'An email to a friend is friendly and uses a greeting and a closing.',
+      bad: ['To Whom It May Concern, I am writing regarding the beach.', 'Dear Sir, please approve my beach request.', 'The beach was at coordinates 3.1, 101.6.'],
+    },
+    {
+      task: 'Write a short message to thank your teacher.',
+      best: 'Dear Cikgu Ros, thank you for helping me with my Maths. I understand it now. Yours sincerely, Mei Ling',
+      why: 'A message to a teacher is polite and uses a proper greeting and closing.',
+      bad: ['Yo teacher, maths was ok I guess.', 'Give me more homework please.', 'I do not want to say thank you.'],
+    },
+    {
+      task: 'Write a postcard to a friend about your holiday.',
+      best: 'Greetings from Penang! The food here is delicious. Wish you were here! See you soon, Amir',
+      why: 'A postcard is short, friendly and shares a quick piece of news.',
+      bad: ['Dear Sir, I am applying for a holiday permit.', 'This postcard has no message at all.', 'Please find attached my holiday report.'],
+    },
+    {
+      task: 'Describe your favourite place for a school project.',
+      best: 'My favourite place is the library. It is quiet and has many books. I go there every Saturday.',
+      why: 'A description tells the reader what the place is like using clear details.',
+      bad: ['I like it.', 'The place is a place.', 'No comment.'],
+    },
+  ];
+  const features = [
+    { part: 'Greeting', ex: 'Dear Aina,', why: 'A greeting starts the message and shows who you are writing to.' },
+    { part: 'Opening', ex: 'How are you?', why: 'An opening starts the message in a friendly way.' },
+    { part: 'Body', ex: 'I went to the beach last week.', why: 'The body gives the main news or request.' },
+    { part: 'Closing', ex: 'Best wishes, Danial', why: 'A closing ends the message politely.' },
+  ];
+  return fill(count, (i) => {
+    if (i % 3 === 0) {
+      const s = rng.pick(situations);
+      return mcq(rng, {
+        prefix: 'en5-purpose',
+        prompt: `${s.task}\n\nWhich writing is the best?`,
+        answer: s.best,
+        distractors: s.bad,
+        explanation: s.why,
+        emoji: '✉️',
+        cols: 1,
+        speak: s.task,
+      });
+    }
+    if (i % 3 === 1) {
+      const f = rng.pick(features);
+      return mcq(rng, {
+        prefix: 'en5-purpose',
+        prompt: `In a letter or email, what is the "${f.part}"?`,
+        answer: f.ex,
+        distractors: features.filter((x) => x.part !== f.part).map((x) => x.ex),
+        explanation: f.why,
+        emoji: '📨',
+        cols: 1,
+      });
+    }
+    const f = rng.pick(features);
+    return trueFalse({
+      prefix: 'en5-purpose',
+      prompt: `"${f.ex}" is an example of a ${f.part.toLowerCase()}.`,
+      isTrue: true,
+      explanation: f.why,
+      emoji: '✅',
+    });
+  });
+}
+
+function en5LanguageArts(_y: number, rng: Rng, count: number): Question[] {
+  const stories = [
+    { title: 'The Lost Kitten', character: 'A small kitten', setting: 'A busy market', plot: 'The kitten gets lost and a kind girl helps it find its mother.', lesson: 'We should help others who need us.', feel: 'Worried, then happy' },
+    { title: 'The Brave Boy', character: 'A boy named Hafiz', setting: 'A village near a river', plot: 'Hafiz saves a drowning puppy from the river.', lesson: 'Courage means helping even when you are afraid.', feel: 'Afraid, then proud' },
+    { title: 'The Greedy Monkey', character: 'A monkey', setting: 'A jungle', plot: 'The monkey takes too many bananas and drops them all.', lesson: 'Do not be greedy.', feel: 'Proud, then sorry' },
+    { title: 'The Kind Farmer', character: 'An old farmer', setting: 'A rice field', plot: 'The farmer shares his harvest with hungry neighbours.', lesson: 'Sharing makes everyone happy.', feel: 'Happy and content' },
+  ];
+  const devices = [
+    { s: 'The wind whispered in the trees.', device: 'Personification', why: 'The wind is given a human action: whispering.' },
+    { s: 'He is as brave as a lion.', device: 'Simile', why: 'It compares using "as ... as".' },
+    { s: 'The stars danced in the sky.', device: 'Personification', why: 'The stars are given a human action: dancing.' },
+    { s: 'Her smile was like sunshine.', device: 'Simile', why: 'It compares using "like".' },
+    { s: 'I have told you a million times.', device: 'Hyperbole', why: 'It is an extreme exaggeration, not a real number.' },
+  ];
+  return fill(count, (i) => {
+    if (i % 3 === 0) {
+      const s = rng.pick(stories);
+      return mcq(rng, {
+        prefix: 'en5-arts',
+        prompt: `Story: "${s.title}"\n\nWho is the main character?`,
+        answer: s.character,
+        distractors: ['The teacher', 'The doctor', 'The driver'],
+        explanation: `The main character of "${s.title}" is ${s.character.toLowerCase()}.`,
+        emoji: '📖',
+        cols: 2,
+      });
+    }
+    if (i % 3 === 1) {
+      const s = rng.pick(stories);
+      return mcq(rng, {
+        prefix: 'en5-arts',
+        prompt: `Story: "${s.title}"\n\nWhat is the lesson of this story?`,
+        answer: s.lesson,
+        distractors: ['Money is everything', 'Never help anyone', 'Always be lazy', 'Books are boring'],
+        explanation: `"${s.title}" teaches us: ${s.lesson}`,
+        emoji: '💡',
+        cols: 1,
+      });
+    }
+    const d = rng.pick(devices);
+    return mcq(rng, {
+      prefix: 'en5-arts',
+      prompt: `Which literary device is used in:\n"${d.s}"`,
+      answer: d.device,
+      distractors: ['Personification', 'Simile', 'Hyperbole', 'Metaphor'].filter((x) => x !== d.device),
+      explanation: d.why,
+      emoji: '🎨',
+      cols: 2,
+      speak: d.s,
+    });
+  });
+}
+
 export const ENGLISH_GENERATORS: Record<string, (y: number, r: Rng, c: number) => Question[]> = {
   'en1-phonics': en1Phonics,
   'en1-greetings': en1Greetings,
   'en1-colours-numbers': en1ColoursNumbers,
   'en2-simple-sentences': en2SimpleSentences,
   'en2-vocabulary': en2Vocabulary,
+  'en2-language-arts': en2LanguageArts,
+  'en2-punctuation': en2Punctuation,
   'en3-grammar-basics': en3GrammarBasics,
   'en3-reading': en3Reading,
   'en3-writing': en3Writing,
@@ -913,6 +1148,8 @@ export const ENGLISH_GENERATORS: Record<string, (y: number, r: Rng, c: number) =
   'en4-writing': en4Writing,
   'en5-grammar-advanced': en5GrammarAdvanced,
   'en5-reading-advanced': en5ReadingAdvanced,
+  'en5-writing-purposes': en5WritingPurposes,
+  'en5-language-arts': en5LanguageArts,
   'en6-grammar-mastery': en6GrammarMastery,
   'en6-writing-composition': en6WritingComposition,
   'en6-listening-language-arts': en6ListeningLanguageArts,
