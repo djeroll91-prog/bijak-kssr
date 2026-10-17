@@ -72,6 +72,27 @@ Deploy web: bina (`npm run build`) lalu salin `dist/` ke `docs/` dan push ke
 > folder `assets/` dan aplikasi gagal dimuat. Cetuskan bina semula melalui
 `POST /repos/:owner/:repo/pages/builds` jika perlu.
 
+## Versi kurikulum (PENTING — disemak 2026)
+
+Aplikasi ini mengikut **KSSR Semakan 2017**, dan itu masih betul untuk majoriti murid:
+
+- **KP2027** (Kurikulum Persekolahan 2027) hanya bermula pada **Tahun 1** (dan Tingkatan 1)
+  pada sesi 2027. Murid **Tahun 2 hingga Tahun 6 kekal KSSR Semakan 2017** hingga kohort
+  terakhir tamat Tahun 6 pada **2031**.
+- Dokumen rujukan terkini untuk KSSR ialah **Dokumen Penjajaran KSSR (Semakan 2017)
+  Edisi 3.0** bagi Bahasa Melayu, Bahasa Inggeris, Sains dan Matematik (Tahap I dan Tahap II).
+  Edisi ini menyusun semula kandungan DSKP sedia ada; ia pilihan guru, bukan kurikulum baharu.
+  Rujukan: portal BPK, `bpk.moe.gov.my/kurikulum/kssr/kssr-tahun-<n>`.
+- DSKP rasmi boleh dimuat turun dari BPK, contoh Bahasa Melayu Tahun 5 SK:
+  `bpk.moe.gov.my/kurikulum/kssr/kssr-tahun-5` (fail 005_DSKP_KSSR_Semakan_2017_BM_SK_Thn5).
+- Bahasa Inggeris menggunakan DSKP berasaskan **CEFR** (Tahap 2 sasaran A2), dengan
+  modul Listening/Speaking, Reading, Writing, Language Arts dan Grammar (Grammar hanya
+  bermula Tahun 3). Susunan unit buku teks mengikut Scheme of Work KPM.
+
+**Nota untuk kerja masa depan:** jangan tambah subjek "Alam dan Manusia" atau
+"Teknologi dan Digital" ke katalog Tahun 1-6 sekarang — itu subjek KP2027 yang hanya
+terpakai kepada kohort Tahun 1 mulai 2027, bukan kepada pengguna semasa.
+
 ## Struktur
 
 - `src/screens/` ŌĆö skrin utama (Home, Subjects, Games, Progress, Profile)
