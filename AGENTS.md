@@ -79,6 +79,14 @@ Deploy web: bina (`npm run build`) lalu salin `dist/` ke `docs/` dan push ke
 - `src/data/contributors.ts` ŌĆö kredit guru penyumbang latihan. Setiap topik
   dipetakan secara deterministik (hash `id`) kepada seorang guru supaya kredit
   kekal. Semakan: `node verify-contributors.mjs`.
+- `src/lib/review.ts` ŌĆö enjin ulangan berjarak (SRS) peringkat **topik**
+  (bukan per soalan, kerana penjana menghasilkan soalan baharu setiap kali).
+  Kotak Leitner (`BOX_INTERVALS`, `MAX_BOX=5`): lulus naik kotak dan
+  menjarakkan tarikh, gagal turun kotak dan masuk bank kesilapan
+  (`MISTAKE_LIMIT=8`). Kad lama dibina semula daripada sejarah percubaan
+  semasa migrasi, jadi data murid sedia ada tidak hilang.
+- `src/lib/dates.ts` ŌĆö pembantu tarikh (`todayKey`, `addDays`) untuk memecahkan
+  kebergantungan bulat antara `storage.ts` dan `review.ts`.
 - `android-app/` ŌĆö projek Android (manifest, `MainActivity.java`, res, assets/www)
 - `scripts/build-apk.sh` ŌĆö saluran bina APK
 - `scripts/make-icons.py` / `make-android-icons.py` ŌĆö penjana ikon
@@ -86,6 +94,24 @@ Deploy web: bina (`npm run build`) lalu salin `dist/` ke `docs/` dan push ke
 - `verify-generators.mjs`, `verify-random.mjs`, `verify-plan.mjs`,
   `verify-contributors.mjs` — semakan enjin soalan, kerawakan, pelan
   harian dan kredit guru
+- `verify-review.mjs` ŌĆö semakan enjin SRS (kotak, jarak, lapses)
+- `verify-migrate.mjs` ŌĆö semakan migrasi data (rekod lama kekal, kad dibina)
+- `test-review-ui.mjs` / `test-review-flow.mjs` ŌĆö ujian jsdom pada `dist/`:
+  kad ulangan muncul, sesi berselang merentas topik, kad dikemas kini
+
+## Ciri ulangan berjarak (v1.4.0)
+
+- Kad ulangan disimpan dalam `profile.reviews` (satu kad per topik).
+- Skrin Utama memaparkan kad **Masa Ulang!** (bilangan topik perlu diulang
+  hari ini) dan **Ruang Cuba Lagi** (bank kesilapan, topik yang pernah gagal).
+- Sesi ulangan **berselang** merentas beberapa topik (bukan satu topik sahaja);
+  sesi pendek ditambah soalan sehingga bilangan minimum supaya bermakna.
+- Skrin Kemajuan mempunyai bahagian **Ulangan Pintar** untuk ibu bapa:
+  bilangan perlu diulang, dikuasai, sedang belajar dan topik goyah.
+- Skrin Keputusan sesi ulangan memaparkan semua topik yang disentuh dan
+  mengkreditkan **setiap guru** yang menyumbang, bukan satu nama rawak.
+- Skema storan dinaikkan ke v2; `migrate()` membina kad daripada sejarah
+  percubaan lama tanpa kehilangan rekod.
 
 ## Bahasa antara muka
 

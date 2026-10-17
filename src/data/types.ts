@@ -156,6 +156,40 @@ export interface StudyPlan {
   lastFocusDate: string;
 }
 
+/**
+ * Kad ulangan berjarak bagi satu topik.
+ *
+ * Ulangan berlaku pada peringkat topik, bukan soalan tepat: penjana soalan
+ * menghasilkan soalan baharu bagi konsep yang sama, jadi murid mengingat
+ * semula idea dan bukan menghafal jawapan.
+ */
+export interface ReviewCard {
+  topicId: string;
+  subject: SubjectId;
+  year: YearNum;
+  /** Tarikh (YYYY-MM-DD) kad patut diulang. */
+  dueDate: string;
+  /** Kotak Leitner 0..5; makin tinggi, makin jarak ulangan. */
+  box: number;
+  /** Bilangan kali dijawab dengan markah baik berturut-turut. */
+  streak: number;
+  /** Bilangan kali gagal (markah rendah). */
+  lapses: number;
+  /** Markah terkini (peratus). */
+  lastPct: number;
+  lastReviewed: string;
+  addedAt: number;
+}
+
+/** Hasil satu topik dalam satu sesi latihan, untuk kemas kini kad ulangan. */
+export interface ReviewOutcome {
+  topicId: string;
+  subject: SubjectId;
+  year: YearNum;
+  correct: number;
+  total: number;
+}
+
 export interface Profile {
   id: string;
   name: string;
@@ -163,6 +197,8 @@ export interface Profile {
   year: YearNum;
   createdAt: number;
   attempts: Attempt[];
+  /** Kad ulangan berjarak bagi topik yang pernah dilatih. */
+  reviews?: ReviewCard[];
   /** id lencana yang telah dimenangi. */
   badges: string[];
   /** Kiraan hari berturut-turut (streak) yang dikemas kini. */

@@ -43,6 +43,20 @@ const MS: Dict = {
   'home.todayGoal': 'Sasaran Hari Ini',
   'home.quickQuiz': 'Latihan Pantas',
 
+  // Ulangan berjarak
+  'review.dueTitle': 'Masa Ulang!',
+  'review.dueSub': '{n} topik menunggu untuk diulang',
+  'review.sessionTitle': 'Sesi Ulangan',
+  'review.mistakesTitle': 'Ruang Cuba Lagi',
+  'review.timesFailed': 'pernah tersalah {n} kali',
+  'review.section': 'Ulangan Pintar',
+  'review.dueToday': 'Perlu diulang hari ini',
+  'review.mastered': 'Sudah kukuh',
+  'review.learning': 'Sedang belajar',
+  'review.shaky': 'Perlu perhatian',
+  'review.empty': 'Aplikasi menjadualkan ulangan supaya hafalan kekal lama.',
+  'review.noCards': 'Selesaikan latihan dan aplikasi akan jadualkan ulangan pintar untuk kamu.',
+
   // Subjects
   'subjects.title': 'Mata Pelajaran',
   'subjects.choose': 'Pilih subjek untuk tahun',
@@ -373,6 +387,19 @@ const EN: Dict = {
   'home.noBadges': 'Finish an exercise to earn your first badge!',
   'home.todayGoal': "Today's Goal",
   'home.quickQuiz': 'Quick Practice',
+
+  'review.dueTitle': 'Time to Review!',
+  'review.dueSub': '{n} topics are waiting to be reviewed',
+  'review.sessionTitle': 'Review Session',
+  'review.mistakesTitle': 'Try Again Space',
+  'review.timesFailed': 'missed {n} times',
+  'review.section': 'Smart Review',
+  'review.dueToday': 'Due today',
+  'review.mastered': 'Solid',
+  'review.learning': 'Still learning',
+  'review.shaky': 'Needs attention',
+  'review.empty': 'The app schedules reviews so learning sticks.',
+  'review.noCards': 'Finish some exercises and the app will schedule smart reviews for you.',
 
   'subjects.title': 'Subjects',
   'subjects.choose': 'Choose a subject for year',

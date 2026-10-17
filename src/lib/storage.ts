@@ -5,6 +5,8 @@
  * membolehkan aplikasi dikemas kini tanpa kehilangan rekod lama.
  */
 
+import { todayKey } from './dates';
+import { backfillReviews } from './review';
 import type {
   AppData,
   Attempt,
@@ -13,6 +15,7 @@ import type {
   PlanTask,
   PlanTaskKind,
   Profile,
+  ReviewCard,
   Settings,
   StudyPlan,
   SubjectId,
@@ -20,7 +23,7 @@ import type {
 } from '../data/types';
 
 const KEY = 'bijak-kssr/v1';
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const DEFAULT_SETTINGS: Settings = {
   sound: true,
@@ -51,6 +54,7 @@ export function newProfile(name: string, avatar: string, year: YearNum): Profile
     year,
     createdAt: Date.now(),
     attempts: [],
+    reviews: [],
     badges: [],
     streakDays: 0,
     lastActiveDate: todayKey(),
@@ -62,14 +66,12 @@ export function newProfile(name: string, avatar: string, year: YearNum): Profile
   };
 }
 
-export function todayKey(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 function isObj(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
 }
+
+// Kekalkan eksport lama supaya modul sedia ada tidak perlu diubah.
+export { todayKey };
 
 /** Betulkan dan lengkapkan rekod yang mungkin tidak lengkap. */
 function repairAttempt(raw: unknown): Attempt | null {
@@ -161,10 +163,33 @@ function repairPlan(raw: unknown): StudyPlan | null {
   };
 }
 
+function repairReviewCard(raw: unknown): ReviewCard | null {
+  if (!isObj(raw)) return null;
+  if (typeof raw.topicId !== 'string' || raw.topicId.length === 0) return null;
+  const box = Math.max(0, Math.min(5, Math.round(Number(raw.box) || 0)));
+  const dateKey = (v: unknown): string =>
+    typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : todayKey();
+  return {
+    topicId: raw.topicId,
+    subject: (raw.subject as SubjectId) ?? 'matematik',
+    year: clampYear(Number(raw.year) || 1),
+    dueDate: dateKey(raw.dueDate),
+    box,
+    streak: Math.max(0, Number(raw.streak) || 0),
+    lapses: Math.max(0, Number(raw.lapses) || 0),
+    lastPct: Math.max(0, Math.min(100, Number(raw.lastPct) || 0)),
+    lastReviewed: dateKey(raw.lastReviewed),
+    addedAt: Number(raw.addedAt) || Date.now(),
+  };
+}
+
 function repairProfile(raw: unknown): Profile | null {
   if (!isObj(raw)) return null;
   const attempts = Array.isArray(raw.attempts)
     ? raw.attempts.map(repairAttempt).filter((a): a is Attempt => a !== null)
+    : [];
+  const reviews = Array.isArray(raw.reviews)
+    ? raw.reviews.map(repairReviewCard).filter((c): c is ReviewCard => c !== null)
     : [];
   return {
     id: typeof raw.id === 'string' ? raw.id : `p-${Math.random().toString(36).slice(2, 9)}`,
@@ -173,6 +198,7 @@ function repairProfile(raw: unknown): Profile | null {
     year: clampYear(Number(raw.year) || 1),
     createdAt: Number(raw.createdAt) || Date.now(),
     attempts,
+    reviews,
     badges: Array.isArray(raw.badges) ? raw.badges.filter((b): b is string => typeof b === 'string') : [],
     streakDays: Math.max(0, Number(raw.streakDays) || 0),
     lastActiveDate: typeof raw.lastActiveDate === 'string' ? raw.lastActiveDate : todayKey(),
@@ -225,6 +251,13 @@ export function migrate(raw: unknown): AppData {
   const profiles = Array.isArray(raw.profiles)
     ? raw.profiles.map(repairProfile).filter((p): p is Profile => p !== null)
     : [];
+  // Profil daripada skema lama tiada kad ulangan. Bina semula daripada
+  // rekod latihan supaya murid sedia ada terus mendapat ulangan berjarak.
+  for (const p of profiles) {
+    if ((p.reviews?.length ?? 0) === 0 && p.attempts.length > 0) {
+      p.reviews = backfillReviews(p);
+    }
+  }
   const activeId =
     typeof raw.activeProfileId === 'string' && profiles.some((p) => p.id === raw.activeProfileId)
       ? raw.activeProfileId

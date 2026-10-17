@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useStore, useT } from '../state/store';
 import { Btn, Chip, Confetti, useAnimatedNumber } from '../components/ui';
 import { subjectById } from '../data/subjects';
+import { ALL_TOPICS } from '../data/catalog';
 import { badgeHow, badgeName } from '../data/badges';
 import { contributorFor } from '../data/contributors';
 import { dayCount, subjectName, yearLabel } from '../lib/i18n';
@@ -52,6 +53,11 @@ export function ResultScreen() {
 
   const meta = subjectById(r.subject);
   const contributor = contributorFor(r.topicId);
+  // Sesi ulangan merentas topik beberapa guru: paparkan setiap guru yang
+  // menyumbang kepada sesi ini, bukan satu nama rawak.
+  const reviewTeachers = r.reviewTopicIds
+    ? [...new Set(r.reviewTopicIds.map((id) => contributorFor(id).name))]
+    : [];
   const tier = score >= 100 ? 'gold' : score >= 80 ? 'silver' : score >= 60 ? 'bronze' : 'plain';
   const title = r.perfect ? t('result.perfect') : score >= 80 ? t('result.great') : score >= 60 ? t('result.good') : t('result.tryAgain');
 
@@ -84,7 +90,14 @@ export function ResultScreen() {
           <div className="row-between">
             <div>
               <p className="tiny muted">{t('result.topicLabel') || 'Topik'}</p>
-              <b style={{ fontSize: '0.95rem', fontWeight: 900 }}>{r.topicTitle}</b>
+              <b style={{ fontSize: '0.95rem', fontWeight: 900 }}>
+                {r.reviewTopicIds && r.reviewTopicIds.length > 0
+                  ? r.reviewTopicIds
+                      .map((id) => ALL_TOPICS.find((x) => x.id === id)?.title)
+                      .filter(Boolean)
+                      .join(' • ')
+                  : r.topicTitle}
+              </b>
               <p className="tiny muted">
                 {subjectName(lang, r.subject, meta.name)} • {yearLabel(lang, r.year)}
               </p>
@@ -105,7 +118,9 @@ export function ResultScreen() {
           </div>
 
           <p className="tiny muted" style={{ marginTop: 10 }}>
-            {contributor.emoji} {t('topics.byTeacher')} <b>{contributor.name}</b>
+            {reviewTeachers.length > 0
+              ? `📚 ${t('topics.byTeacher')} ${reviewTeachers.join(', ')}`
+              : `${contributor.emoji} ${t('topics.byTeacher')} ${contributor.name}`}
           </p>
 
           {profile ? (
@@ -169,7 +184,12 @@ export function ResultScreen() {
             onClick={() => {
               sound.play('pop');
               // Sesi baharu menggunakan benih berbeza → soalan berbeza.
-              go({ screen: 'quiz', topicId: r.topicId === 'quick' ? nav.topicId : r.topicId, subject: r.subject, from: nav.from });
+              // Sesi ulangan diulang dengan topik yang sama.
+              if (r.reviewTopicIds && r.reviewTopicIds.length > 0) {
+                go({ screen: 'quiz', review: { topicIds: r.reviewTopicIds }, from: nav.from });
+              } else {
+                go({ screen: 'quiz', topicId: r.topicId === 'quick' ? nav.topicId : r.topicId, subject: r.subject, from: nav.from });
+              }
             }}
           >
             🔄 {t('result.retry')}

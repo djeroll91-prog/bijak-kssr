@@ -13,6 +13,7 @@ import { BADGES, badgeName } from '../data/badges';
 import { profileStats } from '../lib/storage';
 import { sound } from '../lib/audio';
 import { DIAGNOSTIC_TOPIC_ID, diagnosticRows, planProgress, practisedTopicCount } from '../lib/plan';
+import { cardsOf, reviewSummary, mistakeCount } from '../lib/review';
 import type { SubjectId } from '../data/types';
 
 type Range = 7 | 15 | 30;
@@ -34,6 +35,8 @@ export function ProgressScreen() {
   );
 
   const diagRows = useMemo(() => diagnosticRows(profile?.diagnostic), [profile?.diagnostic]);
+  const review = useMemo(() => reviewSummary(cardsOf(profile)), [profile]);
+  const shaky = useMemo(() => mistakeCount(cardsOf(profile)), [profile]);
   const planProgressValue = useMemo(() => planProgress(profile?.plan), [profile?.plan]);
 
   const sessions = useMemo(() => practice.slice(-range), [practice, range]);
@@ -230,6 +233,39 @@ export function ProgressScreen() {
             </div>
           </>
         ) : null}
+
+        {/* Ulangan pintar: keadaan hafalan anak untuk ibu bapa. */}
+        {review.total > 0 ? (
+          <>
+            <p className="section-title">🔁 {t('review.section')}</p>
+            <div className="card">
+              <div className="row wrap" style={{ gap: 6 }}>
+                <Chip tone={review.due > 0 ? 'warn' : 'success'}>
+                  {t('review.dueToday')}: {review.due}
+                </Chip>
+                <Chip tone="success">
+                  {t('review.mastered')}: {review.mastered}
+                </Chip>
+                <Chip tone="brand">
+                  {t('review.learning')}: {review.learning}
+                </Chip>
+                <Chip tone={shaky > 0 ? 'danger' : 'success'}>
+                  {t('review.shaky')}: {shaky}
+                </Chip>
+              </div>
+              <p className="tiny muted" style={{ marginTop: 10 }}>
+                {t('review.empty')}
+              </p>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="section-title">🔁 {t('review.section')}</p>
+            <div className="card-flat">
+              <p className="tiny muted center">{t('review.noCards')}</p>
+            </div>
+          </>
+        )}
 
         {/* Trend markah */}
         <p className="section-title">{t('progress.trend')}</p>

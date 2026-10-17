@@ -20,6 +20,7 @@ import type {
   Badge,
   DiagnosticItem,
   Profile,
+  ReviewOutcome,
   Settings,
   StudyPlan,
   SubjectId,
@@ -38,6 +39,7 @@ import {
 } from '../lib/storage';
 import { newBadges } from '../data/badges';
 import { buildPlan, DIAGNOSTIC_TOPIC_ID } from '../lib/plan';
+import { applyOutcomes } from '../lib/review';
 import { sound, voice } from '../lib/audio';
 import { translate, type Lang } from '../lib/i18n';
 
@@ -66,6 +68,8 @@ export interface NavState {
   result?: QuizResult;
   /** Tetapan latihan pantas. */
   quick?: { topicIds: string[]; label: string };
+  /** Sesi ulangan berjarak merentas beberapa topik (latihan berselang). */
+  review?: { topicIds: string[] };
   /** Tugasan pelan belajar yang sedang dijalankan. */
   planTaskId?: string;
   /** Kembali ke skrin mana selepas result. */
@@ -92,6 +96,8 @@ export interface QuizResult {
   points: number;
   badges: Badge[];
   perfect: boolean;
+  /** Topik yang disentuh dalam sesi ulangan berselang (jika ada). */
+  reviewTopicIds?: string[];
 }
 
 interface Store {
@@ -121,7 +127,10 @@ interface Store {
   setLang: (lang: Lang) => void;
 
   /** Latihan */
-  recordAttempt: (attempt: Omit<Attempt, 'id' | 'ts'>) => { stars: number; points: number; badges: Badge[] };
+  recordAttempt: (
+    attempt: Omit<Attempt, 'id' | 'ts'>,
+    outcomes?: ReviewOutcome[],
+  ) => { stars: number; points: number; badges: Badge[] };
   markTopicSeen: (topicId: string) => void;
   consumePendingBadges: () => void;
   celebrateBadge: (id: string) => void;
@@ -292,10 +301,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const recordAttempt = useCallback(
-    (attempt: Omit<Attempt, 'id' | 'ts'>) => {
+    (attempt: Omit<Attempt, 'id' | 'ts'>, outcomes?: ReviewOutcome[]) => {
       const stars = starsFor(attempt.correct, attempt.total);
       const points = pointsFor(attempt.correct, attempt.total, attempt.seconds);
       let gained: Badge[] = [];
+      // Ulangan berjarak dikemas kini mengikut topik. Sesi berselang
+      // menghantar satu hasil bagi setiap topik yang disentuh.
+      const result: ReviewOutcome[] =
+        outcomes && outcomes.length > 0
+          ? outcomes
+          : [
+              {
+                topicId: attempt.topicId,
+                subject: attempt.subject,
+                year: attempt.year,
+                correct: attempt.correct,
+                total: attempt.total,
+              },
+            ];
       setData((d) => {
         const idx = d.profiles.findIndex((p) => p.id === d.activeProfileId);
         if (idx === -1) return d;
@@ -310,6 +333,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ...p,
           ...st,
           attempts: [...p.attempts, full],
+          reviews: applyOutcomes(p.reviews ?? [], result),
           stars: p.stars + stars,
           points: p.points + points,
           seenTopics: p.seenTopics.includes(attempt.topicId)

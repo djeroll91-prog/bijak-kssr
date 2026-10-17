@@ -9,6 +9,7 @@ import { ALL_TOPICS, topicsFor } from '../data/catalog';
 import { badgeById, badgeName } from '../data/badges';
 import { profileStats } from '../lib/storage';
 import { planIsStale, planProgress } from '../lib/plan';
+import { cardsOf, dueCount, dueCards, mistakeCards } from '../lib/review';
 import { sound } from '../lib/audio';
 import type { Topic } from '../data/types';
 
@@ -45,6 +46,26 @@ export function HomeScreen() {
         .map((id) => badgeById(id))
         .filter((b): b is NonNullable<ReturnType<typeof badgeById>> => Boolean(b)),
     [profile.badges],
+  );
+
+  // Ulangan berjarak: topik yang tiba masa diulang, dan topik yang pernah
+  // gagal dikumpul dalam "Ruang Cuba Lagi".
+  const cards = useMemo(() => cardsOf(profile), [profile]);
+  const due = useMemo(() => dueCount(cards), [cards]);
+  const reviewTopics = useMemo(
+    () =>
+      dueCards(cards)
+        .slice(0, 6)
+        .map((c) => ALL_TOPICS.find((x) => x.id === c.topicId))
+        .filter((x): x is Topic => Boolean(x)),
+    [cards],
+  );
+  const mistakes = useMemo(
+    () =>
+      mistakeCards(cards)
+        .map((c) => ({ card: c, topic: ALL_TOPICS.find((x) => x.id === c.topicId) }))
+        .filter((x): x is { card: typeof x.card; topic: Topic } => Boolean(x.topic)),
+    [cards],
   );
 
   return (
@@ -127,6 +148,30 @@ export function HomeScreen() {
           </span>
         </button>
 
+        {/* Ulangan berjarak: dorong murid mengingat semula topik lama. */}
+        {due > 0 ? (
+          <button
+            type="button"
+            className="plan-cta animate-slide"
+            data-ready="true"
+            onClick={() => {
+              sound.play('levelup');
+              go({ screen: 'quiz', review: { topicIds: reviewTopics.map((x) => x.id) }, from: 'home' });
+            }}
+          >
+            <span className="pc-emoji" aria-hidden="true">
+              🔁
+            </span>
+            <span className="grow">
+              <b>{t('review.dueTitle')}</b>
+              <small>{t('review.dueSub', { n: due })}</small>
+            </span>
+            <span className="pc-go" aria-hidden="true">
+              {due}
+            </span>
+          </button>
+        ) : null}
+
         <p className="section-title">{t('home.subjects')}</p>
         <div className="subject-grid">
           {subjects.map((s) => {
@@ -186,6 +231,38 @@ export function HomeScreen() {
             </button>
           ))}
         </div>
+
+        {/* Bank kesilapan: topik yang pernah gagal, untuk cuba semula. */}
+        {mistakes.length > 0 ? (
+          <>
+            <p className="section-title">💪 {t('review.mistakesTitle')}</p>
+            <div className="stack">
+              {mistakes.map(({ card, topic }) => (
+                <button
+                  key={topic.id}
+                  type="button"
+                  className="topic-item"
+                  onClick={() => {
+                    sound.play('pop');
+                    go({ screen: 'quiz', review: { topicIds: [topic.id] }, from: 'home' });
+                  }}
+                >
+                  <span className="badge" aria-hidden="true" style={{ background: 'var(--warn-soft)' }}>
+                    {topic.emoji}
+                  </span>
+                  <span className="grow">
+                    <b>{topic.title}</b>
+                    <small>
+                      {subjectName(lang, topic.subject, subjectById(topic.subject).name)} •{' '}
+                      {t('review.timesFailed', { n: card.lapses })}
+                    </small>
+                  </span>
+                  <span aria-hidden="true">🔁</span>
+                </button>
+              ))}
+            </div>
+          </>
+        ) : null}
 
         <p className="section-title">{t('home.recentBadges')}</p>
         {recentBadges.length === 0 ? (
