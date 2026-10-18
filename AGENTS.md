@@ -444,6 +444,36 @@ Peraturan penting tentang warna:
   `PAIRS` jika gradien tetap berubah.
 - Jangan guna `var(--muted)` — tidak wujud; guna `var(--ink-soft)`.
 
+### Claymorphism (kulit UI semasa)
+
+Seluruh UI memakai gaya **claymorphism**: elemen gebu seperti tanah liat dengan
+sorot putih di tepi atas, bayang gelap lembut di tepi bawah-dalam, dan bayang
+luaran berlapis.
+
+Tiga peraturan yang mudah dilanggar:
+
+- **Permukaan tidak boleh putih tulen.** Sorot putih hanya kelihatan jika
+  permukaan lebih gelap daripada putih. Sebab itu `--surface: #fff8f0` dan
+  `--bg: #f7ead9` (krim hangat). Menetapkan semula `--surface: #ffffff` akan
+  mematikan kesan clay pada semua kad tanpa sebarang ujian gagal — jadi jangan.
+- **Kedalaman clay ada dalam token, bukan pada komponen.** Tiga resipi:
+  `--clay-out-1/2/3` (bayang luaran), `--clay-hi` / `--clay-hi-sm` (sorot +
+  bayang dalam), `--clay-btn` / `--clay-btn-press` (butang berwarna),
+  `--clay-press` (kawasan tenggelam). `--sh-1/2/3` menggabungkan lapisan luar
+  dan dalam. Ubah kedalaman di satu tempat sahaja.
+- **Mod gelap guna token clay sendiri.** Blok `:root[data-theme='dark']`
+  mentakrifkan `--clay-dark-hi` / `--clay-dark-hi-sm` (sorot putih halus 0.11,
+  bukan 1.0) dan `--sh-1/2/3` gelap yang berasingan. Sorot putih pekat pada
+  latar gelap menjadi gumpalan kelabu berkabus — sebab itu ia tidak dikongsi.
+
+Jejari juga dibesarkan untuk bentuk gebu: `--r-sm: 14px`, `--r-md: 22px`,
+`--r-lg: 30px`, `--r-xl: 40px`.
+
+`audit-contrast.mjs` TIDAK menguji bayang atau jejari, jadi perubahan clay
+tidak akan ditangkap olehnya. Sahkan secara visual: bina, serve `dist/` pada
+port baharu (origin baharu mengelak cache service worker PWA), dan periksa
+bahawa tepi atas kad lebih cerah daripada tepi bawah.
+
 Bunyi: `src/lib/audio.ts` (Web Audio API, sintetik sepenuhnya, selamat luar
 talian). Semua nama bunyi dalam `SoundName` mesti ada pemanggil. Lencana
 baharu memainkan `badge` dalam `Result.tsx` (ditangguh 700 ms supaya tidak

@@ -5,17 +5,21 @@
    ========================================================================== */
 
 :root {
-  /* --- Permukaan --- */
-  --bg: #fff8ef;
-  --bg-deep: #fdeedd;
-  --surface: #ffffff;
-  --surface-soft: #fffaf4;
-  --surface-sunken: #f7efe6;
+  /* --- Permukaan ---
+     Claymorphism perlukan latar yang BERTINTA, bukan putih tulen:
+     sorot putih di tepi atas hanya kelihatan jika permukaan lebih gelap
+     daripada putih. Latar krim hangat ini memberi ruang kepada sorot
+     dan bayang, sementara kad kekal cerah supaya teks jelas. */
+  --bg: #f7ead9;
+  --bg-deep: #efdfc9;
+  --surface: #fff8f0;
+  --surface-soft: #fffcf7;
+  --surface-sunken: #f2e5d4;
 
   /* --- Teks (bukan hitam tulen) --- */
   --ink: #3b3355;
   --ink-soft: #6b6280;
-  --ink-faint: #706b7d;
+  --ink-faint: #665f73;
   --ink-on-color: #ffffff;
   /* Teks di atas blok berwarna (butang, cip subjek, kunci jawapan).
      Mod gelap menukarnya kepada gelap kerana blok di sana terang. */
@@ -31,7 +35,7 @@
   --accent-deep: #986518;
   --accent-soft: #fff2dc;
 
-  --success: #117d57;
+  --success: #0f7350;
   --success-soft: #dcf7ee;
   --warn: #99620a;
   --warn-soft: #fdf0d5;
@@ -48,18 +52,39 @@
   --sub-sejarah: #aa671c;
   --sub-pendidikan-islam: #0f766e;
 
-  /* --- Bentuk --- */
-  --r-sm: 10px;
-  --r-md: 16px;
-  --r-lg: 24px;
-  --r-xl: 32px;
+  /* --- Bentuk (claymorphism: bulat gebu) --- */
+  --r-sm: 14px;
+  --r-md: 22px;
+  --r-lg: 30px;
+  --r-xl: 40px;
   --r-pill: 999px;
 
-  /* --- Bayang lembut --- */
-  --sh-1: 0 1px 2px rgba(59, 51, 85, 0.06), 0 2px 8px rgba(59, 51, 85, 0.06);
-  --sh-2: 0 2px 6px rgba(59, 51, 85, 0.07), 0 8px 20px rgba(59, 51, 85, 0.08);
-  --sh-3: 0 6px 14px rgba(59, 51, 85, 0.1), 0 18px 40px rgba(59, 51, 85, 0.12);
-  --sh-press: inset 0 2px 6px rgba(59, 51, 85, 0.14);
+  /* --- Bayang gaya clay ---
+     Resipi clay = tiga lapisan serentak:
+       1. bayang luar lembut (objek nampak terangkat dari latar)
+       2. sorot putih di tepi atas-dalam (cahaya jatuh dari atas)
+       3. bayang gelap di tepi bawah-dalam (bentuk gebu, bukan rata)
+     Lapisan 2 dan 3 itulah yang memberi kesan "tanah liat" dan
+     membezakannya daripada kad rata biasa. */
+  --clay-out-1: 0 7px 14px rgba(59, 51, 85, 0.13), 0 3px 6px rgba(59, 51, 85, 0.09);
+  --clay-out-2: 0 14px 26px rgba(59, 51, 85, 0.15), 0 5px 10px rgba(59, 51, 85, 0.1);
+  --clay-out-3: 0 22px 44px rgba(59, 51, 85, 0.19), 0 9px 18px rgba(59, 51, 85, 0.12);
+  --clay-hi: inset 0 3px 6px rgba(255, 255, 255, 1), inset 0 -6px 12px rgba(59, 51, 85, 0.3);
+  --clay-hi-sm: inset 0 2px 4px rgba(255, 255, 255, 1), inset 0 -4px 8px rgba(59, 51, 85, 0.26);
+  /* Alias sedar-tema: komponen yang menulis box-shadow sendiri (tanpa
+     --sh-*) mesti guna ini, bukan --clay-hi-sm terus, jika tidak mod gelap
+     akan mendapat sorot putih keras. */
+  --clay-in: var(--clay-hi);
+  --clay-in-sm: var(--clay-hi-sm);
+  /* Butang berwarna: sorot lebih lembut supaya warna tidak pudar. */
+  --clay-btn: inset 0 3px 5px rgba(255, 255, 255, 0.5), inset 0 -5px 10px rgba(0, 0, 0, 0.18);
+  --clay-btn-press: inset 0 5px 10px rgba(0, 0, 0, 0.28), inset 0 -2px 4px rgba(255, 255, 255, 0.3);
+  --clay-press: inset 0 4px 9px rgba(59, 51, 85, 0.2), inset 0 -2px 4px rgba(255, 255, 255, 0.7);
+
+  --sh-1: var(--clay-out-1), var(--clay-hi);
+  --sh-2: var(--clay-out-2), var(--clay-hi);
+  --sh-3: var(--clay-out-3), var(--clay-hi);
+  --sh-press: var(--clay-press);
 
   /* --- Jarak --- */
   --sp-1: 4px;
@@ -162,17 +187,24 @@
   --sub-sejarah: #f0a83a;
   --sub-pendidikan-islam: #3fd0b6;
 
-  /* Cahaya lembut (glow) untuk setiap kotak */
+  /* Cahaya lembut (glow) untuk setiap kotak.
+     Dalam mod gelap, clay tidak boleh guna sorot putih pekat — permukaan
+     sudah terang sedikit daripada latar, jadi sorot mesti halus sahaja
+     supaya tidak kelihatan kelabu berkabus. */
   --glow: 0 0 0 1px rgba(139, 123, 245, 0.28), 0 0 18px rgba(139, 123, 245, 0.22),
     0 6px 22px rgba(0, 0, 0, 0.45);
   --glow-soft: 0 0 0 1px rgba(139, 123, 245, 0.18), 0 0 12px rgba(139, 123, 245, 0.14);
+  --clay-dark-hi: inset 0 3px 5px rgba(255, 255, 255, 0.11), inset 0 -4px 9px rgba(0, 0, 0, 0.45);
+  --clay-dark-hi-sm: inset 0 2px 3px rgba(255, 255, 255, 0.09), inset 0 -3px 6px rgba(0, 0, 0, 0.4);
+  --clay-in: var(--clay-dark-hi);
+  --clay-in-sm: var(--clay-dark-hi-sm);
   --sh-1: 0 0 0 1px rgba(139, 123, 245, 0.2), 0 0 14px rgba(139, 123, 245, 0.16),
-    0 4px 16px rgba(0, 0, 0, 0.4);
+    0 5px 16px rgba(0, 0, 0, 0.42), var(--clay-dark-hi);
   --sh-2: 0 0 0 1px rgba(139, 123, 245, 0.24), 0 0 20px rgba(139, 123, 245, 0.2),
-    0 8px 26px rgba(0, 0, 0, 0.5);
+    0 10px 26px rgba(0, 0, 0, 0.5), var(--clay-dark-hi);
   --sh-3: 0 0 0 1px rgba(139, 123, 245, 0.3), 0 0 30px rgba(139, 123, 245, 0.28),
-    0 14px 36px rgba(0, 0, 0, 0.55);
-  --sh-press: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+    0 16px 38px rgba(0, 0, 0, 0.55), var(--clay-dark-hi);
+  --sh-press: inset 0 5px 11px rgba(0, 0, 0, 0.55), inset 0 -2px 4px rgba(255, 255, 255, 0.08);
 }
 
 /* Kotak gelap bercahaya pada permukaan utama */
@@ -199,7 +231,7 @@
 }
 
 :root[data-theme='dark'] .btn:not([disabled]) {
-  box-shadow: 0 0 14px rgba(139, 123, 245, 0.28);
+  box-shadow: 0 0 14px rgba(139, 123, 245, 0.28), var(--clay-btn);
 }
 
 :root[data-theme='dark'] .option[data-state='correct'] {
@@ -470,13 +502,13 @@ ul {
   font-size: 1rem;
   background: var(--brand);
   color: var(--on-fill);
-  box-shadow: 0 4px 0 var(--brand-deep), var(--sh-1);
+  box-shadow: var(--clay-out-1), var(--clay-btn);
   transition: transform var(--dur-fast) var(--ease-pop), box-shadow var(--dur-fast);
 }
 
 .btn:active {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 var(--brand-deep);
+  transform: translateY(2px) scale(0.985);
+  box-shadow: var(--clay-out-1), var(--clay-btn-press);
 }
 
 .btn[disabled] {
@@ -492,36 +524,36 @@ ul {
 .btn-accent {
   background: var(--accent);
   color: #4a3208;
-  box-shadow: 0 4px 0 var(--accent-deep), var(--sh-1);
+  box-shadow: var(--clay-out-1), var(--clay-btn);
 }
 
 .btn-accent:active {
-  box-shadow: 0 1px 0 var(--accent-deep);
+  box-shadow: var(--clay-out-1), var(--clay-btn-press);
 }
 
 .btn-success {
   background: var(--success);
-  box-shadow: 0 4px 0 #0d7c55, var(--sh-1);
+  box-shadow: var(--clay-out-1), var(--clay-btn);
 }
 
 .btn-success:active {
-  box-shadow: 0 1px 0 #0d7c55;
+  box-shadow: var(--clay-out-1), var(--clay-btn-press);
 }
 
 .btn-ghost {
   background: var(--surface);
   color: var(--ink);
-  box-shadow: var(--sh-1);
+  box-shadow: var(--clay-out-1), var(--clay-in-sm);
 }
 
 .btn-ghost:active {
   transform: scale(0.97);
-  box-shadow: var(--sh-1);
+  box-shadow: var(--clay-out-1), var(--clay-press);
 }
 
 .btn-danger {
   background: var(--danger);
-  box-shadow: 0 4px 0 #b04252, var(--sh-1);
+  box-shadow: var(--clay-out-1), var(--clay-btn);
 }
 
 .btn-sm {
@@ -726,8 +758,10 @@ ul {
   content: '';
   position: absolute;
   inset: 0 0 auto 0;
-  height: 5px;
+  height: 6px;
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
   background: var(--tile, var(--brand));
+  box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.16);
 }
 
 .subject-tile .emoji {
@@ -785,11 +819,12 @@ ul {
   width: 46px;
   height: 46px;
   flex: 0 0 46px;
-  border-radius: 14px;
+  border-radius: 16px;
   display: grid;
   place-items: center;
   font-size: 1.4rem;
   background: var(--surface-sunken);
+  box-shadow: var(--clay-in-sm);
 }
 
 .topic-item b {
@@ -959,10 +994,11 @@ ul {
   width: 30px;
   height: 30px;
   flex: 0 0 30px;
-  border-radius: 10px;
+  border-radius: 11px;
   display: grid;
   place-items: center;
   background: var(--surface-sunken);
+  box-shadow: var(--clay-in-sm);
   font-size: 0.82rem;
   font-weight: 900;
   color: var(--ink-soft);
@@ -970,7 +1006,7 @@ ul {
 
 .option[data-state='correct'] {
   background: var(--success-soft);
-  box-shadow: inset 0 0 0 3px var(--success);
+  box-shadow: inset 0 0 0 3px var(--success), var(--clay-in-sm);
 }
 
 .option[data-state='correct'] .key {
@@ -980,7 +1016,7 @@ ul {
 
 .option[data-state='wrong'] {
   background: var(--danger-soft);
-  box-shadow: inset 0 0 0 3px var(--danger);
+  box-shadow: inset 0 0 0 3px var(--danger), var(--clay-in-sm);
   animation: shake 0.4s;
 }
 
@@ -1098,12 +1134,12 @@ ul {
 
 .match-cell[data-sel='true'] {
   background: var(--brand-soft);
-  box-shadow: inset 0 0 0 3px var(--brand);
+  box-shadow: inset 0 0 0 3px var(--brand), var(--clay-in-sm);
 }
 
 .match-cell[data-done='true'] {
   background: var(--success-soft);
-  box-shadow: inset 0 0 0 3px var(--success);
+  box-shadow: inset 0 0 0 3px var(--success), var(--clay-in-sm);
   color: var(--ink-soft);
 }
 
@@ -1221,7 +1257,7 @@ ul {
 }
 
 .review-item[data-ok='false'] {
-  box-shadow: inset 0 0 0 2px var(--danger-soft), var(--sh-1);
+  box-shadow: inset 0 0 0 2px var(--danger-soft), var(--clay-out-1), var(--clay-in-sm);
 }
 
 .review-item .mark {
@@ -1605,7 +1641,7 @@ ul {
 
 .pick[data-sel='true'] {
   background: var(--brand-soft);
-  box-shadow: inset 0 0 0 3px var(--brand);
+  box-shadow: inset 0 0 0 3px var(--brand), var(--clay-in-sm);
   transform: scale(1.04);
 }
 
@@ -1688,6 +1724,7 @@ ul {
   flex: 0 0 54px;
   border-radius: var(--r-pill);
   background: var(--surface-sunken);
+  box-shadow: var(--clay-press);
   transition: background var(--dur);
 }
 
@@ -1700,7 +1737,8 @@ ul {
   height: 26px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: var(--sh-1);
+  box-shadow: 0 2px 5px rgba(59, 51, 85, 0.28), inset 0 2px 3px rgba(255, 255, 255, 0.95),
+    inset 0 -3px 5px rgba(59, 51, 85, 0.14);
   transition: transform var(--dur) var(--ease-pop);
 }
 
