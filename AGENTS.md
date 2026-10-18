@@ -106,8 +106,24 @@ push ke `main`. GitHub Pages dicetak dari `main /docs`.
 > **Perangkap token:** `GITHUB_TOKEN` dalam persekitaran ini ialah token
 > pengguna GitHub App (`ghu_`) dengan akses **baca sahaja**. Ia boleh
 > `git ls-remote` dan membaca API, tetapi push/cipta ref gagal dengan
-> `403 Resource not accessible by integration`. Push perlu dijalankan di
-> persekitaran yang ada token boleh tulis.
+> `403 Resource not accessible by integration`. Untuk menerbitkan, minta
+> pengguna berikan PAT klasik (`github_pat_...`) dan gunakannya sekali sahaja:
+>
+> ```bash
+> GIT_TERMINAL_PROMPT=0 git push "https://x-access-token:$GH_PAT@github.com/djeroll91-prog/bijak-kssr.git" main
+> ```
+>
+> Jangan simpan PAT dalam `git remote set-url` — ia akan tersimpan dalam
+> `.git/config` dan kekal dalam sejarah kerja. Selepas push, ingatkan
+> pengguna supaya memutarkan token kerana ia terdedah dalam log perbualan.
+
+> **Perangkap release:** `releases/latest/download/...` hanya menunjuk ke
+> artifak baharu selepas release dicipta. Menaikkan versi tanpa mencipta
+> release bermakna pautan kekal menghantar APK LAMA walaupun Pages sudah
+> terkini. Selepas setiap push: cipta release untuk tag baharu, muat naik
+> `dist/bijak-kssr.apk` dan `dist/bijak-kssr-app.zip`, kemudian sahkan
+> `versionCode` daripada pautan `releases/latest` (bukan hanya saiz fail —
+> saiz boleh datang daripada cache CDN).
 
 ## Versi kurikulum (PENTING — disemak 2026)
 
