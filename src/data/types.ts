@@ -7,7 +7,23 @@ export type SubjectId =
   | 'bahasa-melayu'
   | 'english'
   | 'sains'
-  | 'sejarah';
+  | 'sejarah'
+  | 'pendidikan-islam';
+
+/**
+ * Bidang kurikulum Pendidikan Islam (KSSR Semakan 2017).
+ *
+ * DSKP rasmi membahagikan mata pelajaran ini kepada TUJUH bidang. Bidang
+ * Hadis hanya bermula Tahun 3, jadi Tahun 1 dan 2 tiada topik itu.
+ */
+export type PiField =
+  | 'al-quran'
+  | 'hadis'
+  | 'akidah'
+  | 'ibadah'
+  | 'sirah'
+  | 'adab'
+  | 'jawi';
 
 export type NoteKind = 'tip' | 'example' | 'formula' | 'fun';
 
@@ -92,6 +108,8 @@ export interface Topic {
   generator: string;
   /** Mini permainan yang sesuai untuk topik ini. */
   games?: string[];
+  /** Bidang kurikulum bagi subjek yang berbidang (kini Pendidikan Islam). */
+  field?: PiField;
 }
 
 export interface SubjectMeta {
@@ -177,6 +195,14 @@ export interface StudyPlan {
   /** Saat belajar terkumpul pada tarikh terakhir aktif. */
   focusSeconds: number;
   lastFocusDate: string;
+  /**
+   * Tarikh (YYYY-MM-DD) setiap hari pelan disiapkan sepenuhnya.
+   *
+   * Ini yang melaksanakan peraturan "satu sesi sehari": hari berikutnya
+   * hanya dibuka pada hari kalendar BERIKUTAN selepas hari semasa siap.
+   * `null` bermaksud hari itu belum siap.
+   */
+  dayCompletedOn?: (string | null)[];
 }
 
 /**
@@ -258,6 +284,14 @@ export interface Settings {
   voiceEnUri?: string;
   /** Cincangan SHA-256 PIN gerbang ibu bapa, jika ditetapkan. */
   parentPinHash?: string;
+  /**
+   * Had satu sesi pelajaran sehari.
+   *
+   * Bila dihidupkan, hari pelan berikutnya hanya dibuka pada hari
+   * kalendar berikutnya. Tujuannya menjaga murid daripada belajar
+   * berlebihan dalam satu hari. Ibu bapa boleh mematikannya.
+   */
+  dailyLimit?: boolean;
 }
 
 export interface AppData {

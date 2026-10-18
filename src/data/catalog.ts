@@ -9,6 +9,7 @@ import { MATEMATIK_TOPICS_12 } from './topics/matematik-12';
 import { MATEMATIK_TOPICS_36 } from './topics/matematik-36';
 import { BAHASA_MELAYU_TOPICS, ENGLISH_TOPICS } from './topics/bm-en';
 import { SAINS_TOPICS, SEJARAH_TOPICS } from './topics/sains-sejarah';
+import { PI_TOPICS } from './topics/pendidikan-islam';
 import { EXTRA_NOTES } from './notes-extra';
 import { MATEMATIK_GENERATORS } from '../lib/generators/matematik';
 import { MATEMATIK_GENERATORS_34 } from '../lib/generators/matematik2';
@@ -17,6 +18,7 @@ import { BAHASA_MELAYU_GENERATORS } from '../lib/generators/bahasa-melayu';
 import { ENGLISH_GENERATORS } from '../lib/generators/english';
 import { SAINS_GENERATORS } from '../lib/generators/sains';
 import { SEJARAH_GENERATORS } from '../lib/generators/sejarah';
+import { PENDIDIKAN_ISLAM_GENERATORS } from '../lib/generators/pendidikan-islam';
 import { EXTRA_QUESTIONS } from '../lib/generators/extra-bank';
 import type { Generator } from '../lib/generators/shared';
 import { defaultHint, mcq } from '../lib/generators/shared';
@@ -29,6 +31,7 @@ export const ALL_TOPICS: Topic[] = [
   ...ENGLISH_TOPICS,
   ...SAINS_TOPICS,
   ...SEJARAH_TOPICS,
+  ...PI_TOPICS,
 ].map((t) => {
   const extra = EXTRA_NOTES[t.id];
   return extra ? { ...t, notes: [...t.notes, ...extra] } : t;
@@ -42,6 +45,7 @@ const GENERATORS: Record<string, Generator> = {
   ...ENGLISH_GENERATORS,
   ...SAINS_GENERATORS,
   ...SEJARAH_GENERATORS,
+  ...PENDIDIKAN_ISLAM_GENERATORS,
 };
 
 /** Statistik yang dipaparkan di skrin maklumat. */

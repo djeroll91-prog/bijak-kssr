@@ -301,4 +301,5 @@ export const WRITTEN: Record<SubjectId, WrittenGen> = {
   english: (topic, rng, tier) => textWritten(topic, rng, tier),
   sains: (topic, rng, tier) => textWritten(topic, rng, tier),
   sejarah: (topic, rng, tier) => textWritten(topic, rng, tier),
+  'pendidikan-islam': (topic, rng, tier) => textWritten(topic, rng, tier),
 };

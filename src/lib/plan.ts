@@ -17,6 +17,7 @@ import type {
 } from '../data/types';
 import { ALL_TOPICS } from '../data/catalog';
 import { todayKey } from './storage';
+import { addDays } from './dates';
 
 /** Ambang penguasaan (peratus). Bawah nilai ini dianggap lemah. */
 export const WEAK_PCT = 70;
@@ -188,7 +189,16 @@ export function buildPlan(profile: Profile, seed = Date.now()): StudyPlan | null
     tasks,
     focusSeconds: 0,
     lastFocusDate: todayKey(),
+    // Hari belum ada yang siap, jadi semua tarikh kosong.
+    dayCompletedOn: Array.from({ length: PLAN_DAYS }, () => null),
   };
+}
+
+export interface PlanProgressOptions {
+  /** Hadkan satu hari pelan bagi setiap hari kalendar. */
+  dailyLimit?: boolean;
+  /** Tarikh hari ini (YYYY-MM-DD); boleh diuji. */
+  today?: string;
 }
 
 export interface PlanProgress {
@@ -200,23 +210,81 @@ export interface PlanProgress {
   /** Semua tugasan hari aktif sudah siap? */
   dayComplete: boolean;
   allDone: boolean;
+  /**
+   * Hari aktif belum dibuka kerana sesi hari ini sudah siap dan had harian
+   * dihidupkan. Skrin pelan menggunakan ini untuk memaparkan mesej
+   * "jumpa esok" dan bukan senarai tugasan.
+   */
+  waitingTomorrow: boolean;
+  /** Bilangan hari pelan yang sudah dibuka setakat ini. */
+  unlockedDays: number;
 }
 
-export function planProgress(plan: StudyPlan | null | undefined): PlanProgress {
+/**
+ * Hitung kemajuan pelan, dengan sokongan had satu sesi sehari.
+ *
+ * Peraturan had harian: hari berikutnya hanya dibuka apabila hari semasa
+ * sudah siap DAN tarikh siap itu bukan hari ini. Ini bermakna murid yang
+ * menyiapkan hari pertama pada hari Isnin akan melihat hari kedua pada
+ * hari Selasa, bukan serta-merta.
+ *
+ * Pemeriksaan dibuat pada tarikh setempat peranti supaya peraturan ini
+ * berfungsi walaupun tanpa internet.
+ */
+export function planProgress(
+  plan: StudyPlan | null | undefined,
+  opts: PlanProgressOptions = {},
+): PlanProgress {
+  const { dailyLimit = false, today = todayKey() } = opts;
   if (!plan || plan.tasks.length === 0) {
-    return { done: 0, total: 0, pct: 0, activeDay: 0, dayComplete: false, allDone: false };
+    return {
+      done: 0,
+      total: 0,
+      pct: 0,
+      activeDay: 0,
+      dayComplete: false,
+      allDone: false,
+      waitingTomorrow: false,
+      unlockedDays: 0,
+    };
   }
+
   const done = plan.tasks.filter((t) => t.done).length;
   const total = plan.tasks.length;
+  const completed = plan.dayCompletedOn ?? [];
+
+  const dayTasksOf = (d: number) => plan.tasks.filter((t) => t.dayIndex === d);
+  const dayIsDone = (d: number) => {
+    const list = dayTasksOf(d);
+    return list.length > 0 && list.every((t) => t.done);
+  };
+
   let activeDay = PLAN_DAYS - 1;
+  let waitingTomorrow = false;
+  let unlockedDays = 0;
+
   for (let d = 0; d < PLAN_DAYS; d += 1) {
-    const dayTasks = plan.tasks.filter((t) => t.dayIndex === d);
-    if (dayTasks.some((t) => !t.done)) {
+    if (dayTasksOf(d).length === 0) continue;
+    unlockedDays += 1;
+    if (!dayIsDone(d)) {
       activeDay = d;
       break;
     }
+    // Hari ini sudah siap. Dengan had harian, hari berikutnya hanya dibuka
+    // pada hari kalendar seterusnya.
+    const doneOn = completed[d];
+    const nextHasTasks = d + 1 < PLAN_DAYS && dayTasksOf(d + 1).length > 0;
+    if (dailyLimit && doneOn === today && nextHasTasks) {
+      activeDay = d + 1;
+      waitingTomorrow = true;
+      break;
+    }
+    if (!nextHasTasks) {
+      activeDay = d;
+    }
   }
-  const dayTasks = plan.tasks.filter((t) => t.dayIndex === activeDay);
+
+  const dayTasks = dayTasksOf(activeDay);
   return {
     done,
     total,
@@ -224,13 +292,47 @@ export function planProgress(plan: StudyPlan | null | undefined): PlanProgress {
     activeDay,
     dayComplete: dayTasks.length > 0 && dayTasks.every((t) => t.done),
     allDone: done === total,
+    waitingTomorrow,
+    unlockedDays,
   };
 }
 
+/**
+ * Tandakan hari pelan sebagai siap pada tarikh tertentu.
+ *
+ * Dipanggil apabila semua tugasan satu hari selesai. Tarikh inilah yang
+ * menentukan bila hari berikutnya boleh dibuka.
+ */
+export function markDayCompleted(
+  plan: StudyPlan,
+  dayIndex: number,
+  today = todayKey(),
+): (string | null)[] {
+  const out = [...(plan.dayCompletedOn ?? [])];
+  while (out.length < PLAN_DAYS) out.push(null);
+  // Simpan tarikh siap yang PERTAMA sahaja supaya mengulang tugasan tidak
+  // melambatkan pembukaan hari berikutnya.
+  if (!out[dayIndex]) out[dayIndex] = today;
+  return out;
+}
+
+/** Tarikh hari pelan berikutnya akan dibuka, atau `null` jika sudah dibuka. */
+export function nextDayOpensOn(
+  plan: StudyPlan | null | undefined,
+  dayIndex: number,
+): string | null {
+  if (!plan || dayIndex <= 0) return null;
+  const prev = plan.dayCompletedOn?.[dayIndex - 1];
+  return prev ? addDays(prev, 1) : null;
+}
+
 /** Tugasan bagi hari aktif, disusun mengikut urutan asal. */
-export function activeDayTasks(plan: StudyPlan | null | undefined): PlanTask[] {
+export function activeDayTasks(
+  plan: StudyPlan | null | undefined,
+  opts: PlanProgressOptions = {},
+): PlanTask[] {
   if (!plan) return [];
-  const { activeDay } = planProgress(plan);
+  const { activeDay } = planProgress(plan, opts);
   return plan.tasks.filter((t) => t.dayIndex === activeDay);
 }
 

@@ -47,9 +47,15 @@ export function PlanScreen() {
   const [elapsed, setElapsed] = useState(0);
 
   const plan = profile?.plan ?? null;
-  const progress = useMemo(() => planProgress(plan), [plan]);
+  const progress = useMemo(
+    () => planProgress(plan, { dailyLimit: settings.dailyLimit !== false }),
+    [plan, settings.dailyLimit],
+  );
   const streak = useMemo(() => planStreak(plan), [plan]);
-  const todayTasks = useMemo(() => activeDayTasks(plan), [plan]);
+  const todayTasks = useMemo(
+    () => activeDayTasks(plan, { dailyLimit: settings.dailyLimit !== false }),
+    [plan, settings.dailyLimit],
+  );
   const diagRows = useMemo(() => diagnosticRows(profile?.diagnostic), [profile?.diagnostic]);
   const stale = profile ? planIsStale(plan, profile.year) : false;
 
@@ -198,40 +204,69 @@ export function PlanScreen() {
         {/* Tugasan hari ini */}
         <div className="row-between" style={{ marginTop: 18 }}>
           <p className="section-title" style={{ margin: 0 }}>
-            {dayDone ? t('plan.allTodayDone') : t('plan.todayTasks')}
+            {progress.waitingTomorrow
+              ? t('daily.nextDay')
+              : dayDone
+                ? t('plan.allTodayDone')
+                : t('plan.todayTasks')}
           </p>
           <Chip tone={dayDone ? 'success' : 'brand'}>
             {todayTasks.filter((x) => x.done).length}/{todayTasks.length || TASKS_PER_DAY}
           </Chip>
         </div>
 
-        <div className="stack stagger">
-          {todayTasks.map((task) => {
-            const topic = topicById(task.topicId);
-            if (!topic) return null;
-            const meta = subjectById(topic.subject);
-            const km = KIND_META[task.kind];
-            return (
-              <div key={task.id} className="plan-task animate-slide" data-done={task.done ? 'true' : 'false'}>
-                <button type="button" className="pt-check" aria-pressed={task.done} onClick={() => toggleDone(task)}>
-                  {task.done ? '✓' : ''}
-                </button>
-                <button type="button" className="pt-main" onClick={() => startTask(task)}>
-                  <span className="pt-emoji" aria-hidden="true" style={{ background: `${meta.color}1a` }}>
-                    {topic.emoji}
-                  </span>
-                  <span className="grow">
-                    <b>{topic.title}</b>
-                    <small>
-                      {km.icon} {t(km.key)} • ⏱️ {task.minutes} {t('progress.minutes')}
-                    </small>
-                  </span>
-                  <span aria-hidden="true">{task.done ? '✅' : '›'}</span>
-                </button>
-              </div>
-            );
-          })}
-        </div>
+        {/* Had sesi harian: sesi hari ini sudah siap, hari berikutnya tunggu esok. */}
+        {progress.waitingTomorrow ? (
+          <div className="card animate-pop daily-lock">
+            <div className="daily-lock-emoji" aria-hidden="true">
+              🌙
+            </div>
+            <b className="daily-lock-title">{t('daily.lockedTitle')}</b>
+            <p className="muted" style={{ margin: '6px 0 0' }}>
+              {t('daily.lockedDesc')}
+            </p>
+            <div className="daily-lock-when">
+              <Chip tone="brand">⏰ {t('daily.opensTomorrow')}</Chip>
+              <Chip tone="success">
+                🔥 {streak} {t('plan.daysDone')}
+              </Chip>
+            </div>
+            <p className="tiny muted" style={{ marginTop: 10 }}>
+              {t('daily.streakNote')}
+            </p>
+            <p className="tiny muted" style={{ marginTop: 6 }}>
+              {t('daily.seeYouTomorrow')}
+            </p>
+          </div>
+        ) : (
+          <div className="stack stagger">
+            {todayTasks.map((task) => {
+              const topic = topicById(task.topicId);
+              if (!topic) return null;
+              const meta = subjectById(topic.subject);
+              const km = KIND_META[task.kind];
+              return (
+                <div key={task.id} className="plan-task animate-slide" data-done={task.done ? 'true' : 'false'}>
+                  <button type="button" className="pt-check" aria-pressed={task.done} onClick={() => toggleDone(task)}>
+                    {task.done ? '✓' : ''}
+                  </button>
+                  <button type="button" className="pt-main" onClick={() => startTask(task)}>
+                    <span className="pt-emoji" aria-hidden="true" style={{ background: `${meta.color}1a` }}>
+                      {topic.emoji}
+                    </span>
+                    <span className="grow">
+                      <b>{topic.title}</b>
+                      <small>
+                        {km.icon} {t(km.key)} • ⏱️ {task.minutes} {t('progress.minutes')}
+                      </small>
+                    </span>
+                    <span aria-hidden="true">{task.done ? '✅' : '›'}</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Pemasa fokus */}
         <p className="section-title">{t('plan.focusTimer')}</p>

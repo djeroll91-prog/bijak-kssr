@@ -98,6 +98,15 @@ const SUBJECT_TIPS: Record<SubjectId, ExamTipGroup> = {
       { titleKey: 'tips.sj3.title', bodyKey: 'tips.sj3.body', emoji: '📜' },
     ],
   },
+  'pendidikan-islam': {
+    subject: 'pendidikan-islam',
+    emoji: '🕌',
+    tips: [
+      { titleKey: 'tips.pi1.title', bodyKey: 'tips.pi1.body', emoji: '📖' },
+      { titleKey: 'tips.pi2.title', bodyKey: 'tips.pi2.body', emoji: '🤲' },
+      { titleKey: 'tips.pi3.title', bodyKey: 'tips.pi3.body', emoji: '✍️' },
+    ],
+  },
 };
 
 /** Kumpulan tip bagi satu tahun: tip am dahulu, kemudian setiap subjek. */

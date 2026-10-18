@@ -266,6 +266,18 @@ export function ProfileScreen() {
             onChange={(v) => setSetting('dark', v)}
           />
 
+          {/* Had satu sesi sehari supaya murid tidak belajar berlebihan. */}
+          <ToggleRow
+            lead="📅"
+            title={t('daily.settingLabel')}
+            desc={t('daily.settingDesc')}
+            on={settings.dailyLimit !== false}
+            onChange={(v) => {
+              setSetting('dailyLimit', v);
+              showToast(v ? t('daily.on') : t('daily.off'));
+            }}
+          />
+
           {/* Bahasa */}
           <div className="settings-row">
             <span className="lead" aria-hidden="true">

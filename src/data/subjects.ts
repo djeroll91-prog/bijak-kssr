@@ -1,6 +1,6 @@
 /** Maklumat mata pelajaran dan mini permainan. */
 
-import type { GameMeta, SubjectId, SubjectMeta } from './types';
+import type { GameMeta, PiField, SubjectId, SubjectMeta } from './types';
 
 export const SUBJECTS: SubjectMeta[] = [
   {
@@ -48,10 +48,41 @@ export const SUBJECTS: SubjectMeta[] = [
     fromYear: 4,
     blurb: 'Sejarah awal negara, kedaulatan negara dan kemakmuran negara.',
   },
+  {
+    id: 'pendidikan-islam',
+    name: 'Pendidikan Islam',
+    short: 'PI',
+    emoji: '🕌',
+    color: 'var(--sub-pendidikan-islam)',
+    fromYear: 1,
+    blurb: 'Al-Quran, Hadis, Akidah, Ibadah, Sirah, Adab dan Jawi.',
+  },
+];
+
+/**
+ * Nama bidang kurikulum Pendidikan Islam untuk paparan.
+ *
+ * Setiap bidang ada kunci i18n sendiri supaya nama boleh diterjemah, dan
+ * `emoji` membantu murid tahun rendah mengenal bidang dengan pantas.
+ */
+export const PI_FIELDS: { id: PiField; emoji: string; key: string }[] = [
+  { id: 'al-quran', emoji: '📖', key: 'pi.field.alQuran' },
+  { id: 'hadis', emoji: '🗣️', key: 'pi.field.hadis' },
+  { id: 'akidah', emoji: '🤲', key: 'pi.field.akidah' },
+  { id: 'ibadah', emoji: '🕋', key: 'pi.field.ibadah' },
+  { id: 'sirah', emoji: '🌙', key: 'pi.field.sirah' },
+  { id: 'adab', emoji: '💛', key: 'pi.field.adab' },
+  { id: 'jawi', emoji: '✍️', key: 'pi.field.jawi' },
 ];
 
 export function subjectById(id: SubjectId): SubjectMeta {
   return SUBJECTS.find((s) => s.id === id) ?? SUBJECTS[0];
+}
+
+/** Meta bidang Pendidikan Islam, atau `undefined` jika id tidak dikenali. */
+export function piFieldById(id: PiField | undefined) {
+  if (!id) return undefined;
+  return PI_FIELDS.find((f) => f.id === id);
 }
 
 export function subjectColor(id: SubjectId): string {

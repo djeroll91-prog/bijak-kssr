@@ -94,6 +94,29 @@ export function NotesScreen() {
           >
             ✏️ {t('notes.startQuiz')}
           </Btn>
+          {/* Lembaran latihan untuk topik ini sahaja. */}
+          <button
+            type="button"
+            className="ws-open"
+            onClick={() => {
+              sound.play('tap');
+              go({
+                screen: 'worksheet',
+                topicId: topic.id,
+                subject: topic.subject,
+                from: 'notes',
+              });
+            }}
+          >
+            <span className="lead" aria-hidden="true">
+              🖨️
+            </span>
+            <span className="grow">
+              <b>{t('ws.title')}</b>
+              <small>{t('ws.desc')}</small>
+            </span>
+            <span aria-hidden="true">›</span>
+          </button>
         </div>
 
         {games.length > 0 ? (

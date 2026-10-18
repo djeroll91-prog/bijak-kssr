@@ -39,6 +39,27 @@ export function TopicsScreen() {
           <p className="tiny muted">{meta.blurb}</p>
         </div>
 
+        {/* Lembaran latihan boleh cetak untuk subjek dan tahun ini. */}
+        {available.length > 0 ? (
+          <button
+            type="button"
+            className="ws-open"
+            onClick={() => {
+              sound.play('pop');
+              go({ screen: 'worksheet', subject, from: 'topics' });
+            }}
+          >
+            <span className="lead" aria-hidden="true">
+              🖨️
+            </span>
+            <span className="grow">
+              <b>{t('ws.title')}</b>
+              <small>{t('ws.desc')}</small>
+            </span>
+            <span aria-hidden="true">›</span>
+          </button>
+        ) : null}
+
         {available.length === 0 ? (
           <EmptyState
             emoji="🔒"

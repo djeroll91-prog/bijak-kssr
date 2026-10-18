@@ -38,7 +38,7 @@ import {
   todayKey,
 } from '../lib/storage';
 import { newBadges } from '../data/badges';
-import { buildPlan, DIAGNOSTIC_TOPIC_ID } from '../lib/plan';
+import { buildPlan, DIAGNOSTIC_TOPIC_ID, markDayCompleted } from '../lib/plan';
 import type { ExamScore } from '../lib/exam';
 import { EXAM_TOPIC_ID } from '../lib/exam';
 import { applyOutcomes } from '../lib/review';
@@ -62,7 +62,8 @@ export type ScreenId =
   | 'report'
   | 'mockExam'
   | 'examResult'
-  | 'examTips';
+  | 'examTips'
+  | 'worksheet';
 
 export interface NavState {
   screen: ScreenId;
@@ -537,7 +538,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const tasks: StudyPlan['tasks'] = p.plan.tasks.map((t) =>
         t.id === taskId ? { ...t, done: true } : t,
       );
-      return { plan: { ...p.plan, tasks } };
+      // Rekod tarikh hari siap sepenuhnya. Tarikh ini yang menentukan bila
+      // hari pelan berikutnya boleh dibuka apabila had harian dihidupkan.
+      const plan: StudyPlan = { ...p.plan, tasks };
+      const target = p.plan.tasks.find((t) => t.id === taskId);
+      if (target) {
+        const dayTasks = tasks.filter((t) => t.dayIndex === target.dayIndex);
+        if (dayTasks.length > 0 && dayTasks.every((t) => t.done)) {
+          plan.dayCompletedOn = markDayCompleted(plan, target.dayIndex);
+        }
+      }
+      return { plan };
     });
   }, [patchProfile]);
 

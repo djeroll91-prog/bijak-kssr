@@ -23,7 +23,7 @@ import type {
 } from '../data/types';
 
 const KEY = 'bijak-kssr/v1';
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const DEFAULT_SETTINGS: Settings = {
   sound: true,
@@ -33,6 +33,9 @@ export const DEFAULT_SETTINGS: Settings = {
   contrast: false,
   dark: false,
   fontScale: 1,
+  // Lalai hidup: aplikasi ini bukan tuisyen, jadi satu sesi sehari
+  // mengelakkan murid belajar berlebihan. Ibu bapa boleh mematikannya.
+  dailyLimit: true,
 };
 
 export function emptyData(): AppData {
@@ -160,7 +163,33 @@ function repairPlan(raw: unknown): StudyPlan | null {
     tasks,
     focusSeconds: Math.max(0, Number(raw.focusSeconds) || 0),
     lastFocusDate: typeof raw.lastFocusDate === 'string' ? raw.lastFocusDate : todayKey(),
+    dayCompletedOn: repairDayCompleted(raw.dayCompletedOn, tasks),
   };
+}
+
+/**
+ * Bina semula senarai tarikh siap hari.
+ *
+ * Data daripada skema lama tiada medan ini. Dalam kes itu kita anggap hari
+ * yang sudah siap disiapkan pada tarikh mula pelan, supaya murid sedia ada
+ * tidak terkunci menunggu hari esok secara tiba-tiba selepas kemas kini.
+ */
+function repairDayCompleted(raw: unknown, tasks: PlanTask[]): (string | null)[] {
+  const dateOk = (v: unknown): string | null =>
+    typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+  const out: (string | null)[] = Array.from({ length: 7 }, () => null);
+  if (Array.isArray(raw)) {
+    for (let d = 0; d < 7; d += 1) out[d] = dateOk(raw[d]);
+  }
+  // Isi hari yang sudah siap tetapi tiada tarikh (data skema lama).
+  for (let d = 0; d < 7; d += 1) {
+    if (out[d]) continue;
+    const dayTasks = tasks.filter((t) => t.dayIndex === d);
+    if (dayTasks.length > 0 && dayTasks.every((t) => t.done)) {
+      out[d] = todayKey();
+    }
+  }
+  return out;
 }
 
 function repairReviewCard(raw: unknown): ReviewCard | null {
@@ -222,6 +251,8 @@ function repairSettings(raw: unknown): Settings {
     contrast: raw.contrast === true,
     dark: raw.dark === true,
     fontScale: clampFont(Number(raw.fontScale)),
+    // Lalai hidup jika medan tiada (data skema lama).
+    dailyLimit: raw.dailyLimit !== false,
   };
   // Suara pilihan: hanya simpan rentetan yang munasabah.
   if (typeof raw.voiceMsUri === 'string' && raw.voiceMsUri) out.voiceMsUri = raw.voiceMsUri;

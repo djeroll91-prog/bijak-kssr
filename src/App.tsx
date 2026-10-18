@@ -19,6 +19,7 @@ import { ReportScreen } from './screens/Report';
 import { MockExamScreen } from './screens/MockExam';
 import { ExamResultScreen } from './screens/ExamResult';
 import { ExamTipsScreen } from './screens/ExamTips';
+import { WorksheetScreen } from './screens/Worksheet';
 import { sound } from './lib/audio';
 import type { ScreenId } from './state/store';
 
@@ -189,6 +190,7 @@ function Router() {
         {nav.screen === 'mockExam' ? <MockExamScreen /> : null}
         {nav.screen === 'examResult' ? <ExamResultScreen /> : null}
         {nav.screen === 'examTips' ? <ExamTipsScreen /> : null}
+        {nav.screen === 'worksheet' ? <WorksheetScreen /> : null}
       </ScreenStage>
 
       <BottomNav />

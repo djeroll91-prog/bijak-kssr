@@ -149,7 +149,7 @@ check('Bilangan gagal dipaparkan', /pernah tersalah 1 kali/.test(text));
   const cards = parsed?.profiles?.[0]?.reviews ?? [];
   check('Kad ulangan disimpan ke storan', cards.length === 2, `${cards.length}`);
   check('Kad gagal ada lapses', cards.some((c) => c.lapses > 0), JSON.stringify(cards.map((c) => `${c.topicId}:${c.lapses}`)));
-  check('Versi skema dinaikkan', parsed?.version === 2, `${parsed?.version}`);
+  check('Versi skema dinaikkan', parsed?.version === 3, `${parsed?.version}`);
   check('Rekod lama kekal', parsed?.profiles?.[0]?.attempts?.length === 2, `${parsed?.profiles?.[0]?.attempts?.length}`);
 }
 

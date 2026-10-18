@@ -436,3 +436,70 @@ bertindih dengan bunyi markah).
 Animasi: semua `@keyframes` dihormati oleh blok `data-motion='off'` dan
 `prefers-reduced-motion`. Ujian: `node test-screens.mjs`,
 `node test-desktop-layout.mjs`, `node test-voice-picker.mjs`.
+
+## Penjana soalan: bank fakta mesti diacak
+
+Penjana berasaskan bank fakta (contoh `generators/pendidikan-islam.ts`)
+mesti mengacak bank dengan `rng` SEBELUM memilih item:
+
+```ts
+const facts = rng.shuffle(b.facts);   // bukan b.facts[i % b.facts.length]
+```
+
+Jika tidak, setiap benih menghasilkan urutan soalan yang sama. Kertas
+peperiksaan kemudian bertindih antara percubaan walaupun benih berbeza, dan
+`verify-exam.mjs` gagal dengan "kertas terlalu serupa" serta "terlalu banyak
+ulangan selepas elak". Kesannya paling teruk pada bank kecil (Pendidikan
+Islam: ~9 fakta/topik).
+
+Dua lagi peraturan untuk soalan padan (`match`):
+
+- Label kiri mesti unik dalam satu soalan, jika tidak ada lebih daripada satu
+  jawapan betul. Penjana PI menapis ini melalui `dedupeLeft` selepas mengacak.
+- Label kanan juga mesti unik, kerana setiap kanan dipaparkan sekali sahaja.
+  Semak dengan `node verify-match.mjs` dan `node verify-generators.mjs`.
+
+Lembaran latihan (`screens/Worksheet.tsx`) dan had sesi harian
+(`lib/plan.ts` → `waitingTomorrow`) diuji oleh
+`node test-worksheet-daily.mjs`.
+
+## Bina APK
+
+`scripts/build-apk.sh` bina APK tanpa Gradle. Ia perlukan `ANDROID_HOME`
+dengan `build-tools/35.0.1` dan `platforms/android-34`, serta `javac` dan
+`keytool` pada PATH.
+
+Pasang dalam bekas Debian 13:
+
+```bash
+sudo apt-get install -y openjdk-21-jdk-headless unzip
+curl -sSL -o /tmp/clt.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+sudo mkdir -p /opt/android-sdk/cmdline-tools && sudo chown -R $(id -u):$(id -g) /opt/android-sdk
+unzip -q /tmp/clt.zip -d /tmp/clt && mv /tmp/clt/cmdline-tools /opt/android-sdk/cmdline-tools/latest
+export ANDROID_HOME=/opt/android-sdk
+export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+yes | sdkmanager --licenses
+sdkmanager "build-tools;35.0.1" "platforms;android-34"
+```
+
+Naikkan `version` dalam `package.json` SEBELUM membina. Android enggan
+memasang APK dengan version-code sama atau lebih rendah, dan version-code
+dikira daripada `version` (`major*10000 + minor*100 + patch`). Selepas
+binaan, `dist/bijak-kssr.apk` dan `dist/bijak-kssr-app.zip` dihasilkan;
+salin `dist/.` ke `docs/` untuk penerbitan GitHub Pages.
+
+Sahkan APK benar-benar terkini, bukan hanya wujud:
+
+```bash
+python3 -c "
+import zipfile;z=zipfile.ZipFile('dist/bijak-kssr.apk')
+js=[n for n in z.namelist() if 'assets/www/assets/index-' in n and n.endswith('.js')][0]
+d=z.read(js).decode('utf-8','ignore');print(js, d.count('Lembaran'), d.count('daily-lock'))
+"
+PAYLOAD_DIR=/tmp/apk-payload node test-apk-load.mjs
+```
+
+`test-apk-load.mjs` membaca aset daripada APK yang telah diekstrak. Sediakan
+muatan dengan `unzip -q dist/bijak-kssr.apk -d /tmp/apk-payload && cp -r
+/tmp/apk-payload/assets/www/. /tmp/apk-payload/`, kemudian tetapkan
+`PAYLOAD_DIR=/tmp/apk-payload`.

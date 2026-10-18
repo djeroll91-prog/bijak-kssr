@@ -79,7 +79,7 @@ function oldData() {
   check('Migrasi: streak kekal', p.streakDays === 4, `${p.streakDays}`);
   check('Migrasi: lencana kekal', p.badges.includes('first-steps'));
   check('Migrasi: bahasa kekal', d.lang === 'ms', d.lang);
-  check('Migrasi: versi dinaikkan', d.version === 2, `${d.version}`);
+  check('Migrasi: versi dinaikkan', d.version === s.SCHEMA_VERSION, `${d.version}`);
 }
 
 // 2. Kad ulangan dibina daripada sejarah lama.
@@ -146,7 +146,7 @@ function oldData() {
 {
   const p = s.newProfile('Siti', '🐼', 1);
   check('Profil baharu: kad ulangan kosong', Array.isArray(p.reviews) && p.reviews.length === 0);
-  check('Profil baharu: versi storan semasa', s.SCHEMA_VERSION === 2, `${s.SCHEMA_VERSION}`);
+  check('Profil baharu: versi storan semasa', s.SCHEMA_VERSION >= 2, `${s.SCHEMA_VERSION}`);
 }
 
 // 8. Statistik profil tidak terjejas oleh medan baharu.
