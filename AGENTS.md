@@ -65,14 +65,29 @@ bash scripts/build-apk.sh                      # bina dist/bijak-kssr.apk
 - **Repo:** https://github.com/djeroll91-prog/bijak-kssr
 - **Pakej web zip:** https://github.com/djeroll91-prog/bijak-kssr/releases/latest/download/bijak-kssr-app.zip
 
-Deploy web: bina (`npm run build`) lalu salin `dist/` ke `docs/` dan push ke
-`main`. GitHub Pages dicetak dari `main /docs`.
+Deploy web: bina (`npm run build`) lalu selaraskan `docs/` dengan `dist/` dan
+push ke `main`. GitHub Pages dicetak dari `main /docs`.
 
-> **Perangkap deploy:** `docs/.nojekyll` tidak dihasilkan oleh `npm run build`.
-> Selepas `rm -rf docs && cp -r dist docs`, pulihkan dengan
-> `git checkout docs/.nojekyll`. Tanpanya GitHub Pages (Jekyll) mengabaikan
-> folder `assets/` dan aplikasi gagal dimuat. Cetuskan bina semula melalui
-`POST /repos/:owner/:repo/pages/builds` jika perlu.
+> **Perangkap deploy 1 — `.nojekyll`:** ia tidak dihasilkan oleh
+> `npm run build`. Tanpanya GitHub Pages (Jekyll) mengabaikan folder `assets/`
+> dan aplikasi gagal dimuat. Pastikan ia wujud dalam `docs/`.
+
+> **Perangkap deploy 2 — JANGAN `rm -rf docs`:** `docs/` ialah salinan `dist/`
+> TAMBAH `bijak-kssr.apk` dan `bijak-kssr-app.zip`. Memadam `docs/` akan
+> memusnahkan kedua-dua artifak itu walaupun pautan muat turun (dan
+> `releases/latest`) masih merujuknya. Salin secara terpilih dan kekalkan
+> kedua-dua fail tersebut.
+
+> **Perangkap versi APK:** `version-code` mesti naik setiap keluaran, jika
+> tidak Android enggan memasang APK baharu di atas yang lama. `build-apk.sh`
+> kini mengira kedua-dua `version-code` dan `version-name` daripada
+> `package.json` (1.14.0 -> kod 11400). Jangan kodkan keras semula.
+
+> **Perangkap token:** `GITHUB_TOKEN` dalam persekitaran ini ialah token
+> pengguna GitHub App (`ghu_`) dengan akses **baca sahaja**. Ia boleh
+> `git ls-remote` dan membaca API, tetapi push/cipta ref gagal dengan
+> `403 Resource not accessible by integration`. Push perlu dijalankan di
+> persekitaran yang ada token boleh tulis.
 
 ## Versi kurikulum (PENTING — disemak 2026)
 
