@@ -14,15 +14,26 @@
  */
 import { readFileSync } from 'node:fs';
 
-const css = readFileSync('src/styles/theme.css', 'utf8');
+// Buang komen dahulu: teks komen boleh mengandungi aksara yang mengelirukan
+// padanan pemilih (contohnya tanda kurung dalam nota penerangan).
+const css = readFileSync('src/styles/theme.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 
+/**
+ * Baca token hex daripada blok yang pemilihnya mengandungi `selector`.
+ *
+ * Menyokong pemilih berkumpulan (beberapa pemilih dikongsi satu blok), kerana
+ * blok "tenang + bahan" ditulis sebagai senarai pemilih.
+ */
 function tokensIn(selector) {
-  const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const m = css.match(new RegExp(esc + '\\s*\\{([\\s\\S]*?)\\n\\}'));
-  if (!m) throw new Error(`blok ${selector} tidak dijumpai`);
-  const out = {};
-  for (const t of m[1].matchAll(/(--[\w-]+):\s*(#[0-9a-fA-F]{3,8})/g)) out[t[1]] = t[2];
-  return out;
+  const want = selector.replace(/\s+/g, '');
+  for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const selectors = m[1].split(',').map((s) => s.replace(/\s+/g, ''));
+    if (!selectors.includes(want)) continue;
+    const out = {};
+    for (const t of m[2].matchAll(/(--[\w-]+):\s*(#[0-9a-fA-F]{3,8})/g)) out[t[1]] = t[2];
+    return out;
+  }
+  throw new Error(`blok ${selector} tidak dijumpai`);
 }
 
 const light = tokensIn(':root');
@@ -31,6 +42,35 @@ const MODES = [
   ['gelap', { ...light, ...tokensIn(":root[data-theme='dark']") }],
   ['tenang', { ...light, ...tokensIn(":root[data-calm='on']") }],
   ['kontras tinggi', { ...light, ...tokensIn(":root[data-contrast='high']") }],
+];
+
+/**
+ * Gaya bahan bingkai (skin).
+ *
+ * Bahan hanya dipakai pada bingkai (nav atas/bawah, jalur tajuk), jadi
+ * pasangan yang perlu diuji ialah teks nav di atas jalur bahan itu — bukan
+ * teks kandungan. Permukaan kandungan kekal clay dan sudah diliputi MODES.
+ */
+const dark = tokensIn(":root[data-theme='dark']");
+const SKIN_MODES = [
+  ['kulit cerah', { ...light, ...tokensIn(":root[data-skin='leather']") }],
+  ['kulit gelap', { ...light, ...dark, ...tokensIn(":root[data-skin='leather']"), ...tokensIn(":root[data-skin='leather'][data-theme='dark']") }],
+  ['buku cerah', { ...light, ...tokensIn(":root[data-skin='book']") }],
+  ['buku gelap', { ...light, ...dark, ...tokensIn(":root[data-skin='book']"), ...tokensIn(":root[data-skin='book'][data-theme='dark']") }],
+  // Mod tenang mematikan bahan; warnanya berbeza daripada kulit/buku biasa.
+  ['tenang + kulit', { ...light, ...tokensIn(":root[data-calm='on']"), ...tokensIn(":root[data-skin='leather']"), ...tokensIn(":root[data-skin='leather'][data-calm='on']:not([data-theme='dark'])") }],
+  ['tenang + buku', { ...light, ...tokensIn(":root[data-calm='on']"), ...tokensIn(":root[data-skin='book']"), ...tokensIn(":root[data-skin='book'][data-calm='on']:not([data-theme='dark'])") }],
+];
+
+const SKIN_PAIRS = [
+  ['nav biasa atas jalur', '--skin-band-soft', '--skin-band', 4.5],
+  ['nav aktif atas jalur', '--skin-band-active', '--skin-band', 4.5],
+  ['nav aktif atas latar aktif', '--skin-band-active', '--skin-band-deep', 4.5],
+  ['tajuk atas jalur', '--skin-band-ink', '--skin-band', 4.5],
+  ['tajuk atas latar aktif', '--skin-band-ink', '--skin-band-deep', 4.5],
+  ['teks kandungan atas halaman bahan', '--ink', '--skin-page', 4.5],
+  ['teks lembut atas halaman bahan', '--ink-soft', '--skin-page', 4.5],
+  ['teks samar atas halaman bahan', '--ink-faint', '--skin-page', 4.5],
 ];
 
 function hexToRgb(hex) {
@@ -84,6 +124,9 @@ const PAIRS = [
   ['cip bahaya', '--danger', '--danger-soft', 4.5],
   ['cip info', '--info', '--info-soft', 4.5],
   ['cip jenama', '--brand-deep', '--brand-soft', 4.5],
+  // Label nav aktif ialah teks kecil di atas --brand-soft. Guna --brand-deep,
+  // bukan --brand (yang gagal 4.5:1 dalam mod cerah/tenang).
+  ['label nav aktif', '--brand-deep', '--brand-soft', 4.5],
 
   // Warna sebagai teks / ikon atas permukaan
   ['kejayaan pada permukaan', '--success', '--surface', 4.5],
@@ -144,10 +187,36 @@ for (const [modeName, vars] of MODES) {
 }
 
 console.log(`Pasangan diperiksa: ${total} (${MODES.length} mod x ${PAIRS.length} pasangan)`);
-if (fails.length === 0) {
+
+// Pemeriksaan gaya bahan (chrome sahaja).
+let skinTotal = 0;
+const skinFails = [];
+for (const [modeName, vars] of SKIN_MODES) {
+  for (const [name, fgVar, bgVar, need] of SKIN_PAIRS) {
+    const fg = colourOf(vars, fgVar);
+    const bg = colourOf(vars, bgVar);
+    if (!fg || !bg) {
+      skinFails.push(`[${modeName}] ${name}: token hilang (${fgVar}/${bgVar})`);
+      continue;
+    }
+    skinTotal += 1;
+    const r = ratio(fg, bg);
+    if (r < need) {
+      skinFails.push(
+        `[${modeName}] ${name}: ${r.toFixed(2)}:1 (perlu ${need}:1) — ${fgVar}=${fg} pada ${bgVar}=${bg}`,
+      );
+    }
+  }
+}
+console.log(
+  `Gaya bahan: ${skinTotal} pasangan (${SKIN_MODES.length} gaya x ${SKIN_PAIRS.length} pasangan)`,
+);
+
+const allFails = [...fails, ...skinFails];
+if (allFails.length === 0) {
   console.log('ALL OK — semua pasangan lulus WCAG AA');
   process.exit(0);
 }
-console.log(`GAGAL (${fails.length}):`);
-for (const f of fails) console.log(' -', f);
+console.log(`GAGAL (${allFails.length}):`);
+for (const f of allFails) console.log(' -', f);
 process.exit(1);

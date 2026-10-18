@@ -438,10 +438,18 @@ Peraturan penting tentang warna:
   tulis `color: #fff` pada butang/cip/kunci jawapan.
 - Tahap logam pada `result-hero` (emas/perak/gangsa) guna dakwat gelap
   `#2e2410`, bukan putih — logam itu cerah.
-- `node audit-contrast.mjs` menguji 188 pasangan (4 mod x 47) dan mesti lulus
+- `node audit-contrast.mjs` menguji 192 pasangan (4 mod x 48) dan mesti lulus
   WCAG AA. Jalankan selepas mengubah sebarang warna. Ia membaca token terus
   daripada `theme.css`, jadi nilai literal mesti dikemas kini dalam senarai
   `PAIRS` jika gradien tetap berubah.
+- **Token `--brand` tidak selamat sebagai teks atas `--brand-soft`.** Ia hanya
+  4.09:1 (cerah) dan 4.06:1 (tenang). Guna `--brand-deep` (5.16/5.12) untuk
+  teks kecil. Ini pernah menjadi pepijat pada label nav aktif; `audit-contrast`
+  tidak menangkapnya kerana ia hanya menguji `--brand-deep` atas `--brand-soft`.
+- **Jalur nav bawah mesti mengikut tema.** Latar asas ialah putih 0.94, jadi
+  tanpa penimpa `:root[data-theme='dark'] .bottom-nav` jalur itu kekal cerah
+  dalam UI gelap dan teks nav jatuh ke 2.9:1. Mod bahan (`data-skin`) turut
+  menetapkan semula jalur ini.
 - Jangan guna `var(--muted)` — tidak wujud; guna `var(--ink-soft)`.
 
 ### Claymorphism (kulit UI semasa)
@@ -473,6 +481,43 @@ Jejari juga dibesarkan untuk bentuk gebu: `--r-sm: 14px`, `--r-md: 22px`,
 tidak akan ditangkap olehnya. Sahkan secara visual: bina, serve `dist/` pada
 port baharu (origin baharu mengelak cache service worker PWA), dan periksa
 bahawa tepi atas kad lebih cerah daripada tepi bawah.
+
+### Gaya bahan (skin)
+
+`data-skin` pada `<html>` menukar **bingkai chrome sahaja**: `clay` (lalai),
+`leather` (Kulit), `book` (Buku latihan). Nilai disimpan dalam
+`settings.skin` dan dipilih dalam `Profile.tsx`.
+
+Peraturan yang mudah dilanggar:
+
+- **Bahan tidak boleh menyentuh permukaan kandungan.** Ia hanya mewarnai
+  `.topbar`, `.bottom-nav`, dan bingkai luar `.phone`/`.app-shell`. Kad,
+  nota, dan butang jawapan mesti kekal permukaan clay legap. Jika tekstur
+  bahan meresap ke bawah teks, kebolehbacaan jatuh tanpa sebarang ujian gagal.
+- **Token bahan:** `--skin-page`, `--skin-shell`, `--skin-band`,
+  `--skin-band-deep`, `--skin-band-ink`, `--skin-band-soft`,
+  `--skin-band-active`. Setiap palet mesti lulus 4.5:1 untuk teks jalur.
+- **Mod tenang mematikan tekstur.** `:root[data-calm='on']` menanggalkan
+  gradien/jahitan bahan dan memulihkan jalur cerah. Jangan lupa jalur ini,
+  jika tidak pengguna mod tenang terperangkap dengan jalur gelap.
+- `node audit-contrast.mjs` menyemak token bahan (48 pasangan). Ia membaca
+  fail CSS, jadi ia membuktikan palet ditakrifkan — bukan bahawa pelayar
+  memilihnya.
+- `node audit-skin-computed.mjs` memuatkan APL SEBENAR (React + CSS dibina) di
+  dalam iframe seorigin, kemudian membaca `getComputedStyle` daripada Chromium.
+  Ia mengukur semua 15 kombinasi (3 bahan x tema x mod tenang x kontras) dalam
+  SATU pelancaran pelayar, jadi ia pantas. Ia membuktikan tiga perkara:
+  bingkai bertukar bahan, permukaan kandungan kekal legap, dan setiap pasangan
+  teks/latar lulus WCAG AA. Jalankan `npm run build` dahulu.
+  Ia memulakan pelayan statiknya sendiri, jadi ia tidak bergantung pada
+  `npm run dev` yang sedang berjalan.
+  **Perangkap:** jangan guna `execFileSync` untuk memanggil Chromium apabila
+  pelayan itu berjalan dalam proses yang sama. `execFileSync` menyekat gelung
+  peristiwa Node, jadi pelayan tidak dapat membalas dan Chromium menunggu
+  sehingga tamat masa. Guna `spawn` tak segerak.
+  Satu lagi perangkap: melancarkan Chromium sekali per kombinasi sangat lambat
+  (13 x ~60 s). Muatkan apl sekali, kemudian tukar `data-skin`/`data-theme`/
+  `data-calm`/`data-contrast` pada `<html>` dan baca semula.
 
 Bunyi: `src/lib/audio.ts` (Web Audio API, sintetik sepenuhnya, selamat luar
 talian). Semua nama bunyi dalam `SoundName` mesti ada pemanggil. Lencana

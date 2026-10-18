@@ -17,6 +17,7 @@ import type {
   Profile,
   ReviewCard,
   Settings,
+  SkinId,
   StudyPlan,
   SubjectId,
   YearNum,
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
   // Lalai hidup: aplikasi ini bukan tuisyen, jadi satu sesi sehari
   // mengelakkan murid belajar berlebihan. Ibu bapa boleh mematikannya.
   dailyLimit: true,
+  skin: 'clay',
 };
 
 export function emptyData(): AppData {
@@ -71,6 +73,11 @@ export function newProfile(name: string, avatar: string, year: YearNum): Profile
 
 function isObj(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
+}
+
+/** Hanya terima id gaya yang dikenali; data lama/rosak jatuh ke 'clay'. */
+function isSkin(v: unknown): v is SkinId {
+  return v === 'clay' || v === 'leather' || v === 'book';
 }
 
 // Kekalkan eksport lama supaya modul sedia ada tidak perlu diubah.
@@ -253,6 +260,7 @@ function repairSettings(raw: unknown): Settings {
     fontScale: clampFont(Number(raw.fontScale)),
     // Lalai hidup jika medan tiada (data skema lama).
     dailyLimit: raw.dailyLimit !== false,
+    skin: isSkin(raw.skin) ? raw.skin : 'clay',
   };
   // Suara pilihan: hanya simpan rentetan yang munasabah.
   if (typeof raw.voiceMsUri === 'string' && raw.voiceMsUri) out.voiceMsUri = raw.voiceMsUri;

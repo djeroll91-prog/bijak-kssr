@@ -292,7 +292,19 @@ export interface Settings {
    * berlebihan dalam satu hari. Ibu bapa boleh mematikannya.
    */
   dailyLimit?: boolean;
+  /**
+   * Gaya bahan bingkai (chrome).
+   *
+   * Hanya bingkai aplikasi — jalur tajuk, nav bawah/atas dan latar sekeliling —
+   * bertukar bahan. Permukaan kandungan (kad, soalan, nota) kekal clay dan
+   * legap supaya teks sentiasa di atas latar cerah. Ini mengelakkan tekstur
+   * berada di belakang teks, yang akan merosakkan kebolehbacaan.
+   */
+  skin?: SkinId;
 }
+
+/** Gaya bahan bingkai. `clay` ialah lalai asal. */
+export type SkinId = 'clay' | 'leather' | 'book';
 
 export interface AppData {
   version: number;

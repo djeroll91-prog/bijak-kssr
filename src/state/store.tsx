@@ -270,8 +270,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     root.dataset.contrast = settings.contrast ? 'high' : 'normal';
     root.dataset.motion = settings.motion ? 'on' : 'off';
     root.dataset.theme = settings.dark ? 'dark' : 'light';
+    root.dataset.skin = settings.skin ?? 'clay';
     root.style.setProperty('--fs-scale', String(settings.fontScale));
-  }, [settings.calm, settings.contrast, settings.motion, settings.fontScale, settings.dark]);
+  }, [settings.calm, settings.contrast, settings.motion, settings.fontScale, settings.dark, settings.skin]);
 
   const go = useCallback((next: NavState) => {
     setHistory((h) => [...h, nav].slice(-30));

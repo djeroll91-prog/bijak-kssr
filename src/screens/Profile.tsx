@@ -339,6 +339,44 @@ export function ProfileScreen() {
             </div>
           </div>
 
+          {/* Gaya bahan bingkai — hanya chrome, kandungan kekal clay. */}
+          <div className="settings-row">
+            <span className="lead" aria-hidden="true">
+              🎨
+            </span>
+            <span className="grow">
+              <b>{t('profile.skin')}</b>
+              <small>{t('profile.skinDesc')}</small>
+            </span>
+            <div className="row layout-switch skin-switch" style={{ gap: 6 }}>
+              {(
+                [
+                  ['clay', t('profile.skinClay')],
+                  ['leather', t('profile.skinLeather')],
+                  ['book', t('profile.skinBook')],
+                ] as const
+              ).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className="chip"
+                  data-active={(settings.skin ?? 'clay') === mode ? 'true' : 'false'}
+                  style={
+                    (settings.skin ?? 'clay') === mode
+                      ? { background: 'var(--brand)', color: 'var(--on-fill)' }
+                      : undefined
+                  }
+                  onClick={() => {
+                    sound.play('pop');
+                    setSetting('skin', mode);
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Saiz teks */}
           <div className="settings-row">
             <span className="lead" aria-hidden="true">
