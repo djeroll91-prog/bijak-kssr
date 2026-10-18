@@ -8,7 +8,7 @@ dibungkus sebagai **APK Android** dan boleh dipasang sebagai PWA.
 
 - Semua teks antara muka mesti dwibahasa (BM/EN) melalui `src/lib/i18n.ts`.
   Jangan sekali-kali menulis rentetan Bahasa Melayu secara keras dalam komponen.
-- Semua aktiviti mesti ada kesan bunyi (`src/lib/audio.ts` ŌåÆ `sound.play(...)`) dan animasi.
+- Semua aktiviti mesti ada kesan bunyi (`src/lib/audio.ts` → `sound.play(...)`) dan animasi.
 - Palet warna lembut dan riang; elak warna terlalu terang/saturasi tinggi.
 - Guna `type` (bukan `interface`) dan pastikan `npx tsc --noEmit` lulus sebelum siap.
 
@@ -35,13 +35,33 @@ bash scripts/build-apk.sh                      # bina dist/bijak-kssr.apk
 1. **Guna `build-tools/35.0.1`, bukan 34.0.0.** `d8` dalam 34.0.0 (R8 8.2.2) ranap
    dengan `NullPointerException: Cannot invoke "String.length()"` apabila memproses
    kelas bersarang yang dikompil dengan JDK 21. Versi 35.0.1 berfungsi.
-2. **Tiada Gradle diperlukan.** APK dibina terus dengan `aapt2 compile` ŌåÆ `aapt2 link`
-   ŌåÆ `javac` ŌåÆ `d8` ŌåÆ `zipalign` ŌåÆ `apksigner`. Elak pergantungan muat turun besar.
+2. **Tiada Gradle diperlukan.** APK dibina terus dengan `aapt2 compile` → `aapt2 link`
+   → `javac` → `d8` → `zipalign` → `apksigner`. Elak pergantungan muat turun besar.
 3. **`zip` tiada dalam imej ini** — masukkan `classes.dex` ke dalam APK guna
    `zipfile` Python (APK ialah fail ZIP biasa).
 4. **`/dev/kvm` tiada**, jadi emulator Android tidak boleh dijalankan. Sahkan APK
    secara statik sahaja: `aapt2 dump badging`, `apksigner verify`, `dexdump -f`,
    dan pastikan setiap aset yang dirujuk `index.html` wujud dalam APK.
+4b. **Menyediakan SDK Android dari kosong (resepi disemak 2026).** Imej ini
+   tiada `java` dan tiada SDK. Resepi yang berjaya:
+   ```bash
+   sudo apt-get install -y openjdk-21-jdk-headless   # JDK 21 (17 tiada dalam trixie)
+   curl -sL -o /tmp/cmdtools.zip \
+     https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+   mkdir -p ~/android-sdk/cmdline-tools
+   unzip -q /tmp/cmdtools.zip -d /tmp/ct && mv /tmp/ct/cmdline-tools ~/android-sdk/cmdline-tools/latest
+   chmod +x ~/android-sdk/cmdline-tools/latest/bin/*
+   export ANDROID_HOME=~/android-sdk
+   export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+   yes | sdkmanager --licenses                      # WAJIB sebelum --install
+   sdkmanager --install "build-tools;35.0.1" "platforms;android-34"
+   export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+   bash scripts/build-apk.sh
+   ```
+   Perangkap: `commandlinetools` diekstrak tanpa bit laksana (chmod perlu);
+   `sdkmanager --install` gagal senyap sehingga lesen diterima; URL muat turun
+   `build-tools` langsung memberi 404 - guna sdkmanager.
+
 5. **`androidx.webkit` tidak digunakan.** Sebab itu `MainActivity` melaksanakan
    pemuat aset tersuai sendiri untuk hos maya `appassets.androidplatform.net`
    (menyajikan fail dari `assets/www`). Ini mengekalkan laluan mutlak seperti
@@ -252,7 +272,7 @@ berulang tanpa disedari.
   Perangkap harness: jsdom tiada `SpeechSynthesisUtterance`, jadi ujian mesti
   menyediakan kelas tiruan atau klik pilih suara akan gagal.
 - **Ujian navigasi guna `waitFor`, bukan `sleep` tetap.** Rantaian klik seperti
-  "Subjek ŌåÆ Matematik ŌåÆ topik ŌåÆ Mula Belajar" kadangkala melebihi `sleep(700)`
+  "Subjek → Matematik → topik → Mula Belajar" kadangkala melebihi `sleep(700)`
   apabila mesin sibuk (gagal sekali-sekala, bukan pepijat kod). Guna corak
   `await waitFor(() => /.../.test(text()))` untuk keputusan yang stabil.
 
@@ -273,8 +293,8 @@ berulang tanpa disedari.
 ## Bahasa antara muka
 
 Teks antara muka mesti dalam **Bahasa Malaysia**, bukan Bahasa Indonesia.
-Contoh pembetulan yang telah dibuat: `ketik` ŌåÆ `tekan`, `tukat` ŌåÆ `tukar`,
-`Paute` ŌåÆ `Pautan`. Sebelum terbit, imbas `src/lib/i18n.ts` dan `src/data/`
+Contoh pembetulan yang telah dibuat: `ketik` → `tekan`, `tukat` → `tukar`,
+`Paute` → `Pautan`. Sebelum terbit, imbas `src/lib/i18n.ts` dan `src/data/`
 untuk perkataan Indonesia (unduh, unggah, pengaturan, kirim, soal, dll.).
 
 ## Susun atur: telefon (APK) lwn web penuh (pelayar)
@@ -330,7 +350,7 @@ dan sebagainya. `settings.dark` disimpan melalui `src/lib/storage.ts`
 `VoiceEngine` dalam `src/lib/audio.ts` menggunakan Web Speech API. Had penting:
 sesetengah peranti/WebView tiada suara Bahasa Melayu, dan `speechSynthesis`
 mungkin tidak wujud langsung. Enjin menyediakan `voice.supported`, memilih
-suara terbaik yang ada (ms ŌåÆ nama "Malay" ŌåÆ id ŌåÆ null), dan memecahkan teks
+suara terbaik yang ada (ms → nama "Malay" → id → null), dan memecahkan teks
 panjang kepada ayat supaya bacaan tidak terhenti. UI menunjukkan makluman
 `profile.voiceNoSupport` bila peranti tiada enjin suara. Jika pengguna kata
 butang baca "tak berfungsi", semak `voice.supported` dahulu — ia bukan pepijat
@@ -340,13 +360,13 @@ kod jika peranti tiada enjin TTS.
 
 Masalah sebenar pengguna: macOS **tiada** suara Melayu, jadi enjin jatuh ke suara
 Indonesia (`id-ID`) dan sebutan berbunyi Indonesia. Penyelesaian ialah pemilih
-suara dalam aplikasi (Profil ŌåÆ Pilih Suara):
+suara dalam aplikasi (Profil → Pilih Suara):
 
 - Pilihan disimpan dalam `settings.voiceMsUri` dan `settings.voiceEnUri` (URI
   suara, bukan indeks — indeks berubah antara sesi/peranti).
 - `voice.setPreference('ms'|'en', uri|null)`; `null` bermakna automatik.
-- Susunan pemilihan: pilihan pengguna (jika masih ada pada peranti) ŌåÆ padanan
-  `ms-MY` ŌåÆ nama mengandungi "malay"/"melayu" ŌåÆ `id-ID` ŌåÆ senyap.
+- Susunan pemilihan: pilihan pengguna (jika masih ada pada peranti) → padanan
+  `ms-MY` → nama mengandungi "malay"/"melayu" → `id-ID` → senyap.
 - Jika pilihan pengguna hilang dari peranti (contoh suara awan Edge dimatikan),
   ia diabaikan dengan selamat dan pemilihan automatik digunakan semula.
 - UI mengelompokkan suara kepada tab Bahasa Melayu / Bahasa Inggeris dan melabel
