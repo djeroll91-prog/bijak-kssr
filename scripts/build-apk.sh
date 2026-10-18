@@ -11,6 +11,17 @@ PLATFORM="$SDK/platforms/android-34/android.jar"
 OUT="$APP/build"
 mkdir -p "$OUT/compiled" "$OUT/classes" "$OUT/dex"
 
+# Versi diambil daripada package.json supaya APK tidak pernah tertinggal
+# daripada kod. version-code mesti naik setiap keluaran, jika tidak Android
+# enggan memasang APK baharu di atas yang lama.
+VERSION_NAME="$(python3 -c "import json;print(json.load(open('$ROOT/package.json'))['version'])")"
+VERSION_CODE="$(python3 -c "
+import json
+v=json.load(open('$ROOT/package.json'))['version'].split('.')
+print(int(v[0])*10000 + int(v[1])*100 + int(v[2]))
+")"
+echo "==> versi: $VERSION_NAME (kod $VERSION_CODE)"
+
 echo "==> 1/7 salinan aset web ke assets/www"
 rm -rf "$APP/src/main/assets/www"
 mkdir -p "$APP/src/main/assets"
@@ -31,8 +42,8 @@ echo "==> 3/7 paut sumber + manifest (aapt2 link)"
   --java "$OUT/gen" \
   --min-sdk-version 24 \
   --target-sdk-version 34 \
-  --version-code 12 \
-  --version-name 1.12.0 \
+  --version-code "$VERSION_CODE" \
+  --version-name "$VERSION_NAME" \
   "$OUT/compiled/res.zip"
 
 echo "==> 4/7 kompil Java (javac)"
