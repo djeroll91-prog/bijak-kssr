@@ -52,6 +52,12 @@ interface McqArgs {
   cols?: 1 | 2;
   kind?: QuestionKind;
   n?: number;
+  /**
+   * Langkah kerja yang dipaparkan selepas murid menjawab. Biarkan kosong
+   * untuk soalan bukan pengiraan; `lib/steps.ts` akan cuba menjana langkah
+   * daripada bentuk gesaan.
+   */
+  steps?: readonly string[];
 }
 
 /** Bina soalan pilihan jawapan dengan pilihan yang dirawak. */
@@ -71,6 +77,7 @@ export function mcq(rng: Rng, a: McqArgs): Question {
     hint: a.hint,
     emoji: a.emoji,
     cols: a.cols ?? (options.every((o) => o.length <= 5) ? 2 : 1),
+    steps: a.steps ? [...a.steps] : undefined,
   };
 }
 
@@ -85,6 +92,7 @@ export function numeric(
     hint?: string;
     emoji?: string;
     speak?: string;
+    steps?: readonly string[];
   },
 ): Question {
   return {
@@ -97,6 +105,7 @@ export function numeric(
     explanation: a.explanation,
     hint: a.hint,
     emoji: a.emoji,
+    steps: a.steps ? [...a.steps] : undefined,
   };
 }
 

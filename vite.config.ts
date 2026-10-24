@@ -1,11 +1,19 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { readFileSync } from 'node:fs';
+
+/** Versi daripada package.json, disuntik ke dalam bundel. */
+const pkg = JSON.parse(readFileSync('./package.json', 'utf8')) as { version: string };
 
 export default defineConfig({
   // Laluan relatif supaya binaan berfungsi sama ada dihoskan pada root hos
   // (APK, WebView) atau di bawah sub-laluan (cth. GitHub Pages /bijak-kssr/).
   base: './',
+  define: {
+    // Satu sumber kebenaran untuk versi: package.json.
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   plugins: [
     react(),
     VitePWA({

@@ -133,6 +133,18 @@ export const EXTRA_NOTES: Record<string, Note[]> = {
       ],
     },
     {
+      kind: 'tip',
+      title: 'Contoh Kerja: Membundar',
+      bullets: [
+        'Bundarkan 462 kepada puluh terdekat. 462 terletak antara 460 dan 470.',
+        'Digit puluh ialah 6. Digit sa ialah 2.',
+        'Sebab 2 kurang daripada 5, kekalkan 6. Jadi 462 ≈ 460.',
+        'Bundarkan 758 kepada ratus terdekat. 758 terletak antara 700 dan 800.',
+        'Digit ratus ialah 7. Digit puluh ialah 5.',
+        'Sebab 5 sama dengan 5, tambah 1 pada 7 menjadi 8. Jadi 758 ≈ 800.',
+      ],
+    },
+    {
       kind: 'fun',
       title: 'Tahukah Kamu?',
       body: 'Untuk menulis 1000 dalam perkataan, kita tulis "seribu" — bukan "sepuluh ratus"!',
@@ -263,6 +275,18 @@ export const EXTRA_NOTES: Record<string, Note[]> = {
       ],
     },
     {
+      kind: 'tip',
+      title: 'Contoh Kerja: Membundar',
+      bullets: [
+        'Bundarkan 3 750 kepada ratus terdekat. Ia terletak antara 3 700 dan 3 800.',
+        'Digit ratus ialah 7. Digit puluh ialah 5.',
+        'Sebab 5 sama dengan 5, tambah 1 pada 7 menjadi 8. Jadi 3 750 ≈ 3 800.',
+        'Bundarkan 6 412 kepada ribu terdekat. Ia terletak antara 6 000 dan 7 000.',
+        'Digit ribu ialah 6. Digit ratus ialah 4.',
+        'Sebab 4 kurang daripada 5, kekalkan 6. Jadi 6 412 ≈ 6 000.',
+      ],
+    },
+    {
       kind: 'fun',
       title: 'Tahukah Kamu?',
       body: 'Tanda pemisah ruang (4 728) memudahkan kita membaca nombor besar.',
@@ -390,6 +414,18 @@ export const EXTRA_NOTES: Record<string, Note[]> = {
         '6 digit merangkumi ratus ribu hingga sa.',
         'Contoh: 254 318 = 200 000 + 50 000 + 4 000 + 300 + 10 + 8.',
         'Bundar kepada puluh ribu, ribu, atau ratus terdekat.',
+      ],
+    },
+    {
+      kind: 'tip',
+      title: 'Contoh Kerja: Membundar',
+      bullets: [
+        'Bundarkan 27 480 kepada ribu terdekat. Ia terletak antara 27 000 dan 28 000.',
+        'Digit ribu ialah 7. Digit ratus ialah 4.',
+        'Sebab 4 kurang daripada 5, kekalkan 7. Jadi 27 480 ≈ 27 000.',
+        'Bundarkan 35 800 kepada puluh ribu terdekat. Ia terletak antara 30 000 dan 40 000.',
+        'Digit puluh ribu ialah 3. Digit ribu ialah 5.',
+        'Sebab 5 sama dengan 5, tambah 1 pada 3 menjadi 4. Jadi 35 800 ≈ 40 000.',
       ],
     },
     {
@@ -539,6 +575,18 @@ export const EXTRA_NOTES: Record<string, Note[]> = {
       ],
     },
     {
+      kind: 'tip',
+      title: 'Contoh Kerja: Membundar',
+      bullets: [
+        'Bundarkan 348 000 kepada ratus ribu terdekat. Ia terletak antara 300 000 dan 400 000.',
+        'Digit ratus ribu ialah 3. Digit puluh ribu ialah 4.',
+        'Sebab 4 kurang daripada 5, kekalkan 3. Jadi 348 000 ≈ 300 000.',
+        'Bundarkan 2 750 000 kepada juta terdekat. Ia terletak antara 2 000 000 dan 3 000 000.',
+        'Digit juta ialah 2. Digit ratus ribu ialah 7.',
+        'Sebab 7 ialah 5 atau lebih, tambah 1 pada 2 menjadi 3. Jadi 2 750 000 ≈ 3 000 000.',
+      ],
+    },
+    {
       kind: 'fun',
       title: 'Tahukah Kamu?',
       body: '1 juta saat mengambil masa kira-kira 11 setengah hari!',
@@ -666,6 +714,18 @@ export const EXTRA_NOTES: Record<string, Note[]> = {
         'Nombor boleh sampai 10 000 000 (8 digit).',
         'Nilai tempat termasuk juta dan puluh juta.',
         'Bundar kepada juta terdekat: lihat digit ratus ribu.',
+      ],
+    },
+    {
+      kind: 'tip',
+      title: 'Contoh Kerja: Membundar',
+      bullets: [
+        'Bundarkan 4 650 000 kepada juta terdekat. Ia terletak antara 4 000 000 dan 5 000 000.',
+        'Digit juta ialah 4. Digit ratus ribu ialah 6.',
+        'Sebab 6 ialah 5 atau lebih, tambah 1 pada 4 menjadi 5. Jadi 4 650 000 ≈ 5 000 000.',
+        'Bundarkan 8 320 000 kepada juta terdekat. Ia terletak antara 8 000 000 dan 9 000 000.',
+        'Digit juta ialah 8. Digit ratus ribu ialah 3.',
+        'Sebab 3 kurang daripada 5, kekalkan 8. Jadi 8 320 000 ≈ 8 000 000.',
       ],
     },
     {

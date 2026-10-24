@@ -422,6 +422,60 @@ murid tidak melihat soalan yang sama berulang kali:
 - Ujian: `node verify-exam.mjs` (kepelbagaian + elak ulangan) dan
   `node verify-generators.mjs` (bank sihat).
 
+## Cara tackle, langkah kerja & garis nombor (v1.18.0)
+
+Tiga ciri membantu murid *faham cara menjawab*, bukan sekadar meneka jawapan.
+
+### 1. Enjin langkah "Cara jawab" — `src/lib/steps.ts`
+
+- `deriveSteps(q, { subject, year })` menukar gesaan matematik kepada langkah
+  kerja (bundar, nilai tempat, tambah/tolak menegak dengan kumpul semula dan
+  pinjam, darab, bahagi, tukar unit, masa, wang, pecahan/peratus, luas).
+- **Pengadang keselamatan wajib:** setiap pengendali mengira jawapannya sendiri
+  dan membandingkan dengan `q.answer`. Jika tidak sepadan, ia memulangkan
+  `undefined`. Jangan sekali-kali keluarkan langkah tanpa semakan ini — langkah
+  salah lebih memudaratkan daripada tiada langkah.
+- Soalan subjek `english` sengaja dilangkau (langkah BM pada gesaan Inggeris
+  mengelirukan).
+- Nombor dalam gesaan boleh ada pemisah ribuan (`8,660`). Pengendali mesti
+  menerima koma; ini punca utama liputan rendah sebelum ini.
+- `roundingModel(prompt)` mendedahkan geometri pembundaran (lower/upper/digit/
+  decider) dan dikongsi oleh langkah bertulis serta animasi garis nombor, jadi
+  ayat dan gambar sentiasa bercakap tentang nombor yang sama.
+- Liputan semasa: 427/4730 soalan boleh kira (~9%), 28/200 topik.
+- Ujian: `node verify-steps.mjs` — WAJIB lulus sebelum setiap keluaran.
+
+### 2. Strategi menjawab — `src/data/strategies.ts`
+
+- `strategyForTopic(topicId, subject, year)` memulangkan tajuk + langkah +
+  kata kunci. Strategi khusus topik (pembundaran T2–T6) menggantikan tajuk dan
+  langkah subjek, tetapi **mewarisi** `keywords` subjek. Tanpa warisan ini,
+  murid yang membuka bab pembundaran kehilangan rujukan kata kunci matematik.
+- Teks dipandu kunci i18n (`strat.*`), jadi tiada rentetan BM berkod keras dalam
+  komponen.
+- Ujian: `node test-strategy.mjs` (jsdom; menyemak kad strategi, kata kunci,
+  garis nombor, dan pertukaran bahasa BM/EN).
+
+### 3. Animasi garis nombor — `src/components/NumberLine.tsx`
+
+- Menunjukkan di mana nombor berada antara dua gandaan, kemudian menggerakkan
+  penanda ke jawapan. Ini mengajar *mengapa* bundar ke atas/bawah, berbanding
+  hanya membaca peraturan.
+- Satu-satunya sumber gerakan ialah peralihan `left` pada `.numline-marker`.
+  Mod tenang (`data-calm=on`), gerakan mati (`data-motion=off`) dan
+  `prefers-reduced-motion` mematikannya.
+- Garis nombor hanya dipaparkan pada topik yang notasinya menyebut "bundar".
+  Contoh setiap tahun dalam `ROUND_SAMPLES` (Notes.tsx) mesti kekal sepadan
+  dengan `roundingModel`.
+- Ujian: `node verify-round-notes.mjs` (semak contoh kerja dalam nota) dan
+  `node test-strategy.mjs`.
+
+### Versi aplikasi
+
+`src/screens/Profile.tsx` memaparkan `__APP_VERSION__`, disuntik oleh Vite
+daripada `package.json` (`define` dalam `vite.config.ts`). Jangan kodkan keras
+versi dalam komponen — ia akan lapuk tanpa disedari.
+
 ## Warna, bunyi & animasi (aksesibiliti)
 
 Mod paparan dikawal oleh atribut pada `<html>`: `data-theme` (cerah/gelap),

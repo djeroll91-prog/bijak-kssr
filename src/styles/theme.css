@@ -2680,6 +2680,206 @@ ul {
 }
 
 /* ------------------------------------------------------------------ */
+/* Garis nombor (animasi pembundaran)                                  */
+/* ------------------------------------------------------------------ */
+
+.numline {
+  border-radius: 14px;
+  padding: 12px 14px 10px;
+  background: var(--brand-soft);
+  border: 1px solid rgba(108, 92, 231, 0.24);
+}
+
+.numline-title {
+  margin: 0 0 14px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.numline-track {
+  position: relative;
+  height: 44px;
+  margin: 0 6px;
+}
+
+/* Garis mendatar di tengah trek. */
+.numline-axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 999px;
+  background: var(--brand);
+  opacity: 0.35;
+}
+
+/* Tanda di kedua-dua hujung garis. */
+.numline-tick {
+  position: absolute;
+  top: 50%;
+  width: 3px;
+  height: 18px;
+  margin-top: -9px;
+  border-radius: 999px;
+  background: var(--brand);
+}
+
+/* Penanda titik tengah: pemisah 5. */
+.numline-mid {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 12px;
+  margin-top: -6px;
+  border-radius: 999px;
+  background: var(--ink-faint);
+  opacity: 0.5;
+}
+
+/* Penanda yang bergerak dari nombor asal ke jawapan. */
+.numline-marker {
+  position: absolute;
+  top: 50%;
+  margin-top: -11px;
+  margin-left: -11px;
+  transition: left 0.75s var(--ease-pop, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.numline-dot {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--accent);
+  border: 3px solid var(--surface);
+  box-shadow: 0 3px 8px rgba(59, 51, 85, 0.28);
+}
+
+/* Label nombor asal, dipaparkan sebelum penanda bergerak. */
+.numline-origin {
+  position: absolute;
+  top: -2px;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.numline-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.numline-end {
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: var(--ink-soft);
+}
+
+.numline-answer {
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+
+.numline-note {
+  margin: 8px 0 0;
+}
+
+/* Mod tenang / animasi mati: tiada peralihan, penanda terus di jawapan. */
+:root[data-motion='off'] .numline-marker,
+:root[data-calm='on'] .numline-marker {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .numline-marker {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Kad strategi menjawab                                               */
+/* ------------------------------------------------------------------ */
+
+.strat-card {
+  border-radius: var(--r-lg);
+  padding: var(--sp-4);
+  background: var(--surface);
+  box-shadow: var(--sh-1);
+}
+
+.strat-title {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.strat-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.strat-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.strat-num {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.strat-kw {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.strat-kw-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  border: 1px solid rgba(152, 101, 24, 0.2);
+  font-size: 0.72rem;
+  color: var(--ink);
+}
+
+.strat-kw-item b {
+  font-weight: 900;
+}
+
+/* ------------------------------------------------------------------ */
 /* Tips menjawab                                                       */
 /* ------------------------------------------------------------------ */
 

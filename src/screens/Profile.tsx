@@ -14,7 +14,6 @@ import { copyText, shareUrl } from '../lib/share';
 import type { YearNum } from '../data/types';
 
 const AVATARS = ['🦊', '🐼', '🐯', '🐨', '🐸', '🦉', '🐙', '🦄', '🐲', '🐰', '🐵', '🐧'];
-const APP_VERSION = '1.14.0';
 
 export function ProfileScreen() {
   const {
@@ -584,7 +583,7 @@ export function ProfileScreen() {
         <p className="section-title">{t('profile.about')}</p>
         <div className="card-flat">
           <p className="tiny muted center">
-            🎒 <b>{t('app.name')}</b> {t('profile.version')} {APP_VERSION}
+            🎒 <b>{t('app.name')}</b> {t('profile.version')} {__APP_VERSION__}
           </p>
           <p className="tiny muted center" style={{ marginTop: 6 }}>
             {settings.contrast ? '🔍' : '📚'} {stats.topics} {t('profile.catalogInfo')} • {stats.subjects}{' '}

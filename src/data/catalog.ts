@@ -22,6 +22,7 @@ import { PENDIDIKAN_ISLAM_GENERATORS } from '../lib/generators/pendidikan-islam'
 import { EXTRA_QUESTIONS } from '../lib/generators/extra-bank';
 import type { Generator } from '../lib/generators/shared';
 import { defaultHint, mcq } from '../lib/generators/shared';
+import { deriveSteps } from '../lib/steps';
 import { Rng } from '../lib/rng';
 
 export const ALL_TOPICS: Topic[] = [
@@ -125,6 +126,10 @@ export function generateQuestions(
     ...q,
     id: `${topicId}#${seed ?? 0}#${i}`,
     hint: defaultHint(q),
+    // Isi langkah "cara jawab" apabila penjana tidak menyediakannya. Fungsi
+    // ini mengira sendiri dan hanya menerima hasil yang sepadan dengan
+    // jawapan rasmi, jadi langkah salah tidak boleh terpapar.
+    steps: deriveSteps(q, { subject: topic.subject, year: topic.year }),
   }));
 }
 
