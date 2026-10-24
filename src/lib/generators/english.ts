@@ -1317,26 +1317,704 @@ function en5LanguageArts(_y: number, rng: Rng, count: number): Question[] {
   });
 }
 
+/* ------------------------------------------------------------------ */
+/* Listening (Tahun 1-6)                                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Data bunyi huruf untuk soalan mendengar Tahap I.
+ *
+ * Setiap entri menyimpan bunyi awal dan akhir yang sebenar, bukan hanya
+ * huruf pertama, kerana sesetengah huruf berbunyi lain (cth. "c" dalam
+ * "city" berbunyi /s/). Hanya perkataan yang tidak kabur digunakan.
+ */
+const SOUND_WORDS: { w: string; e: string; ms: string; first: string; last: string }[] = [
+  { w: 'sun', e: '☀️', ms: 'matahari', first: 's', last: 'n' },
+  { w: 'cat', e: '🐱', ms: 'kucing', first: 'c', last: 't' },
+  { w: 'ball', e: '⚽', ms: 'bola', first: 'b', last: 'l' },
+  { w: 'dog', e: '🐶', ms: 'anjing', first: 'd', last: 'g' },
+  { w: 'hat', e: '🎩', ms: 'topi', first: 'h', last: 't' },
+  { w: 'map', e: '🗺️', ms: 'peta', first: 'm', last: 'p' },
+  { w: 'pen', e: '🖊️', ms: 'pen', first: 'p', last: 'n' },
+  { w: 'cup', e: '🥤', ms: 'cawan', first: 'c', last: 'p' },
+  { w: 'bus', e: '🚌', ms: 'bas', first: 'b', last: 's' },
+  { w: 'fish', e: '🐟', ms: 'ikan', first: 'f', last: 'sh' },
+  { w: 'book', e: '📕', ms: 'buku', first: 'b', last: 'k' },
+  { w: 'milk', e: '🥛', ms: 'susu', first: 'm', last: 'k' },
+  { w: 'nest', e: '🪹', ms: 'sarang', first: 'n', last: 't' },
+  { w: 'kite', e: '🪁', ms: 'layang-layang', first: 'k', last: 't' },
+  { w: 'leaf', e: '🍃', ms: 'daun', first: 'l', last: 'f' },
+  { w: 'rain', e: '🌧️', ms: 'hujan', first: 'r', last: 'n' },
+];
+
+function en1ListeningSounds(_y: number, rng: Rng, count: number): Question[] {
+  return fill(count, (i) => {
+    const it = rng.pick(SOUND_WORDS);
+    if (i % 3 === 0) {
+      const pool = SOUND_WORDS.filter((x) => x.first !== it.first).map((x) => x.first);
+      return mcq(rng, {
+        prefix: 'en1-listening',
+        prompt: `Which sound does "${it.w}" start with?`,
+        promptSub: `Bunyi apa pada awal "${it.w}"?`,
+        answer: it.first,
+        distractors: [...new Set(pool)].slice(0, 3),
+        explanation: `"${it.w}" (${it.ms}) starts with the sound "${it.first}".`,
+        emoji: '👂',
+        cols: 2,
+        speak: `Which sound does ${it.w} start with?`,
+      });
+    }
+    if (i % 3 === 1) {
+      const pool = SOUND_WORDS.filter((x) => x.last !== it.last).map((x) => x.last);
+      return mcq(rng, {
+        prefix: 'en1-listening',
+        prompt: `Which sound does "${it.w}" end with?`,
+        promptSub: `Bunyi apa pada akhir "${it.w}"?`,
+        answer: it.last,
+        distractors: [...new Set(pool)].slice(0, 3),
+        explanation: `"${it.w}" (${it.ms}) ends with the sound "${it.last}".`,
+        emoji: '👂',
+        cols: 2,
+        speak: `Which sound does ${it.w} end with?`,
+      });
+    }
+    // Label kanan mesti unik: dua perkataan berkongsi bunyi pertama yang
+    // sama akan menghasilkan pasangan mengelirukan (cth. "cat" dan "cup").
+    const usedFirst = new Set([it.first]);
+    const others: typeof SOUND_WORDS = [];
+    for (const cand of rng.shuffle(SOUND_WORDS)) {
+      if (usedFirst.has(cand.first)) continue;
+      usedFirst.add(cand.first);
+      others.push(cand);
+      if (others.length >= 2) break;
+    }
+    return match({
+      prefix: 'en1-listening',
+      prompt: 'Match each word with its first sound.',
+      promptSub: 'Padankan perkataan dengan bunyi pertamanya.',
+      pairs: [it, ...others].map((x) => ({ left: x.w, right: x.first })),
+      explanation: 'Listen to the first sound of each word.',
+      emoji: '👂',
+    });
+  });
+}
+
+/**
+ * Arahan bilik darjah untuk soalan mendengar Tahun 2.
+ *
+ * `action` ialah jawapan ringkas dalam Bahasa Inggeris supaya pilihan jawapan
+ * kekal dalam bahasa yang diuji. `ms` hanya menjadi nota bantuan dwibahasa.
+ */
+const CLASSROOM_STEPS: { say: string; action: string; ms: string; emoji: string }[] = [
+  { say: 'Open your book at page ten.', action: 'Open the book', ms: 'Buka buku kamu.', emoji: '📖' },
+  { say: 'Take out your pencil.', action: 'Take out a pencil', ms: 'Keluarkan pensel kamu.', emoji: '✏️' },
+  { say: 'Write your name at the top.', action: 'Write your name', ms: 'Tulis nama kamu.', emoji: '📝' },
+  { say: 'Close the door, please.', action: 'Close the door', ms: 'Tutup pintu.', emoji: '🚪' },
+  { say: 'Put your bag under the table.', action: 'Put the bag under the table', ms: 'Letakkan beg di bawah meja.', emoji: '🎒' },
+  { say: 'Stand up and stretch.', action: 'Stand up and stretch', ms: 'Berdiri dan regangkan badan.', emoji: '🧍' },
+  { say: 'Sit down quietly.', action: 'Sit down quietly', ms: 'Duduk dengan tenang.', emoji: '🪑' },
+  { say: 'Look at the whiteboard.', action: 'Look at the whiteboard', ms: 'Lihat papan putih.', emoji: '📋' },
+  { say: 'Raise your hand to answer.', action: 'Raise your hand', ms: 'Angkat tangan kamu.', emoji: '🙋' },
+  { say: 'Keep your books in the shelf.', action: 'Keep the books in the shelf', ms: 'Simpan buku di rak.', emoji: '📚' },
+];
+
+/**
+ * Rutin tetap untuk soalan susun urutan.
+ *
+ * Tertibnya sengaja ditetapkan (bukan dirawak) kerana arahan bilik darjah
+ * yang berbeza tidak mempunyai satu urutan yang betul.
+ */
+const MORNING_ROUTINE: string[] = [
+  'Say good morning to your teacher.',
+  'Sit down at your place.',
+  'Take out your books and pencil.',
+  'Listen to the teacher carefully.',
+];
+
+function en2ListeningInstructions(_y: number, rng: Rng, count: number): Question[] {
+  const ORDER_WORDS: { w: string; pos: string; ms: string }[] = [
+    { w: 'First', pos: 'first', ms: 'mula-mula' },
+    { w: 'Then', pos: 'second', ms: 'kemudian' },
+    { w: 'Next', pos: 'third', ms: 'selepas itu' },
+    { w: 'Finally', pos: 'last', ms: 'akhir sekali' },
+  ];
+  return fill(count, (i) => {
+    if (i % 3 === 2) {
+      const start = rng.int(0, MORNING_ROUTINE.length - 3);
+      const picks = MORNING_ROUTINE.slice(start, start + 3);
+      return order({
+        prefix: 'en2-listening',
+        prompt: 'Arrange these morning routine steps in the correct order.',
+        promptSub: 'Susun langkah rutin pagi ini mengikut urutan yang betul.',
+        items: rng.shuffle(picks),
+        correctOrder: picks,
+        explanation: 'A morning routine follows a clear order from start to finish.',
+        emoji: '👂',
+      });
+    }
+    const it = rng.pick(CLASSROOM_STEPS);
+    if (i % 3 === 0) {
+      const others = CLASSROOM_STEPS.filter((x) => x.action !== it.action);
+      return mcq(rng, {
+        prefix: 'en2-listening',
+        prompt: `Your teacher says:\n\n"${it.say}"\n\nWhat should you do?`,
+        promptSub: `Apakah yang perlu kamu lakukan? (${it.ms})`,
+        answer: it.action,
+        distractors: rng.sample(others, 3).map((x) => x.action),
+        explanation: `"${it.say}" means you should ${it.action.charAt(0).toLowerCase()}${it.action.slice(1)}.`,
+        emoji: it.emoji,
+        cols: 1,
+        speak: it.say,
+      });
+    }
+    const it2 = rng.pick(ORDER_WORDS);
+    const others = ORDER_WORDS.filter((x) => x.w !== it2.w);
+    return mcq(rng, {
+      prefix: 'en2-listening',
+      prompt: `Your teacher says:\n\n"${it2.w}, open your book."\n\nWhat does "${it2.w}" tell you about the time?`,
+      promptSub: `Apakah maksud "${it2.w}"?`,
+      answer: `It happens ${it2.pos}`,
+      distractors: others.map((x) => `It happens ${x.pos}`),
+      explanation: `"${it2.w}" (${it2.ms}) tells you when something happens — here it happens ${it2.pos}.`,
+      emoji: '👂',
+      cols: 2,
+      speak: `${it2.w}, open your book.`,
+    });
+  });
+}
+
+/**
+ * Cerita pendek untuk soalan mendengar Tahun 3.
+ *
+ * `speak` membaca cerita penuh; soalan menyemak kefahaman, bukan hafalan.
+ */
+const SHORT_STORIES: {
+  t: string;
+  ms: string;
+  q: string;
+  a: string;
+  d: string[];
+  why: string;
+  main: string;
+}[] = [
+  {
+    t: 'Nabil found a small kitten under the stairs. It was wet and cold. He took it home and gave it warm milk. Now the kitten sleeps beside his bed every night.',
+    ms: 'Nabil menjumpai anak kucing di bawah tangga. Ia basah dan sejuk. Dia membawanya pulang dan memberinya susu suam.',
+    q: 'Where did Nabil find the kitten?',
+    a: 'Under the stairs',
+    d: ['In the garden', 'At the market', 'Behind the school'],
+    why: 'The story says he found it under the stairs.',
+    main: 'Nabil found a kitten and took care of it',
+  },
+  {
+    t: 'Every morning, Mei Ling walks to school with her neighbour. They pass a bakery and smell fresh bread. Mei Ling saves her pocket money to buy one bun on Friday.',
+    ms: 'Setiap pagi, Mei Ling berjalan ke sekolah dengan jirannya. Mereka melalui kedai roti.',
+    q: 'When does Mei Ling buy a bun?',
+    a: 'On Friday',
+    d: ['On Monday', 'Every day', 'On Sunday'],
+    why: 'The story says she buys one bun on Friday.',
+    main: 'Mei Ling saves money to buy a bun on Friday',
+  },
+  {
+    t: 'The school library was noisy, so the librarian put up a sign. It said, "Please whisper." After that, everyone spoke softly and the library became a calm place to read.',
+    ms: 'Perpustakaan sekolah bising, jadi pustakawan meletakkan tanda "Sila berbisik".',
+    q: 'Why did the librarian put up a sign?',
+    a: 'Because the library was noisy',
+    d: ['Because the books were old', 'Because it was raining', 'Because school was closed'],
+    why: 'The story says the library was noisy, so she put up a sign.',
+    main: 'The librarian asked everyone to whisper',
+  },
+  {
+    t: 'Arif planted a seed in a small pot. He watered it every day and kept it near the window. After two weeks, a tiny green shoot appeared. Arif was very happy.',
+    ms: 'Arif menanam biji benih dalam pasu kecil dan menyiramnya setiap hari.',
+    q: 'What appeared after two weeks?',
+    a: 'A tiny green shoot',
+    d: ['A red flower', 'A big tree', 'A ripe fruit'],
+    why: 'The story says a tiny green shoot appeared after two weeks.',
+    main: 'Arif grew a plant from a seed',
+  },
+];
+
+function en3ListeningStories(_y: number, rng: Rng, count: number): Question[] {
+  return fill(count, (i) => {
+    const s = rng.pick(SHORT_STORIES);
+    if (i % 2 === 0) {
+      return mcq(rng, {
+        prefix: 'en3-listening',
+        prompt: `Listen to the story:\n\n"${s.t}"\n\n${s.q}`,
+        promptSub: 'Dengar cerita, kemudian jawab soalan.',
+        answer: s.a,
+        distractors: s.d,
+        explanation: s.why,
+        emoji: '📖',
+        cols: 1,
+        speak: `${s.t} ${s.q}`,
+      });
+    }
+    return trueFalse({
+      prefix: 'en3-listening',
+      prompt: `Listen to the story:\n\n"${s.t}"\n\nTrue or false: ${s.main}.`,
+      promptSub: 'Betul atau salah?',
+      isTrue: true,
+      explanation: `${s.why} This is the main point of the story.`,
+      emoji: '👂',
+      speak: `${s.t} True or false: ${s.main}.`,
+      lang: 'en',
+    });
+  });
+}
+
+/**
+ * Pengumuman sekolah untuk soalan mendengar Tahun 4.
+ *
+ * Setiap pengumuman menyimpan beberapa `qs` supaya kertas peperiksaan boleh
+ * menyoal sudut berbeza daripada bahan yang sama. Tanpa ini, kertas 30 soalan
+ * terpaksa mengulang pengumuman yang sama dan menjadi terlalu serupa.
+ */
+const ANNOUNCEMENTS: {
+  t: string;
+  ms: string;
+  qs: { q: string; a: string; d: string[]; why: string }[];
+}[] = [
+  {
+    t: 'Attention, please. The school library will close at four o\'clock today. Please return your books before then.',
+    ms: 'Perhatian. Perpustakaan sekolah akan tutup pada pukul empat hari ini.',
+    qs: [
+      { q: 'What time will the library close?', a: 'Four o\'clock', d: ['Three o\'clock', 'Five o\'clock', 'Six o\'clock'], why: 'The announcement says the library will close at four o\'clock.' },
+      { q: 'What should pupils do before the library closes?', a: 'Return their books', d: ['Buy new books', 'Clean the shelves', 'Pay a fine'], why: 'The announcement asks pupils to return their books before then.' },
+    ],
+  },
+  {
+    t: 'Good morning, pupils. The football practice is cancelled today because of heavy rain. It will be held tomorrow at the same time.',
+    ms: 'Latihan bola sepak dibatalkan hari ini kerana hujan lebat.',
+    qs: [
+      { q: 'Why is football practice cancelled?', a: 'Because of heavy rain', d: ['Because the coach is away', 'Because the field is new', 'Because it is a holiday'], why: 'The announcement says it is cancelled because of heavy rain.' },
+      { q: 'When will football practice be held?', a: 'Tomorrow', d: ['Today', 'Next week', 'This evening'], why: 'The announcement says it will be held tomorrow at the same time.' },
+    ],
+  },
+  {
+    t: 'Please note that the canteen will serve free milk every Wednesday during recess. Bring your own cup.',
+    ms: 'Kantin akan memberi susu percuma setiap hari Rabu waktu rehat.',
+    qs: [
+      { q: 'What must pupils bring?', a: 'Their own cup', d: ['Their own food', 'A football', 'A library book'], why: 'The announcement says, "Bring your own cup."' },
+      { q: 'When is free milk served?', a: 'Every Wednesday during recess', d: ['Every Monday morning', 'Every Friday after school', 'Every day at noon'], why: 'The announcement says every Wednesday during recess.' },
+    ],
+  },
+  {
+    t: 'This is a reminder that the school bus will leave at seven fifteen tomorrow. Please be at the gate five minutes early.',
+    ms: 'Bas sekolah akan bertolak pada pukul tujuh suku esok.',
+    qs: [
+      { q: 'When should pupils be at the gate?', a: 'Five minutes early', d: ['At seven fifteen', 'After the bell', 'At eight o\'clock'], why: 'The announcement asks pupils to be at the gate five minutes early.' },
+      { q: 'What time will the school bus leave?', a: 'Seven fifteen', d: ['Five minutes early', 'Eight o\'clock', 'Seven o\'clock'], why: 'The announcement says the bus will leave at seven fifteen.' },
+    ],
+  },
+  {
+    t: 'The book fair will be held in the school hall from Monday to Wednesday. Pupils may visit during recess only. Please bring small notes to buy books.',
+    ms: 'Pesta buku akan diadakan di dewan sekolah dari Isnin hingga Rabu.',
+    qs: [
+      { q: 'Where will the book fair be held?', a: 'In the school hall', d: ['In the library', 'In the canteen', 'On the field'], why: 'The announcement says the book fair will be in the school hall.' },
+      { q: 'When may pupils visit the book fair?', a: 'During recess only', d: ['After school', 'Before assembly', 'At any time'], why: 'The announcement says pupils may visit during recess only.' },
+    ],
+  },
+  {
+    t: 'Pupils in Year Four will have a dental check-up on Thursday morning. Please bring your health card and wait outside the clinic quietly.',
+    ms: 'Murid Tahun Empat akan menjalani pemeriksaan gigi pada pagi Khamis.',
+    qs: [
+      { q: 'What should pupils bring for the dental check-up?', a: 'Their health card', d: ['Their toothbrush', 'A water bottle', 'Their report card'], why: 'The announcement asks pupils to bring their health card.' },
+      { q: 'Where should pupils wait?', a: 'Outside the clinic', d: ['In the classroom', 'In the hall', 'At the gate'], why: 'The announcement says to wait outside the clinic quietly.' },
+    ],
+  },
+];
+
+function en4ListeningAnnouncements(_y: number, rng: Rng, count: number): Question[] {
+  return fill(count, (i) => {
+    const a = rng.pick(ANNOUNCEMENTS);
+    if (i % 4 === 3) {
+      return trueFalse({
+        prefix: 'en4-listening',
+        prompt: `Listen to the announcement:\n\n"${a.t}"\n\nThe main purpose of this announcement is to give information.`,
+        promptSub: 'Betul atau salah?',
+        isTrue: true,
+        explanation: a.qs[0].why,
+        emoji: '📢',
+        speak: `${a.t} The main purpose of this announcement is to give information.`,
+        lang: 'en',
+      });
+    }
+    const item = rng.pick(a.qs);
+    return mcq(rng, {
+      prefix: 'en4-listening',
+      prompt: `Listen to the announcement:\n\n"${a.t}"\n\n${item.q}`,
+      promptSub: 'Dengar pengumuman, kemudian jawab soalan.',
+      answer: item.a,
+      distractors: item.d,
+      explanation: item.why,
+      emoji: '📢',
+      cols: 1,
+      speak: `${a.t} ${item.q}`,
+    });
+  });
+}
+
+/** Laporan ringkas untuk soalan mendengar Tahun 5. */
+const REPORTS: { t: string; ms: string; q: string; a: string; d: string[]; why: string }[] = [
+  {
+    t: 'Malaysia has thirteen states and three federal territories. The largest state is Sarawak, and the smallest is Perlis.',
+    ms: 'Malaysia mempunyai tiga belas negeri dan tiga wilayah persekutuan.',
+    q: 'Which is the largest state in Malaysia?',
+    a: 'Sarawak',
+    d: ['Perlis', 'Selangor', 'Johor'],
+    why: 'The report says the largest state is Sarawak.',
+  },
+  {
+    t: 'Mount Kinabalu is the tallest mountain in Malaysia. It is about four thousand and ninety-five metres high and is in Sabah.',
+    ms: 'Gunung Kinabalu ialah gunung tertinggi di Malaysia, di Sabah.',
+    q: 'Where is Mount Kinabalu?',
+    a: 'In Sabah',
+    d: ['In Sarawak', 'In Pahang', 'In Perak'],
+    why: 'The report says Mount Kinabalu is in Sabah.',
+  },
+  {
+    t: 'Recycling reduces waste. Paper, plastic and glass can all be recycled. Recycling also saves energy and keeps the environment clean.',
+    ms: 'Kitar semula mengurangkan sisa dan menjaga kebersihan alam.',
+    q: 'Which materials can be recycled according to the report?',
+    a: 'Paper, plastic and glass',
+    d: ['Food and water', 'Sand and stone', 'Wood and leaves'],
+    why: 'The report lists paper, plastic and glass.',
+  },
+  {
+    t: 'Malaysia is a tropical country. It is warm all year, with rain in most months. Temperatures usually range from twenty-one to thirty-five degrees Celsius.',
+    ms: 'Malaysia ialah negara tropika yang panas sepanjang tahun.',
+    q: 'What is the usual temperature range in Malaysia?',
+    a: 'Twenty-one to thirty-five degrees',
+    d: ['Ten to twenty degrees', 'Forty to fifty degrees', 'Zero to ten degrees'],
+    why: 'The report gives the range as twenty-one to thirty-five degrees Celsius.',
+  },
+];
+
+function en5ListeningReports(_y: number, rng: Rng, count: number): Question[] {
+  return fill(count, (i) => {
+    const r = rng.pick(REPORTS);
+    if (i % 2 === 0) {
+      return mcq(rng, {
+        prefix: 'en5-listening',
+        prompt: `Listen to the report:\n\n"${r.t}"\n\n${r.q}`,
+        promptSub: 'Dengar laporan, kemudian jawab soalan.',
+        answer: r.a,
+        distractors: r.d,
+        explanation: r.why,
+        emoji: '📊',
+        cols: 1,
+        speak: `${r.t} ${r.q}`,
+      });
+    }
+    const op = rng.pick([
+      { s: 'The report states a fact that can be checked.', ok: true },
+      { s: 'The report mainly shares the speaker\'s personal feelings.', ok: false },
+    ]);
+    return trueFalse({
+      prefix: 'en5-listening',
+      prompt: `Listen to the report:\n\n"${r.t}"\n\nTrue or false: ${op.s}`,
+      promptSub: 'Betul atau salah?',
+      isTrue: op.ok,
+      explanation: op.ok
+        ? 'The report gives facts, not personal feelings.'
+        : 'The report gives facts, so it is not mainly about feelings.',
+      emoji: '📊',
+      speak: `${r.t} True or false: ${op.s}`,
+      lang: 'en',
+    });
+  });
+}
+
+/** Ceramah ringkas untuk soalan mendengar Tahun 6. */
+const TALKS: { t: string; ms: string; main: string; d: string[]; why: string }[] = [
+  {
+    t: 'Today I will talk about saving water. First, turn off the tap when you brush your teeth. Second, fix leaking pipes quickly. In short, every drop counts.',
+    ms: 'Hari ini saya akan bercakap tentang menjimatkan air.',
+    main: 'How to save water',
+    d: ['How to clean a house', 'Why it rains', 'How to fix a bicycle'],
+    why: 'The speaker says, "Today I will talk about saving water."',
+  },
+  {
+    t: 'Good habits help us learn better. Sleep early so you are not tired. Eat a good breakfast before school. Plan your homework so you do not rush.',
+    ms: 'Amalan baik membantu kita belajar dengan lebih baik.',
+    main: 'Good habits for learning',
+    d: ['Favourite foods', 'A school trip', 'How to play football'],
+    why: 'The talk is about habits that help us learn better.',
+  },
+  {
+    t: 'Reading opens new worlds. Books let you visit places you have never been. They also teach you new words and new ideas. Start with a short book you enjoy.',
+    ms: 'Membaca membuka dunia baharu.',
+    main: 'The benefits of reading',
+    d: ['How to draw', 'The best sport', 'Cooking at home'],
+    why: 'The talk explains what reading gives us.',
+  },
+  {
+    t: 'Teamwork makes hard tasks easier. Share the work fairly. Listen to your friends. When everyone helps, the job finishes faster and everyone feels happy.',
+    ms: 'Kerja berpasukan menjadikan tugas sukar lebih mudah.',
+    main: 'The importance of teamwork',
+    d: ['How to bake a cake', 'The tallest mountain', 'How to save money'],
+    why: 'The talk explains why teamwork is important.',
+  },
+];
+
+function en6ListeningDiscussions(_y: number, rng: Rng, count: number): Question[] {
+  return fill(count, (i) => {
+    const tk = rng.pick(TALKS);
+    if (i % 2 === 0) {
+      return mcq(rng, {
+        prefix: 'en6-listening',
+        prompt: `Listen to the talk:\n\n"${tk.t}"\n\nWhat is the talk mainly about?`,
+        promptSub: 'Apakah isi utama ceramah ini?',
+        answer: tk.main,
+        distractors: tk.d,
+        explanation: tk.why,
+        emoji: '🎤',
+        cols: 1,
+        speak: `${tk.t} What is the talk mainly about?`,
+      });
+    }
+    const others = TALKS.filter((x) => x.main !== tk.main);
+    return match({
+      prefix: 'en6-listening',
+      prompt: 'Match each talk topic with its main idea.',
+      promptSub: 'Padankan tajuk ceramah dengan idea utamanya.',
+      pairs: [tk, ...rng.sample(others, 2)].map((x) => ({ left: x.t.split('.')[0], right: x.main })),
+      explanation: 'The main idea is what the whole talk is about.',
+      emoji: '🎤',
+    });
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Speaking (Tahun 2-6)                                                */
+/* ------------------------------------------------------------------ */
+
+function en2SpeakingTalking(_y: number, rng: Rng, count: number): Question[] {
+  const prompts = [
+    { q: 'How do you start when you talk about yourself?', a: 'My name is …', d: ['The end is …', 'Yesterday was …', 'It is raining …'], why: 'Start with your name, then add your age.' },
+    { q: 'Your friend asks, "How old are you?" What do you say?', a: 'I am eight years old.', d: ['I am fine, thank you.', 'It is a blue bag.', 'My name is Siti.'], why: 'The question asks about age, so answer with your age.' },
+    { q: 'How do you tell someone your favourite food?', a: 'I like fried rice.', d: ['I have two brothers.', 'I live in Melaka.', 'I am a pupil.'], why: 'Use "I like …" to talk about your favourite food.' },
+    { q: 'Your friend asks, "Where do you live?" What do you say?', a: 'I live in Melaka.', d: ['I am eight years old.', 'I like to sing.', 'My father is a teacher.'], why: 'Use "I live in …" to say where you live.' },
+    { q: 'How do you talk about your family?', a: 'I have one brother and one sister.', d: ['I like green.', 'I am in Year Two.', 'It is three ringgit.'], why: 'Use "I have …" to talk about your family.' },
+  ];
+  return fill(count, (i) => {
+    const it = rng.pick(prompts);
+    if (i % 2 === 0) {
+      return mcq(rng, {
+        prefix: 'en2-speaking',
+        prompt: it.q,
+        promptSub: 'Pilih jawapan yang paling sesuai.',
+        answer: it.a,
+        distractors: it.d,
+        explanation: it.why,
+        emoji: '🗣️',
+        cols: 1,
+        speak: it.q,
+      });
+    }
+    const others = prompts.filter((x) => x.a !== it.a);
+    return match({
+      prefix: 'en2-speaking',
+      prompt: 'Match each question with the best answer.',
+      promptSub: 'Padankan soalan dengan jawapan yang betul.',
+      pairs: [it, ...rng.sample(others, 2)].map((x) => ({ left: x.q, right: x.a })),
+      explanation: 'Each question has a suitable answer about yourself.',
+      emoji: '🗣️',
+    });
+  });
+}
+
+function en3SpeakingDescribing(_y: number, rng: Rng, count: number): Question[] {
+  const people = [
+    { s: 'She has long black hair.', who: 'a girl with long hair', d: ['a boy with short hair', 'a bald man', 'a baby'], why: '"Long black hair" describes a girl with long hair.' },
+    { s: 'He is tall and friendly.', who: 'a tall friendly boy', d: ['a short angry boy', 'a small baby', 'an old woman'], why: '"Tall and friendly" describes a tall, friendly boy.' },
+    { s: 'My teacher wears glasses.', who: 'a teacher with glasses', d: ['a teacher without glasses', 'a doctor', 'a driver'], why: '"Wears glasses" tells us the teacher has glasses.' },
+    { s: 'The old man walks slowly.', who: 'an old man', d: ['a young boy', 'a fast runner', 'a small girl'], why: '"Old man" tells us who is being described.' },
+  ];
+  const places = [
+    { s: 'The library is quiet and clean.', which: 'a library', d: ['a market', 'a playground', 'a canteen'], why: '"Quiet and clean" suits a library.' },
+    { s: 'The market is busy and noisy.', which: 'a market', d: ['a library', 'a bedroom', 'a clinic'], why: '"Busy and noisy" describes a market.' },
+    { s: 'The beach is hot and sandy.', which: 'a beach', d: ['a classroom', 'a library', 'a hospital'], why: '"Hot and sandy" describes a beach.' },
+  ];
+  return fill(count, (i) => {
+    if (i % 2 === 0) {
+      const it = rng.pick(people);
+      return mcq(rng, {
+        prefix: 'en3-speaking',
+        prompt: `Who does this describe?\n\n"${it.s}"`,
+        promptSub: 'Siapa yang diterangkan?',
+        answer: it.who,
+        distractors: it.d,
+        explanation: it.why,
+        emoji: '🗣️',
+        cols: 1,
+        speak: it.s,
+      });
+    }
+    const it = rng.pick(places);
+    return mcq(rng, {
+      prefix: 'en3-speaking',
+      prompt: `Which place does this describe?\n\n"${it.s}"`,
+      promptSub: 'Tempat mana yang diterangkan?',
+      answer: it.which,
+      distractors: it.d,
+      explanation: it.why,
+      emoji: '🏙️',
+      cols: 2,
+      speak: it.s,
+    });
+  });
+}
+
+function en4SpeakingConversations(_y: number, rng: Rng, count: number): Question[] {
+  const scenes = [
+    { q: 'You want to borrow a pen from your friend. What do you say?', a: 'May I borrow your pen, please?', d: ['Give me your pen.', 'I have a pen.', 'The pen is blue.'], why: '"May I … please?" is polite when asking for something.' },
+    { q: 'You are looking for the toilet. What do you ask?', a: 'Excuse me, where is the toilet?', d: ['The toilet is clean.', 'I like toilets.', 'Toilets are blue.'], why: '"Excuse me, where is …?" is polite when asking for directions.' },
+    { q: 'You want to buy a book. What do you ask the shopkeeper?', a: 'How much is this book?', d: ['This book is heavy.', 'I can read.', 'The book has pages.'], why: 'Ask "How much is this?" to find the price.' },
+    { q: 'Your friend helps you. What do you say?', a: 'Thank you very much.', d: ['Give me that.', 'It is mine.', 'I do not know.'], why: 'Say "thank you" when someone helps you.' },
+    { q: 'You want to join a conversation. What do you say?', a: 'Can I ask a question?', d: ['Be quiet, please.', 'I am leaving now.', 'That is wrong.'], why: 'Ask politely before joining a conversation.' },
+    { q: 'You are late to class. What do you say to your teacher?', a: 'I am sorry I am late.', d: ['I am always late.', 'The bell is loud.', 'I like this class.'], why: 'Say sorry politely when you are late.' },
+    { q: 'You want to know the way to the library. What do you ask?', a: 'Could you show me the way to the library?', d: ['The library is big.', 'I read books.', 'Books are heavy.'], why: '"Could you show me the way …?" asks for directions politely.' },
+    { q: 'Your friend is sad. What do you say?', a: 'Are you all right? Can I help you?', d: ['Stop crying now.', 'It is not my problem.', 'You are always sad.'], why: 'Show care by asking if your friend is all right.' },
+    { q: 'You want to leave the table during dinner. What do you say?', a: 'May I be excused, please?', d: ['I am leaving now.', 'Dinner is over.', 'I do not like this food.'], why: '"May I be excused, please?" is polite when leaving the table.' },
+    { q: 'Someone gives you a gift. What do you say?', a: 'Thank you. That is very kind of you.', d: ['I do not want it.', 'Give me another one.', 'It is too small.'], why: 'Thank the giver and comment kindly.' },
+    { q: 'You did not hear what your friend said. What do you say?', a: 'I am sorry, could you repeat that, please?', d: ['Speak properly.', 'I was not listening.', 'Say it again, now.'], why: 'Ask politely for a repeat when you did not hear.' },
+    { q: 'You want to use the phone to call your parents. What do you ask?', a: 'May I use the phone to call my parents, please?', d: ['Give me the phone.', 'The phone is mine.', 'I like phones.'], why: 'Ask politely with "May I … please?" before using something.' },
+    { q: 'You step on your friend\'s foot by accident. What do you say?', a: 'I am very sorry. Are you hurt?', d: ['Watch where you stand.', 'It was your fault.', 'Feet are strong.'], why: 'Say sorry and check if your friend is hurt.' },
+    { q: 'You want your friend to wait for you. What do you say?', a: 'Could you wait for me, please?', d: ['Wait here.', 'Do not move.', 'I will be long.'], why: '"Could you … please?" is a polite request.' },
+    { q: 'You want to ask your teacher a question in class. What do you do?', a: 'Raise your hand and wait to be called.', d: ['Shout the question out.', 'Walk to the front.', 'Ask your friend instead.'], why: 'Raise your hand and wait your turn politely.' },
+    { q: 'You want to return a book you borrowed. What do you say?', a: 'Here is the book I borrowed. Thank you.', d: ['Keep the book.', 'I lost your book.', 'Books are boring.'], why: 'Return what you borrowed and thank the owner.' },
+  ];
+  return fill(count, (i) => {
+    const it = rng.pick(scenes);
+    if (i % 2 === 0) {
+      return mcq(rng, {
+        prefix: 'en4-speaking',
+        prompt: it.q,
+        promptSub: 'Pilih ayat yang paling sopan.',
+        answer: it.a,
+        distractors: it.d,
+        explanation: it.why,
+        emoji: '💬',
+        cols: 1,
+        speak: it.q,
+      });
+    }
+    const others = scenes.filter((x) => x.a !== it.a);
+    return match({
+      prefix: 'en4-speaking',
+      prompt: 'Match each situation with the right thing to say.',
+      promptSub: 'Padankan situasi dengan ayat yang sesuai.',
+      pairs: [it, ...rng.sample(others, 2)].map((x) => ({ left: x.q, right: x.a })),
+      explanation: 'Choose polite and suitable words for each situation.',
+      emoji: '💬',
+    });
+  });
+}
+
+function en5SpeakingPresenting(_y: number, rng: Rng, count: number): Question[] {
+  const items = [
+    { q: 'You want to share your opinion. Which phrase is best?', a: 'In my opinion, …', d: ['Shut the door.', 'It is raining.', 'I am nine.'], why: '"In my opinion, …" introduces an opinion politely.' },
+    { q: 'You agree with your friend. What do you say?', a: 'I agree with you because …', d: ['You are wrong.', 'I do not care.', 'Stop talking.'], why: 'Give your reason when you agree: "I agree with you because …".' },
+    { q: 'You disagree politely. What do you say?', a: 'I see your point, but …', d: ['That is silly.', 'You are always wrong.', 'I will not listen.'], why: '"I see your point, but …" disagrees politely.' },
+    { q: 'How do you begin a presentation?', a: 'Greet your audience and say your topic.', d: ['Say goodbye and leave.', 'Read the whole essay.', 'Ask for money.'], why: 'Start by greeting the audience and stating your topic.' },
+    { q: 'How do you end a presentation?', a: 'Thank your audience.', d: ['Walk away quietly.', 'Start again.', 'Close your book.'], why: 'End politely by thanking your audience.' },
+  ];
+  return fill(count, (i) => {
+    const it = rng.pick(items);
+    if (i % 2 === 0) {
+      return mcq(rng, {
+        prefix: 'en5-speaking',
+        prompt: it.q,
+        promptSub: 'Pilih cara yang paling sopan dan sesuai.',
+        answer: it.a,
+        distractors: it.d,
+        explanation: it.why,
+        emoji: '🎤',
+        cols: 1,
+        speak: it.q,
+      });
+    }
+    const others = items.filter((x) => x.a !== it.a);
+    return match({
+      prefix: 'en5-speaking',
+      prompt: 'Match each speaking purpose with the right phrase.',
+      promptSub: 'Padankan tujuan bertutur dengan frasa yang betul.',
+      pairs: [it, ...rng.sample(others, 2)].map((x) => ({ left: x.q, right: x.a })),
+      explanation: 'Each purpose has a suitable polite phrase.',
+      emoji: '🎤',
+    });
+  });
+}
+
+function en6SpeakingInterviews(_y: number, rng: Rng, count: number): Question[] {
+  const qs = [
+    { q: 'You want to know why your friend likes a hobby. Which question is best?', a: 'Why do you like this hobby?', d: ['Do you like it?', 'Is it a hobby?', 'Hobbies exist.'], why: '"Why …?" asks for a reason, which gives a fuller answer.' },
+    { q: 'You want to know how long your friend has done something. Which question is best?', a: 'How long have you been doing it?', d: ['Do you do it?', 'Is it long?', 'What is it?'], why: '"How long …?" asks about duration.' },
+    { q: 'You want to add an idea in a discussion. What do you say?', a: 'May I add something?', d: ['Be quiet.', 'I am bored.', 'That is enough.'], why: '"May I add something?" asks politely to contribute.' },
+    { q: 'A friend has a different view. What do you say?', a: 'I have a different view because …', d: ['You are wrong.', 'I will not listen.', 'Stop it now.'], why: 'State your different view politely with a reason.' },
+    { q: 'What should you do while someone is speaking?', a: 'Listen carefully and wait for your turn.', d: ['Talk over them.', 'Look away.', 'Leave the room.'], why: 'Good discussion needs careful listening and taking turns.' },
+  ];
+  return fill(count, (i) => {
+    const it = rng.pick(qs);
+    if (i % 2 === 0) {
+      return mcq(rng, {
+        prefix: 'en6-speaking',
+        prompt: it.q,
+        promptSub: 'Pilih pilihan yang paling sesuai.',
+        answer: it.a,
+        distractors: it.d,
+        explanation: it.why,
+        emoji: '🎙️',
+        cols: 1,
+        speak: it.q,
+      });
+    }
+    const others = qs.filter((x) => x.a !== it.a);
+    return match({
+      prefix: 'en6-speaking',
+      prompt: 'Match each discussion goal with the best response.',
+      promptSub: 'Padankan tujuan perbincangan dengan jawapan terbaik.',
+      pairs: [it, ...rng.sample(others, 2)].map((x) => ({ left: x.q, right: x.a })),
+      explanation: 'Choose a response that fits the discussion goal.',
+      emoji: '🎙️',
+    });
+  });
+}
+
 export const ENGLISH_GENERATORS: Record<string, (y: number, r: Rng, c: number) => Question[]> = {
   'en1-phonics': en1Phonics,
   'en1-greetings': en1Greetings,
   'en1-colours-numbers': en1ColoursNumbers,
+  'en1-listening-sounds': en1ListeningSounds,
   'en2-simple-sentences': en2SimpleSentences,
   'en2-vocabulary': en2Vocabulary,
   'en2-language-arts': en2LanguageArts,
   'en2-punctuation': en2Punctuation,
+  'en2-listening-instructions': en2ListeningInstructions,
+  'en2-speaking-talking': en2SpeakingTalking,
   'en3-grammar-basics': en3GrammarBasics,
   'en3-reading': en3Reading,
   'en3-writing': en3Writing,
+  'en3-listening-stories': en3ListeningStories,
+  'en3-speaking-describing': en3SpeakingDescribing,
   'en4-grammar': en4Grammar,
   'en4-vocabulary': en4Vocabulary,
   'en4-reading': en4ReadingComprehension,
   'en4-writing': en4Writing,
+  'en4-listening-announcements': en4ListeningAnnouncements,
+  'en4-speaking-conversations': en4SpeakingConversations,
   'en5-grammar-advanced': en5GrammarAdvanced,
   'en5-reading-advanced': en5ReadingAdvanced,
   'en5-writing-purposes': en5WritingPurposes,
   'en5-language-arts': en5LanguageArts,
+  'en5-listening-reports': en5ListeningReports,
+  'en5-speaking-presenting': en5SpeakingPresenting,
   'en6-grammar-mastery': en6GrammarMastery,
   'en6-writing-composition': en6WritingComposition,
   'en6-listening-language-arts': en6ListeningLanguageArts,
+  'en6-listening-discussions': en6ListeningDiscussions,
+  'en6-speaking-interviews': en6SpeakingInterviews,
 };

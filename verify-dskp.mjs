@@ -78,7 +78,26 @@ for (let y = 1; y <= 6; y += 1) {
   ok(`BM T${y}: tiada kod di luar 1.0-5.0`, luar.length === 0, luar.join(','));
 }
 
-// 4. Sejarah: penomboran Tajuk berterusan.
+// 4. English: modul Listening dan Speaking mesti hadir setiap tahun.
+// DSKP Bahasa Inggeris (CEFR) menyenaraikan Listening dan Speaking sebagai
+// modul pertama dan kedua. Ia pernah langsung tiada, jadi ia dikunci di sini.
+{
+  const MODUL = ['Listening', 'Speaking'];
+  for (let y = 1; y <= 6; y += 1) {
+    const ts = ALL_TOPICS.filter((t) => t.subject === 'english' && t.year === y);
+    for (const m of MODUL) {
+      const ada = ts.filter((t) => t.code === m);
+      ok(`English T${y}: modul ${m} hadir`, ada.length > 0, ada.map((t) => t.id).join(',') || 'tiada');
+    }
+  }
+  // Setiap topik English mesti guna nama modul DSKP, bukan kod berangka.
+  const kodPelik = ALL_TOPICS.filter(
+    (t) => t.subject === 'english' && /^[0-9]/.test(String(t.code)),
+  );
+  ok('English: kod guna nama modul, bukan nombor', kodPelik.length === 0, kodPelik.map((t) => t.id).join(','));
+}
+
+// 5. Sejarah: penomboran Tajuk berterusan.
 {
   const t4 = ALL_TOPICS.filter((t) => t.subject === 'sejarah' && t.year === 4).map((t) => major(t.code));
   const t5 = ALL_TOPICS.filter((t) => t.subject === 'sejarah' && t.year === 5).map((t) => major(t.code));
@@ -90,13 +109,13 @@ for (let y = 1; y <= 6; y += 1) {
   ok('Sejarah hanya Tahun 4 ke atas', sebelumT4.length === 0, sebelumT4.map((t) => t.id).join(','));
 }
 
-// 5. Label kod mengikut subjek.
+// 6. Label kod mengikut subjek.
 ok('Label Sejarah guna "Tajuk"', topicCodeLabel('ms', 'sejarah', '6.1') === 'Tajuk 6.1');
 ok('Label Sejarah (EN) guna "Topic"', topicCodeLabel('en', 'sejarah', '6.1') === 'Topic 6.1');
 ok('Label Sains guna "DSKP"', topicCodeLabel('ms', 'sains', '1.0') === 'DSKP 1.0');
 ok('Label Matematik guna "DSKP"', topicCodeLabel('ms', 'matematik', '2.0') === 'DSKP 2.0');
 
-// 6. Setiap topik ada penjana dan sekurang-kurangnya tiga nota.
+// 7. Setiap topik ada penjana dan sekurang-kurangnya tiga nota.
 {
   const nota = ALL_TOPICS.filter((t) => t.notes.length < 3);
   ok('Setiap topik ada >= 3 nota', nota.length === 0, nota.map((t) => t.id).join(','));
@@ -104,7 +123,7 @@ ok('Label Matematik guna "DSKP"', topicCodeLabel('ms', 'matematik', '2.0') === '
   ok('Setiap topik ada permainan', tanpa.length === 0, tanpa.map((t) => t.id).join(','));
 }
 
-// 7. Surah hafazan: id wujud, ayat cukup, dan tahun sepadan dengan topik.
+// 8. Surah hafazan: id wujud, ayat cukup, dan tahun sepadan dengan topik.
 {
   const surahOut = join(mkdtempSync(join(tmpdir(), 'srh-')), 'b.mjs');
   await build({

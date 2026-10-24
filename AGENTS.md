@@ -178,14 +178,28 @@ supaya kod tidak bertindih dalam tahun yang sama.
 mengajar kemahiran mengawal pemboleh ubah dan membuat hipotesis.
 
 Semakan automatik: `node verify-dskp.mjs` mengesahkan tiada kod bertindih, liputan
-standard BM 1.0-5.0, penomboran Sains dan Sejarah, serta label kod yang betul.
+standard BM 1.0-5.0, penomboran Sains dan Sejarah, modul English Listening/Speaking
+setiap tahun, serta label kod yang betul.
+
+**Bahasa Inggeris menggunakan nama modul DSKP sebagai kod, bukan nombor.** Modulnya
+ialah Listening, Speaking, Reading, Writing, Language Arts, Grammar, Vocabulary dan
+Punctuation (cth. `code: 'Listening'`). Listening wajib ada setiap tahun T1-T6, dan
+Speaking T2-T6. Sebelum ini kedua-duanya langsung tiada, jadi murid tidak pernah
+berlatih dua kemahiran pertama DSKP. Kerana kod modul boleh berulang antara tahun,
+jangan guna kod berangka untuk subjek ini.
+
+Soalan Listening sengaja **tidak bergantung pada audio**. Tetapan `voice` lalai
+`false`, jadi topik yang memerlukan suara tidak boleh dinilai. Sebaliknya soalan
+menguji kemahiran mendengar secara visual (bunyi awal/akhir perkataan, rima, arahan
+kelas, kefahaman cerita/pengumuman/ceramah) dan setiap soalan menetapkan `speak`
+supaya TTS membacanya apabila murid menghidupkan suara.
 
 ## Struktur
 
 - `src/screens/` — skrin utama (Home, Subjects, Games, Progress, Profile)
 - `src/lib/i18n.ts` — kamus BM (`MS`) dan EN; kira-kira 528 kunci setiap satu (semak dengan `node audit-i18n.mjs`)
-- `src/data/topics/` — nota asas topik DSKP (kira-kira 725 nota, 159 topik)
-- `src/data/notes-extra.ts` — nota ringkas tambahan setiap topik (248 nota);
+- `src/data/topics/` — nota asas topik DSKP (kira-kira 908 nota, 211 topik)
+- `src/data/notes-extra.ts` — nota ringkas tambahan setiap topik (253 nota);
   digabungkan dalam `src/data/catalog.ts` semasa muat. Untuk tambah nota,
   letak kunci mengikut `id` topik dalam `EXTRA_NOTES`. Nota baharu perlu
   sepadan dengan `id` dalam `src/data/topics/*.ts` (semakan: tiada orphan).
@@ -447,7 +461,7 @@ Tiga ciri membantu murid *faham cara menjawab*, bukan sekadar meneka jawapan.
 - `roundingModel(prompt)` mendedahkan geometri pembundaran (lower/upper/digit/
   decider) dan dikongsi oleh langkah bertulis serta animasi garis nombor, jadi
   ayat dan gambar sentiasa bercakap tentang nombor yang sama.
-- Liputan semasa: 427/4730 soalan boleh kira (~9%), 28/200 topik.
+- Liputan semasa: 427/4725 soalan boleh kira (~9%), 28/211 topik.
 - Ujian: `node verify-steps.mjs` — WAJIB lulus sebelum setiap keluaran.
 
 ### 2. Strategi menjawab — `src/data/strategies.ts`
