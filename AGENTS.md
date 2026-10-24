@@ -183,7 +183,7 @@ standard BM 1.0-5.0, penomboran Sains dan Sejarah, serta label kod yang betul.
 ## Struktur
 
 - `src/screens/` — skrin utama (Home, Subjects, Games, Progress, Profile)
-- `src/lib/i18n.ts` — kamus BM (`MS`) dan EN; kira-kira 469 kunci setiap satu (semak dengan `node audit-i18n.mjs`)
+- `src/lib/i18n.ts` — kamus BM (`MS`) dan EN; kira-kira 528 kunci setiap satu (semak dengan `node audit-i18n.mjs`)
 - `src/data/topics/` — nota asas topik DSKP (kira-kira 725 nota, 159 topik)
 - `src/data/notes-extra.ts` — nota ringkas tambahan setiap topik (248 nota);
   digabungkan dalam `src/data/catalog.ts` semasa muat. Untuk tambah nota,
@@ -203,7 +203,12 @@ standard BM 1.0-5.0, penomboran Sains dan Sejarah, serta label kod yang betul.
 - `android-app/` — projek Android (manifest, `MainActivity.java`, res, assets/www)
 - `scripts/build-apk.sh` — saluran bina APK
 - `scripts/make-icons.py` / `make-android-icons.py` — penjana ikon
-- `audit-i18n.mjs` — semak kunci i18n yang hilang
+- `audit-i18n.mjs` — semak kunci i18n yang hilang. Ia juga melaporkan kunci
+  yang **benar-benar** tidak digunakan (rentetan kunci tiada rujukan langsung
+  dalam `src/`). Jangan percaya angka "UNUSED" yang dikira daripada panggilan
+  literal `t('...')` sahaja: banyak kunci dirujuk secara dinamik
+  (`t(tip.titleKey)`, `t(item.labelKey)`), jadi padam hanya kunci yang
+  dilaporkan sebagai "TRULY UNUSED".
 - `verify-generators.mjs`, `verify-random.mjs`, `verify-plan.mjs`,
   `verify-contributors.mjs` — semakan enjin soalan, kerawakan, pelan
   harian dan kredit guru

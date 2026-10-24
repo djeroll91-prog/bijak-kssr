@@ -213,6 +213,23 @@ await visitTab('Utama', /Selamat kembali|Hai/, 'Utama');
   check('Nota: tiada ralat JS', errors.length === before, errors.slice(before, before + 2).join(' | '));
 }
 
+// Kad hafazan surah: hanya muncul pada topik al-Quran Pendidikan Islam.
+{
+  const before = errors.length;
+  await goHome();
+  click(btn('Subjek'));
+  await sleep(400);
+  click(btn('Pendidikan Islam'));
+  await sleep(450);
+  click(btn('Hafazan Surah Al-Fatihah'));
+  await sleep(600);
+  const body = text();
+  check('Hafazan: kad surah dirender', /Al-Fatihah/.test(body) && /Al-Ikhlas/.test(body), body.slice(0, 90));
+  check('Hafazan: ada teks Arab', /[\u0600-\u06ff]/.test(body), body.slice(0, 60));
+  check('Hafazan: ada kiraan hafaz', /daripada\s*2\s*surah/i.test(body), body.slice(0, 90));
+  check('Hafazan: tiada ralat JS', errors.length === before, errors.slice(before, before + 2).join(' | '));
+}
+
 // Skrin diagnosis (dari Pelan).
 await goHome();
 {

@@ -104,5 +104,74 @@ ok('Label Matematik guna "DSKP"', topicCodeLabel('ms', 'matematik', '2.0') === '
   ok('Setiap topik ada permainan', tanpa.length === 0, tanpa.map((t) => t.id).join(','));
 }
 
+// 7. Surah hafazan: id wujud, ayat cukup, dan tahun sepadan dengan topik.
+{
+  const surahOut = join(mkdtempSync(join(tmpdir(), 'srh-')), 'b.mjs');
+  await build({
+    entryPoints: ['src/data/surah.ts'],
+    bundle: true,
+    format: 'esm',
+    platform: 'node',
+    outfile: surahOut,
+    logLevel: 'error',
+  });
+  const { SURAHS, surahById } = await import(surahOut);
+
+  const ids = new Set(SURAHS.map((s) => s.id));
+  ok('Setiap id surah unik', ids.size === SURAHS.length, `${ids.size}/${SURAHS.length}`);
+  ok(
+    'Setiap surah ada ayat yang lengkap',
+    SURAHS.every((s) => s.ayahs.length === s.count && s.count > 0),
+    SURAHS.filter((s) => s.ayahs.length !== s.count).map((s) => s.id).join(','),
+  );
+  ok(
+    'Nombor ayat berterusan 1..n',
+    SURAHS.every((s) => s.ayahs.every((a, i) => a.n === i + 1)),
+    SURAHS.filter((s) => !s.ayahs.every((a, i) => a.n === i + 1)).map((s) => s.id).join(','),
+  );
+  ok(
+    'Setiap ayat ada teks Arab, Rumi dan maksud',
+    SURAHS.every((s) =>
+      s.ayahs.every((a) => a.ar.trim() && a.rumi.trim() && a.ms.trim() && a.en.trim()),
+    ),
+    SURAHS.filter((s) => s.ayahs.some((a) => !a.ar.trim() || !a.rumi.trim() || !a.ms.trim() || !a.en.trim()))
+      .map((s) => s.id)
+      .join(','),
+  );
+  ok(
+    'Teks Arab mengandungi huruf Arab',
+    SURAHS.every((s) => s.ayahs.every((a) => /[\u0600-\u06ff]/.test(a.ar))),
+    SURAHS.filter((s) => s.ayahs.some((a) => !/[\u0600-\u06ff]/.test(a.ar))).map((s) => s.id).join(','),
+  );
+  // Bismillah hanya kekal sebagai ayat pertama al-Fatihah. Jika ia terlekat
+  // pada surah lain, soalan hafazan memaparkan ayat yang salah.
+  ok(
+    'Bismillah hanya pada al-Fatihah',
+    SURAHS.every((s) => s.id === 'al-fatihah' || s.ayahs.every((a) => !a.ar.includes('بِسْمِ ٱللَّهِ'))),
+    SURAHS.filter((s) => s.id !== 'al-fatihah' && s.ayahs.some((a) => a.ar.includes('بِسْمِ ٱللَّهِ')))
+      .map((s) => s.id)
+      .join(','),
+  );
+
+  // Setiap topik al-Quran yang merujuk surah mesti sepadan tahunnya.
+  const pautan = ALL_TOPICS.filter((t) => t.surahs && t.surahs.length > 0);
+  ok('Ada topik hafazan yang dipautkan', pautan.length > 0, `${pautan.length} topik`);
+  for (const t of pautan) {
+    const hilang = t.surahs.filter((id) => !surahById(id));
+    ok(`Topik ${t.id}: semua id surah wujud`, hilang.length === 0, hilang.join(','));
+    const silapTahun = t.surahs
+      .map((id) => surahById(id))
+      .filter((s) => s && s.year !== t.year)
+      .map((s) => `${s.id}(${s.year})`);
+    ok(`Topik ${t.id}: surah sepadan Tahun ${t.year}`, silapTahun.length === 0, silapTahun.join(','));
+  }
+
+  // Setiap tahun 1-6 mesti ada sekurang-kurangnya satu surah hafazan.
+  for (let y = 1; y <= 6; y += 1) {
+    const senarai = SURAHS.filter((s) => s.year === y);
+    ok(`Tahun ${y}: ada surah hafazan`, senarai.length > 0, senarai.map((s) => s.name).join(', '));
+  }
+}
+
 console.log(`\n${fails.length === 0 ? 'ALL OK' : `GAGAL: ${fails.length}`}\n`);
 process.exit(fails.length === 0 ? 0 : 1);

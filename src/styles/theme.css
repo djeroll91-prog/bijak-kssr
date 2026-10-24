@@ -969,6 +969,17 @@ ul {
   margin-top: 6px;
 }
 
+/* Ayat al-Quran dalam soalan hafazan: RTL dan fon Arab, bukan fon UI. */
+.q-prompt .prompt-ar {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 2.1;
+  margin-top: 10px;
+  text-align: right;
+  font-family: 'Traditional Arabic', 'Amiri', 'Scheherazade New',
+    'KFGQPC Uthmanic Script HAFS', 'Noto Naskh Arabic', 'Times New Roman', serif;
+}
+
 .options {
   display: grid;
   gap: var(--sp-3);
@@ -3708,4 +3719,118 @@ ul {
 :root[data-skin='book'][data-calm='on'] .web-nav,
 :root[data-skin='book'][data-calm='on'] .topbar {
   background-image: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Kad hafazan surah (Pendidikan Islam)                                */
+/* ------------------------------------------------------------------ */
+
+.surah-card {
+  border-radius: var(--r-md);
+  padding: var(--sp-4);
+  background: var(--surface);
+  box-shadow: var(--sh-1);
+  border-left: 5px solid var(--accent);
+}
+
+.surah-card[data-memorised='true'] {
+  border-left-color: var(--success);
+  background: var(--success-soft);
+}
+
+.surah-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.surah-head b {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--ink);
+  display: block;
+}
+
+.surah-head small {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-faint);
+  display: block;
+}
+
+.surah-emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.surah-ayahs {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.surah-ayah {
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  background: var(--surface-soft);
+}
+
+.surah-ayah-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.surah-num {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+}
+
+/* Ayat Arab: saiz besar, tinggi baris lapang, dan arah kanan ke kiri. */
+.surah-ar {
+  font-size: 1.5rem;
+  line-height: 2.1;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: right;
+  margin: 6px 0 4px;
+  font-family: 'Traditional Arabic', 'Amiri', 'Scheherazade New',
+    'KFGQPC Uthmanic Script HAFS', 'Noto Naskh Arabic', 'Times New Roman', serif;
+}
+
+.surah-rumi,
+.surah-maksud {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  margin-top: 4px;
+}
+
+.surah-maksud {
+  color: var(--ink-faint);
+}
+
+.surah-hidden {
+  font-size: 0.8rem;
+  letter-spacing: 6px;
+  color: var(--ink-faint);
+  padding: 8px 0 4px;
+  opacity: 0.6;
+}
+
+@media (min-width: 720px) {
+  .surah-ar {
+    font-size: 1.9rem;
+  }
 }

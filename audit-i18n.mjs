@@ -29,9 +29,24 @@ for (const f of walk('src')) {
 
 const missingMs = [...used.keys()].filter((k) => !ms.has(k));
 const missingEn = [...used.keys()].filter((k) => !en.has(k));
+
+// Sesetengah kunci dirujuk secara dinamik (cth. `t(tip.titleKey)`), jadi
+// pengesanan literal `t('...')` sahaja tidak mencukupi. Untuk penentuan
+// "benar-benar tidak digunakan", kita imbas setiap fail sumber dan anggap
+// kunci sebagai terpakai jika rentetannya muncul di mana-mana di luar i18n.ts.
+const srcText = walk('src')
+  .filter((f) => !f.endsWith('i18n.ts'))
+  .map((f) => readFileSync(f, 'utf8'))
+  .join('\n');
+
+const trulyUnused = [...ms].filter((k) => !srcText.includes(`'${k}'`) && !srcText.includes(`"${k}"`) && !srcText.includes(`\`${k}\``));
+
 console.log(`keys used: ${used.size} | MS: ${ms.size} | EN: ${en.size}`);
 console.log(`MISSING in MS: ${missingMs.length}`);
 missingMs.forEach((k) => console.log('  ', k, '->', [...used.get(k)].join(', ')));
 console.log(`MISSING in EN: ${missingEn.length}`);
 missingEn.forEach((k) => console.log('  ', k, '->', [...used.get(k)].join(', ')));
-console.log(`UNUSED in MS: ${[...ms].filter((k) => !used.has(k)).length}`);
+console.log(`UNUSED in MS (literal t() sahaja): ${[...ms].filter((k) => !used.has(k)).length}`);
+console.log(`TRULY UNUSED in MS (tiada rujukan langsung): ${trulyUnused.length}`);
+trulyUnused.forEach((k) => console.log('  ', k));
+if (trulyUnused.length > 0) process.exitCode = 1;

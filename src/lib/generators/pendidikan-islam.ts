@@ -14,6 +14,7 @@
 
 import type { Question } from '../../data/types';
 import type { Rng } from '../rng';
+import { surahById, type Surah } from '../../data/surah';
 import { fill, fillBlank, match, mcq, order, trueFalse } from './shared';
 
 /** Satu fakta: soalan, jawapan betul, dan pilihan yang salah. */
@@ -28,6 +29,8 @@ interface Bank {
   order?: { prompt: string; items: string[] };
   /** Pernyataan betul/salah. */
   tf?: [statement: string, isTrue: boolean][];
+  /** Id surah hafazan untuk soalan berasaskan ayat (lihat `data/surah.ts`). */
+  surahs?: string[];
 }
 
 const BANKS: Record<string, Bank> = {};
@@ -56,6 +59,149 @@ function dedupeLeft(pairs: [string, string][]): [string, string][] {
 /** Daftar bank fakta bagi satu topik. */
 function bank(topicId: string, b: Bank): void {
   BANKS[topicId] = b;
+}
+
+/**
+ * Bina soalan hafazan daripada teks surah sebenar.
+ *
+ * Soalan jenis ini menguji ayat, bukan fakta umum, jadi ia dijana daripada
+ * `data/surah.ts` dan bukan disimpan dalam bank. Ini memastikan teks Arab
+ * dan Rumi sentiasa sepadan dengan rujukan al-Quran, dan tiada ayat ditaip
+ * dua kali (sekali dalam data, sekali dalam bank).
+ */
+function surahQuestions(ids: string[], rng: Rng, emoji: string): Question[] {
+  const surahs = ids.map((id) => surahById(id)).filter((s): s is Surah => s !== undefined);
+  if (surahs.length === 0) return [];
+
+  // Kolam makna dan Rumi daripada semua surah terlibat, untuk pengganggu.
+  const allAyahs = surahs.flatMap((s) => s.ayahs.map((a) => ({ surah: s, ayah: a })));
+  const out: Question[] = [];
+
+  // 1. Bilangan ayat setiap surah.
+  for (const s of surahs) {
+    const wrongs = [s.count - 1, s.count + 1, s.count + 2]
+      .filter((n) => n > 0 && n !== s.count)
+      .map((n) => `${n} ayat`);
+    out.push(
+      mcq(rng, {
+        prefix: '',
+        prompt: `Berapakah bilangan ayat surah ${s.name}?`,
+        answer: `${s.count} ayat`,
+        distractors: wrongs.slice(0, 3),
+        explanation: `Surah ${s.name} mempunyai ${s.count} ayat.`,
+        emoji,
+        cols: 2,
+      }),
+    );
+  }
+
+  // 2. Maksud ayat: paparkan teks Arab, pilih terjemahan Melayu yang betul.
+  for (const { ayah } of allAyahs) {
+    const wrongs = allAyahs
+      .filter((x) => x.ayah.ms !== ayah.ms)
+      .map((x) => x.ayah.ms);
+    const uniq = [...new Set(wrongs)].slice(0, 3);
+    if (uniq.length < 3) continue;
+    out.push(
+      mcq(rng, {
+        prefix: '',
+        prompt: `Apakah maksud ayat ini?\n${ayah.ar}`,
+        answer: ayah.ms,
+        distractors: uniq,
+        explanation: `Maksud ayat ${ayah.n}: ${ayah.ms}`,
+        emoji,
+        cols: 1,
+      }),
+    );
+  }
+
+  // 3. Susun ayat mengikut urutan. Teks Rumi sahaja (tanpa nombor ayat)
+  //    supaya jawapan tidak bocor melalui label "1.", "2.".
+  for (const s of surahs) {
+    if (s.ayahs.length < 3) continue;
+    const take = Math.min(3, s.ayahs.length);
+    const items = s.ayahs.slice(0, take).map((a) => a.rumi);
+    out.push(
+      order({
+        prefix: '',
+        prompt: `Susun ${take} ayat pertama surah ${s.name} mengikut urutan yang betul.`,
+        items: rng.shuffle(items),
+        correctOrder: items,
+        explanation: `Ayat 1 surah ${s.name}: ${s.ayahs[0].rumi}`,
+        emoji,
+      }),
+    );
+  }
+
+  // 4. Betul/salah: uji sama ada Rumi sepadan dengan ayat yang ditunjukkan.
+  //    Untuk pernyataan palsu, gantikan dengan Rumi ayat lain dalam surah yang
+  //    sama supaya soalan itu benar-benar salah.
+  for (const { surah, ayah } of allAyahs) {
+    const other = surah.ayahs.find((a) => a.n !== ayah.n);
+    const isTrue = !other || rng.chance(0.5);
+    const shown = isTrue ? ayah : other;
+    out.push(
+      trueFalse({
+        prefix: '',
+        prompt: `Ayat ${ayah.n} surah ${surah.name} berbunyi: ${shown.rumi}`,
+        isTrue,
+        explanation: `Ayat ${ayah.n} surah ${surah.name} berbunyi: ${ayah.rumi}`,
+        emoji,
+      }),
+    );
+  }
+
+  // 5. Padankan Rumi dengan maksudnya. Teks Arab tidak digunakan di sini
+  //    kerana sel padan dipaparkan kiri-ke-kanan; ayat panjang juga menyukarkan
+  //    padanan pada skrin kecil.
+  for (const s of surahs) {
+    const short = s.ayahs.filter((a) => a.rumi.length <= 40 && a.ms.length <= 60);
+    if (short.length < 3) continue;
+    const picked = rng.sample(short, 3);
+    out.push(
+      match({
+        prefix: '',
+        prompt: `Padankan bacaan Rumi surah ${s.name} dengan maksudnya.`,
+        pairs: picked.map((a) => ({ left: a.rumi, right: a.ms })),
+        explanation: `Setiap bacaan ada maksudnya. Cuba baca bersama maksud.`,
+        emoji,
+      }),
+    );
+  }
+
+  // 6. Isi tempat kosong: ayat ke berapa dalam surah.
+  for (const { surah, ayah } of allAyahs) {
+    const others = surah.ayahs.filter((a) => a.n !== ayah.n);
+    if (others.length < 3) continue;
+    out.push(
+      fillBlank(rng, {
+        prefix: '',
+        prompt: `Ayat ini ialah ayat ke berapa dalam surah ${surah.name}? ${ayah.ar}`,
+        answer: `Ayat ${ayah.n}`,
+        options: rng.sample(others, 3).map((a) => `Ayat ${a.n}`),
+        explanation: `Ayat ini ialah ayat ${ayah.n} surah ${surah.name}.`,
+        emoji,
+      }),
+    );
+  }
+
+  // Selang-seli mengikut jenis. Tanpa langkah ini, jenis yang jarang dijana
+  // (susun urutan, padan) hampir tidak pernah terpilih kerana kalah bilangan
+  // dengan jenis yang banyak (pilihan jawapan, isi tempat kosong).
+  const buckets = new Map<string, Question[]>();
+  for (const q of out) {
+    const list = buckets.get(q.kind) ?? [];
+    list.push(q);
+    buckets.set(q.kind, list);
+  }
+  const lists = [...buckets.values()];
+  const mixed: Question[] = [];
+  for (let round = 0; mixed.length < out.length; round += 1) {
+    for (const list of lists) {
+      if (round < list.length) mixed.push(list[round]);
+    }
+  }
+  return mixed;
 }
 
 /* ==================================================================== */
@@ -97,6 +243,7 @@ bank('pi1-quran-tilawah', {
 
 bank('pi1-quran-hafazan', {
   emoji: '🕋',
+  surahs: ['al-fatihah', 'al-ikhlas'],
   facts: [
     ['Apakah maksud Al-Fatihah?', 'Pembukaan', ['Penutup', 'Kemurnian', 'Perlindungan']],
     ['Berapakah bilangan ayat surah Al-Fatihah?', '7 ayat', ['5 ayat', '6 ayat', '10 ayat']],
@@ -107,18 +254,27 @@ bank('pi1-quran-hafazan', {
     ['Di manakah surah Al-Fatihah diturunkan?', 'Mekah', ['Madinah', 'Taif', 'Syam']],
     ['Apakah maksud Ar-Rahman?', 'Maha Pemurah', ['Maha Penyayang', 'Maha Besar', 'Maha Adil']],
     ['Al-Fatihah dibaca pada setiap rakaat apa?', 'Rakaat solat', ['Wuduk', 'Azan', 'Puasa']],
+    ['Apakah maksud Al-Ikhlas?', 'Kemurnian iman', ['Pembukaan', 'Perlindungan', 'Manusia']],
+    ['Berapakah bilangan ayat surah Al-Ikhlas?', '4 ayat', ['3 ayat', '5 ayat', '6 ayat']],
+    ['Surah apakah yang menyatakan Allah itu Satu?', 'Al-Ikhlas', ['Al-Falaq', 'An-Nas', 'Al-Fatihah']],
+    ['Apakah ayat pertama surah Al-Ikhlas?', 'Qul huwallahu ahad', ['Qul a\'uzu birabbil falaq', 'Bismillahirrahmanirrahim', 'Qul a\'uzu birabbin nas']],
+    ['Apakah pahala membaca surah Al-Ikhlas?', 'Seperti membaca satu pertiga al-Quran', ['Seperti membaca sepuluh ayat', 'Seperti bersedekah', 'Seperti berpuasa sehari']],
   ],
   pairs: [
     ['Al-Fatihah', '7 ayat'],
     ['Ummul Kitab', 'Gelaran Al-Fatihah'],
     ['Rukun solat', 'Membaca Al-Fatihah'],
     ['Bismillah', 'Dengan nama Allah'],
+    ['Al-Ikhlas', '4 ayat'],
+    ['Al-Ikhlas', 'Kemurnian iman'],
   ],
   tf: [
     ['Al-Fatihah mempunyai 7 ayat.', true],
     ['Al-Fatihah ialah surah yang kedua dalam al-Quran.', false],
     ['Al-Fatihah wajib dibaca dalam solat.', true],
     ['Al-Fatihah ialah surah terpendek dalam al-Quran.', false],
+    ['Surah Al-Ikhlas mempunyai 4 ayat.', true],
+    ['Surah Al-Ikhlas menyatakan Allah itu Satu.', true],
   ],
 });
 
@@ -274,33 +430,34 @@ bank('pi1-jawi-huruf', {
 
 bank('pi2-quran-bacaan', {
   emoji: '📖',
+  surahs: ['al-falaq', 'an-nas'],
   facts: [
-    ['Berapakah bilangan ayat surah al-Ikhlas?', '4 ayat', ['5 ayat', '6 ayat', '3 ayat']],
     ['Berapakah bilangan ayat surah al-Falaq?', '5 ayat', ['4 ayat', '6 ayat', '7 ayat']],
     ['Berapakah bilangan ayat surah an-Nas?', '6 ayat', ['5 ayat', '4 ayat', '7 ayat']],
-    ['Apakah maksud al-Ikhlas?', 'Kemurnian iman', ['Perlindungan', 'Pembukaan', 'Kemenangan']],
-    ['Surah apakah yang menyatakan Allah itu Satu?', 'Al-Ikhlas', ['Al-Falaq', 'An-Nas', 'Al-Fatihah']],
     ['Apakah maksud al-Falaq?', 'Waktu subuh', ['Perlindungan', 'Kemurnian', 'Pembukaan']],
     ['Apakah maksud an-Nas?', 'Manusia', ['Perlindungan', 'Kemurnian', 'Waktu subuh']],
     ['Surah apakah yang memohon perlindungan daripada kejahatan?', 'Al-Falaq', ['Al-Ikhlas', 'An-Nas', 'Al-Fatihah']],
-    ['Berapakah bilangan ayat surah al-Kauthar?', '3 ayat', ['4 ayat', '5 ayat', '6 ayat']],
+    ['Surah apakah yang memohon perlindungan daripada gangguan syaitan?', 'An-Nas', ['Al-Falaq', 'Al-Ikhlas', 'Al-Asr']],
+    ['Apakah gelaran bagi surah al-Falaq dan an-Nas?', 'Al-Mu\'awwizatain', ['Al-Mu\'awwizat', 'Al-Musabbihat', 'Al-Fawatih']],
+    ['Bilakah Nabi Muhammad membaca surah al-Falaq dan an-Nas?', 'Sebelum tidur', ['Sebelum makan', 'Selepas solat', 'Ketika berjalan']],
+    ['Apakah ayat pertama surah al-Falaq?', 'Qul a\'uzu birabbil falaq', ['Qul a\'uzu birabbin nas', 'Qul huwallahu ahad', 'Inna a\'tainakal kausar']],
   ],
   pairs: [
-    ['Al-Ikhlas', '4 ayat'],
     ['Al-Falaq', '5 ayat'],
     ['An-Nas', '6 ayat'],
     ['Al-Falaq', 'Waktu subuh'],
     ['An-Nas', 'Manusia'],
+    ['Al-Mu\'awwizatain', 'Dua surah perlindungan'],
   ],
   order: {
     prompt: 'Susun surah mengikut bilangan ayat daripada paling sedikit.',
-    items: ['Al-Ikhlas (4 ayat)', 'Al-Falaq (5 ayat)', 'An-Nas (6 ayat)'],
+    items: ['Al-Falaq (5 ayat)', 'An-Nas (6 ayat)', 'Al-Asr (3 ayat)'],
   },
   tf: [
-    ['Surah al-Ikhlas mempunyai 4 ayat.', true],
+    ['Surah al-Falaq mempunyai 5 ayat.', true],
     ['Surah an-Nas mempunyai 4 ayat.', false],
     ['Surah al-Falaq bermaksud waktu subuh.', true],
-    ['Surah an-Nas mempunyai 5 ayat.', false],
+    ['Surah an-Nas mempunyai 6 ayat.', true],
   ],
 });
 
@@ -461,6 +618,7 @@ bank('pi2-jawi-sambung', {
 
 bank('pi3-quran-tajwid', {
   emoji: '📖',
+  surahs: ['al-kafirun', 'al-asr'],
   facts: [
     ['Apakah maksud tajwid?', 'Membaca al-Quran dengan betul mengikut hukumnya', ['Menghafaz al-Quran', 'Menulis al-Quran', 'Menterjemah al-Quran']],
     ['Nun sakinah bertemu huruf ba hukumnya apa?', 'Iqlab', ['Idgham', 'Ikhfa', 'Izhar']],
@@ -653,6 +811,7 @@ bank('pi3-jawi-ayat', {
 
 bank('pi4-quran-hukum', {
   emoji: '📖',
+  surahs: ['al-qariah'],
   facts: [
     ['Apakah maksud tanwin?', 'Baris dua di hujung perkataan', ['Nun yang tidak berbaris', 'Mim yang berbaris', 'Huruf mad']],
     ['Mim sakinah bertemu ba hukumnya apa?', 'Ikhfa syafawi', ['Idgham mimi', 'Izhar syafawi', 'Iqlab']],
@@ -855,6 +1014,7 @@ bank('pi4-jawi-imlak', {
 
 bank('pi5-quran-mad', {
   emoji: '📖',
+  surahs: ['al-qadr'],
   facts: [
     ['Apakah maksud mad?', 'Memanjangkan bacaan', ['Memendekkan bacaan', 'Menghentikan bacaan', 'Mempercepatkan bacaan']],
     ['Berapakah harakat bagi Mad Asli?', '2 harakat', ['4 harakat', '6 harakat', '8 harakat']],
@@ -1057,6 +1217,7 @@ bank('pi5-jawi-khat', {
 
 bank('pi6-quran-waqaf', {
   emoji: '📖',
+  surahs: ['ad-dhuha'],
   facts: [
     ['Apakah maksud waqaf?', 'Berhenti ketika membaca al-Quran', ['Meneruskan bacaan', 'Memulakan bacaan', 'Mempercepat bacaan']],
     ['Apakah maksud tanda waqaf "مـ"?', 'Wajib berhenti', ['Tidak boleh berhenti', 'Harus berhenti', 'Lebih baik terus']],
@@ -1274,8 +1435,16 @@ for (const [topicId, b] of Object.entries(BANKS)) {
     // dua label kiri sama menjadi kabur dan tiada jawapan tunggal yang betul.
     const pairs = b.pairs ? dedupeLeft(rng.shuffle(b.pairs)) : undefined;
     const tfs = b.tf ? rng.shuffle(b.tf) : undefined;
+    // Soalan hafazan dijana daripada teks surah, jadi ia berselang-seli dengan
+    // soalan fakta supaya satu sesi menguji ayat dan fakta sekali gus.
+    const surahQs = b.surahs ? rng.shuffle(surahQuestions(b.surahs, rng, b.emoji)) : [];
 
     return fill(count, (i) => {
+      // Setiap soalan keempat ialah soalan hafazan, supaya ayat diuji tanpa
+      // menenggelamkan soalan fakta dan jenis soalan lain dalam bank.
+      if (surahQs.length > 0 && i % 4 === 2) {
+        return surahQs[i % surahQs.length];
+      }
       const f = facts[i % facts.length];
 
       // Susun urutan digunakan apabila bank menyediakannya, setiap 4 soalan.

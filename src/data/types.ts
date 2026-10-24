@@ -110,6 +110,11 @@ export interface Topic {
   games?: string[];
   /** Bidang kurikulum bagi subjek yang berbidang (kini Pendidikan Islam). */
   field?: PiField;
+  /**
+   * Id surah dalam `data/surah.ts` yang perlu dihafaz bagi topik ini.
+   * Hanya topik hafazan Pendidikan Islam menggunakannya.
+   */
+  surahs?: string[];
 }
 
 export interface SubjectMeta {
@@ -259,6 +264,11 @@ export interface Profile {
   points: number;
   /** Topik yang pernah dibuka. */
   seenTopics: string[];
+  /**
+   * Id surah yang ditanda sudah dihafaz oleh murid. Disimpan per profil
+   * supaya kemajuan hafazan tidak bercampur antara adik-beradik.
+   */
+  memorisedSurahs?: string[];
   /** Keputusan ujian diagnosis terakhir (jika ada). */
   diagnostic?: DiagnosticResult | null;
   /** Pelan belajar mingguan semasa (jika ada). */

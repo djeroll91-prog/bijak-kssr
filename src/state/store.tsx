@@ -170,6 +170,8 @@ interface Store {
     outcomes?: ReviewOutcome[],
   ) => { stars: number; points: number; badges: Badge[] };
   markTopicSeen: (topicId: string) => void;
+  /** Tanda atau batal tanda "sudah dihafaz" bagi satu surah. */
+  toggleMemorisedSurah: (surahId: string) => void;
   consumePendingBadges: () => void;
   celebrateBadge: (id: string) => void;
 
@@ -412,6 +414,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const toggleMemorisedSurah = useCallback((surahId: string) => {
+    setData((d) => ({
+      ...d,
+      profiles: d.profiles.map((p) => {
+        if (p.id !== d.activeProfileId) return p;
+        const done = p.memorisedSurahs ?? [];
+        return {
+          ...p,
+          memorisedSurahs: done.includes(surahId)
+            ? done.filter((id) => id !== surahId)
+            : [...done, surahId],
+        };
+      }),
+    }));
+  }, []);
+
   const consumePendingBadges = useCallback(() => setPendingBadges([]), []);
   const celebrateBadge = useCallback((id: string) => {
     setData((d) =>
@@ -607,6 +625,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setLang,
     recordAttempt,
     markTopicSeen,
+    toggleMemorisedSurah,
     consumePendingBadges,
     celebrateBadge,
     saveExam,

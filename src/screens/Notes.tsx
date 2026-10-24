@@ -7,6 +7,8 @@ import { NumberLine } from '../components/NumberLine';
 import { subjectById, gamesForSubject } from '../data/subjects';
 import { gameBlurb, gameName, subjectName, topicCodeLabel, yearLabel } from '../lib/i18n';
 import { topicById } from '../data/catalog';
+import { surahsForTopic } from '../data/surah';
+import { SurahCard } from '../components/SurahCard';
 import { contributorFor } from '../data/contributors';
 import { strategyForTopic } from '../data/strategies';
 import { roundingModel } from '../lib/steps';
@@ -29,7 +31,7 @@ const ROUND_SAMPLES: Record<number, string> = {
 };
 
 export function NotesScreen() {
-  const { nav, go, back, markTopicSeen, lang, settings } = useStore();
+  const { nav, go, back, markTopicSeen, lang, settings, profile, toggleMemorisedSurah } = useStore();
   const t = useT();
   const topic = topicById(nav.topicId ?? '');
 
@@ -54,6 +56,8 @@ export function NotesScreen() {
     topic.games ? topic.games.includes(g.id) : true,
   );
   const strategy = strategyForTopic(topic.id, topic.subject, topic.year);
+  const topicSurahs = surahsForTopic(topic);
+  const memorised = profile?.memorisedSurahs ?? [];
 
   // Contoh garis nombor: ambil soalan pembundaran pertama yang boleh dihurai.
   // Hanya dipaparkan untuk topik yang benar-benar membincangkan pembundaran.
@@ -104,6 +108,38 @@ export function NotesScreen() {
             <NoteCard key={i} note={n} onSpeak={settings.voice ? (txt) => voice.speak(txt, topic.subject === 'english' ? 'en' : 'ms') : undefined} />
           ))}
         </div>
+
+        {/* Kad hafazan surah: hanya muncul pada topik al-Quran Pendidikan Islam. */}
+        {topicSurahs.length > 0 ? (
+          <>
+            <p className="section-title">
+              📖 {t('surah.heading')}{' '}
+              <span className="tiny muted">
+                {t('surah.progress', {
+                  done: topicSurahs.filter((s) => memorised.includes(s.id)).length,
+                  total: topicSurahs.length,
+                })}
+              </span>
+            </p>
+            <div className="stack">
+              {topicSurahs.map((s) => (
+                <SurahCard
+                  key={s.id}
+                  surah={s}
+                  lang={lang}
+                  memorised={memorised.includes(s.id)}
+                  voiceOn={settings.voice}
+                  onToggleMemorised={() => toggleMemorisedSurah(s.id)}
+                />
+              ))}
+            </div>
+            {topicSurahs.every((s) => memorised.includes(s.id)) ? (
+              <p className="tiny muted center" style={{ marginTop: 8 }}>
+                {t('surah.allDone')}
+              </p>
+            ) : null}
+          </>
+        ) : null}
 
         {/* Animasi garis nombor: nampak di mana nombor berada antara dua gandaan. */}
         {lineModel ? (

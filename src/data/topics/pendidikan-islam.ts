@@ -29,6 +29,8 @@ interface Spec {
   emoji: string;
   summary: string;
   notes: Note[];
+  /** Id surah hafazan bagi topik al-Quran (lihat `data/surah.ts`). */
+  surahs?: string[];
 }
 
 /** Bina topik daripada spesifikasi ringkas supaya fail kekal mudah dibaca. */
@@ -45,6 +47,7 @@ function T(id: string, s: Spec): Topic {
     generator: id,
     games: [G.memory, G.order, G.speed],
     notes: s.notes,
+    surahs: s.surahs,
   };
 }
 
@@ -90,7 +93,8 @@ const T1: Topic[] = [
     code: '1.2',
     title: 'Hafazan Surah Al-Fatihah',
     emoji: '🕋',
-    summary: 'Menghafaz surah al-Fatihah dan memahami maksudnya secara ringkas.',
+    summary: 'Menghafaz surah al-Fatihah dan al-Ikhlas serta memahami maksudnya.',
+    surahs: ['al-fatihah', 'al-ikhlas'],
     notes: [
       {
         kind: 'tip',
@@ -297,27 +301,28 @@ const T2: Topic[] = [
     code: '1.1',
     title: 'Bacaan dan Hafazan Surah Pendek',
     emoji: '📖',
-    summary: 'Membaca dan menghafaz surah al-Ikhlas, al-Falaq dan an-Nas.',
+    summary: 'Membaca dan menghafaz surah al-Falaq dan an-Nas.',
+    surahs: ['al-falaq', 'an-nas'],
     notes: [
       {
         kind: 'tip',
-        title: 'Tiga Surah Pendek',
+        title: 'Dua Surah Perlindungan',
         bullets: [
-          'Al-Ikhlas — 4 ayat, tentang keesaan Allah',
-          'Al-Falaq — 5 ayat, memohon perlindungan',
-          'An-Nas — 6 ayat, memohon perlindungan daripada gangguan',
+          'Al-Falaq — 5 ayat, memohon perlindungan daripada kejahatan makhluk',
+          'An-Nas — 6 ayat, memohon perlindungan daripada gangguan syaitan dan manusia',
+          'Kedua-duanya dipanggil "al-Mu\'awwizatain", iaitu dua surah perlindungan',
         ],
-        emojiRow: '📖 🛡️ 🌙',
+        emojiRow: '🌅 🛡️ 🌙',
       },
       {
         kind: 'example',
-        title: 'Maksud Al-Ikhlas',
-        body: 'Al-Ikhlas bermaksud "Kemurnian Iman". Surah ini menyatakan bahawa Allah itu Satu dan tidak ada yang menyamai-Nya.',
+        title: 'Maksud Al-Falaq',
+        body: 'Al-Falaq bermaksud "Waktu Subuh". Surah ini mengajar kita memohon perlindungan Allah daripada segala kejahatan.',
       },
       {
         kind: 'fun',
         title: 'Tahukah Kamu?',
-        body: 'Membaca surah al-Ikhlas mendapat pahala seperti membaca satu pertiga al-Quran.',
+        body: 'Nabi Muhammad ﷺ membaca surah al-Falaq dan an-Nas sebelum tidur, lalu mengusap badan dengan tangan.',
       },
     ],
   }),
@@ -512,7 +517,8 @@ const T3: Topic[] = [
     code: '1.1',
     title: 'Bacaan Bertajwid',
     emoji: '📖',
-    summary: 'Membaca al-Quran dengan tajwid asas dan hukum nun sakinah.',
+    summary: 'Membaca al-Quran dengan tajwid asas dan menghafaz surah al-Kafirun serta al-Asr.',
+    surahs: ['al-kafirun', 'al-asr'],
     notes: [
       {
         kind: 'tip',
@@ -747,7 +753,8 @@ const T4: Topic[] = [
     code: '1.1',
     title: 'Hukum Bacaan Nun dan Mim',
     emoji: '📖',
-    summary: 'Hukum nun sakinah, tanwin dan mim sakinah.',
+    summary: 'Hukum nun sakinah, tanwin dan mim sakinah serta hafazan surah al-Qariah.',
+    surahs: ['al-qariah'],
     notes: [
       {
         kind: 'tip',
@@ -983,7 +990,8 @@ const T5: Topic[] = [
     code: '1.1',
     title: 'Hukum Mad',
     emoji: '📖',
-    summary: 'Jenis-jenis mad dan kadar panjang bacaan.',
+    summary: 'Jenis-jenis mad dan kadar panjang bacaan serta hafazan surah al-Qadr.',
+    surahs: ['al-qadr'],
     notes: [
       {
         kind: 'tip',
@@ -1219,7 +1227,8 @@ const T6: Topic[] = [
     code: '1.1',
     title: 'Tanda Waqaf',
     emoji: '📖',
-    summary: 'Tanda-tanda berhenti dalam bacaan al-Quran.',
+    summary: 'Tanda-tanda berhenti dalam bacaan al-Quran serta hafazan surah ad-Dhuha.',
+    surahs: ['ad-dhuha'],
     notes: [
       {
         kind: 'tip',

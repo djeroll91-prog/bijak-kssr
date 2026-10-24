@@ -41,6 +41,11 @@ export function QuestionView({
 }) {
   const answered = result !== null;
 
+  // Soalan hafazan meletakkan teks Arab pada baris kedua prompt. Baris itu
+  // dipaparkan sebagai perenggan RTL berasingan supaya ayat al-Quran tidak
+  // dicampur dengan teks Melayu dalam satu blok.
+  const promptLines = q.prompt.split('\n');
+
   return (
     <div className="screen">
       <div className="quiz-head">
@@ -71,7 +76,12 @@ export function QuestionView({
                 {q.emoji}
               </div>
             ) : null}
-            <p className="prompt-text">{q.prompt}</p>
+            <p className="prompt-text">{promptLines[0]}</p>
+            {promptLines.slice(1).map((line, i) => (
+              <p key={i} className="prompt-ar" dir="rtl" lang="ar">
+                {line}
+              </p>
+            ))}
             {q.promptSub ? <p className="prompt-sub">{q.promptSub}</p> : null}
             {voiceOn ? (
               <button
